@@ -1,14 +1,17 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "",
-  "license": "ISC",
-  "author": "",
-  "type": "commonjs",
-  "main": "index.js",
+  "description": "Backend Express para proyecto con Vite",
+  "type": "module",
+  "main": "src/server.js",
   "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "keywords": ["express", "api", "backend", "vite"],
+  "author": "",
+  "license": "ISC",
   "dependencies": {
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
