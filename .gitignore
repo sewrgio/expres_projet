@@ -1,0 +1,23 @@
+# Dependencias (cada quien instala localmente)
+node_modules/
+jspm_packages/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Variables de entorno
+.env
+.env.local
+.env.*.local
+
+# Builds
+dist/
+build/
+out/
+.next/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
