@@ -16,12 +16,10 @@ router.post('/register', async (req, res) => {
     if (existe) return res.status(400).json({ error: 'El correo ya existe' });
 
     await client.query('BEGIN');
-    // Solución para las restricciones circulares del IUJO
     await client.query('SET CONSTRAINTS ALL DEFERRED');
 
     const hashedPassword = await bcrypt.hash(password, 10);
     
-    // 1. Crear Usuario
     const userRes = await client.query(
       `INSERT INTO usuario (nombre, apellido, cedula, correo, telefono, password, activo)
        VALUES ($1, $2, $3, $4, $5, $6, true) RETURNING id_usuario`,
@@ -29,7 +27,6 @@ router.post('/register', async (req, res) => {
     );
     const userId = userRes.rows[0].id_usuario;
 
-    // 2. Asignar Rol
     const rolNombre = rol || 'profesor';
     const rolRes = await client.query(
       `INSERT INTO usuario_rol (id_usuario, id_rol, fecha_desde, activo)
@@ -39,7 +36,6 @@ router.post('/register', async (req, res) => {
     );
     const userRolId = rolRes.rows[0].id_usuario_rol;
 
-    // 3. Crear Perfil de Profesor
     await client.query(
       `INSERT INTO profesor (id_profesor, id_usuario_rol, fecha_ingreso, activo)
        VALUES ($1, $2, CURRENT_DATE, true)`,
@@ -58,29 +54,61 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// --- LOGIN ---
+// --- LOGIN (CORREGIDO) ---
 router.post('/login', async (req, res) => {
   const { correo, password } = req.body;
+
   try {
     const usuario = await Usuario.findByEmail(correo);
-    if (!usuario) return res.status(401).json({ error: 'Usuario no encontrado' });
+    
+    if (!usuario) {
+      return res.status(401).json({ error: 'Credenciales inválidas' });
+    }
 
     const passValido = await bcrypt.compare(password, usuario.password);
-    if (!passValido) return res.status(401).json({ error: 'Contraseña incorrecta' });
+    
+    if (!passValido) {
+      return res.status(401).json({ error: 'Credenciales inválidas' });
+    }
 
+    // Determinar el rol del usuario
+    let rol = 'profesor';
+    if (usuario.es_coordinador && usuario.es_coordinador > 0) {
+      rol = 'coordinador';
+    }
+
+    // Generar token JWT
     const token = jwt.sign(
-      { id: usuario.id_usuario, rol: usuario.es_profesor ? 'profesor' : 'coordinador' },
-      process.env.JWT_SECRET,
+      { 
+        id: usuario.id_usuario, 
+        correo: usuario.correo,
+        rol: rol,
+        esProfesor: usuario.es_profesor > 0,
+        esCoordinador: usuario.es_coordinador > 0,
+        id_profesor: usuario.id_profesor || null,
+        id_coordinador: usuario.id_coordinador || null
+      },
+      process.env.JWT_SECRET || 'iujo_secret_key_2024',
       { expiresIn: '8h' }
     );
 
+    // Respuesta exitosa
     res.json({
+      success: true,
       token,
-      usuario: { nombre: usuario.nombre, es_profesor: usuario.es_profesor }
+      usuario: {
+        id: usuario.id_usuario,
+        nombre: usuario.nombre,
+        apellido: usuario.apellido,
+        correo: usuario.correo,
+        rol: rol,
+        roles: [rol]
+      }
     });
+
   } catch (error) {
     console.error("Error en login:", error.message);
-    res.status(500).json({ error: 'Error interno' });
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
