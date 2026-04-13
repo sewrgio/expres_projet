@@ -36,8 +36,9 @@ app.use('/api/justificativos', justificativoRoutes);
 app.use('/api/coordinadores', coordinadorRoutes);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`✅ Servidor corriendo en http://localhost:${PORT}`);
+// 🔥 CAMBIO IMPORTANTE: Escuchar en todas las interfaces (0.0.0.0)
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ Servidor corriendo en http://0.0.0.0:${PORT}`);
   console.log(`📚 API endpoints disponibles:`);
   console.log(`   - POST /api/auth/login`);
   console.log(`   - GET  /api/profesores`);
