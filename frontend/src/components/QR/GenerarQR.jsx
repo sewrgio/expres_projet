@@ -1,119 +1,179 @@
 import React, { useState } from 'react';
 import api from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 
 const GenerarQR = () => {
+  const { user } = useAuth();
   const [descripcion, setDescripcion] = useState('');
   const [ubicacion, setUbicacion] = useState('');
   const [qrGenerado, setQrGenerado] = useState(null);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
 
-  const handleGenerar = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setCargando(true);
     setError('');
-    setQrGenerado(null);
-
+    
     try {
-      const response = await api.post('/qr/generar', { 
-        descripcion, 
-        ubicacion 
-      });
+      const response = await api.post('/qr/generar', { descripcion, ubicacion });
       setQrGenerado(response.data.qr);
-    } catch (err) {
-      setError(err.response?.data?.error || 'Error al generar QR');
+    } catch (error) {
+      setError(error.response?.data?.error || 'Error al generar QR');
     } finally {
       setCargando(false);
     }
   };
 
   const handleImprimir = () => {
-    const ventana = window.open('');
-    ventana.document.write(`
+    const ventanaImpresion = window.open('', '_blank');
+    ventanaImpresion.document.write(`
       <html>
         <head>
-          <title>QR - ${descripcion || 'Coordinación'}</title>
+          <title>QR - ${ubicacion || 'Coordinación'}</title>
           <style>
-            body { text-align: center; font-family: Arial; padding: 50px; }
-            img { width: 300px; height: 300px; margin: 20px 0; }
-            h2 { color: #003366; }
-            .info { margin: 20px 0; color: #666; }
+            body {
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              min-height: 100vh;
+              font-family: Arial, sans-serif;
+              margin: 0;
+              padding: 20px;
+            }
+            .qr-container {
+              text-align: center;
+              padding: 30px;
+              border: 2px dashed #ccc;
+              border-radius: 16px;
+              background: white;
+            }
+            .qr-title {
+              font-size: 24px;
+              font-weight: bold;
+              margin-bottom: 20px;
+              color: #003366;
+            }
+            .qr-subtitle {
+              font-size: 16px;
+              color: #666;
+              margin-top: 20px;
+            }
+            .qr-info {
+              margin-top: 20px;
+              font-size: 14px;
+              color: #333;
+            }
+            img {
+              width: 250px;
+              height: 250px;
+            }
+            @media print {
+              body {
+                margin: 0;
+                padding: 0;
+              }
+              .no-print {
+                display: none;
+              }
+            }
           </style>
         </head>
         <body>
-          <h2>📚 IUJO - Control de Asistencia</h2>
-          <h3>${descripcion || 'Coordinación'}</h3>
-          <img src="${qrGenerado.imagen}" />
-          <div class="info">
-            <p><strong>Ubicación:</strong> ${ubicacion || 'No especificada'}</p>
-            <p>Escanee este código QR para registrar entrada/salida</p>
-            <p><small>Código: ${qrGenerado.codigo}</small></p>
+          <div class="qr-container">
+            <div class="qr-title">📚 IUJO Asistencia</div>
+            <div class="qr-subtitle">Código QR para Registro</div>
+            <img src="${qrGenerado.imagen}" alt="QR Code" />
+            <div class="qr-info">
+              <p><strong>Ubicación:</strong> ${ubicacion || 'Coordinación'}</p>
+              <p><strong>Descripción:</strong> ${descripcion || 'Registro de asistencia'}</p>
+              <p><strong>Fecha:</strong> ${new Date().toLocaleString()}</p>
+            </div>
           </div>
-          <p>Instituto Universitario de Jesús Obrero</p>
         </body>
       </html>
     `);
-    ventana.print();
+    ventanaImpresion.document.close();
+    ventanaImpresion.print();
+  };
+
+  const handleDescargar = () => {
+    const link = document.createElement('a');
+    link.href = qrGenerado.imagen;
+    link.download = `qr_${ubicacion || 'coordinacion'}_${Date.now()}.png`;
+    link.click();
   };
 
   return (
-    <div className="card">
-      <h3 className="card-title">Generar QR para Coordinación</h3>
-      <p>Genere un código QR para pegar físicamente en la entrada/salida de la coordinación.</p>
-      
-      <form onSubmit={handleGenerar}>
-        <div className="form-group">
-          <label className="form-label">Nombre de la Coordinación *</label>
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Ej: Coordinación de Ingeniería Informática"
-            value={descripcion}
-            onChange={(e) => setDescripcion(e.target.value)}
-            required
-          />
-        </div>
-        
-        <div className="form-group">
-          <label className="form-label">Ubicación</label>
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Ej: Edificio Principal, Piso 2, Oficina 201"
-            value={ubicacion}
-            onChange={(e) => setUbicacion(e.target.value)}
-          />
-        </div>
-        
-        <button type="submit" className="btn btn-primary" disabled={cargando}>
-          {cargando ? 'Generando...' : '🔑 Generar QR'}
-        </button>
-      </form>
+    <div>
+      <h2 className="page-title">Generar Código QR</h2>
 
-      {error && (
-        <div style={{ marginTop: '20px', padding: '10px', background: '#ffebee', color: '#c62828', borderRadius: '5px' }}>
-          {error}
+      {!qrGenerado ? (
+        <div className="card">
+          <h3 className="card-title">Datos del QR</h3>
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label>Ubicación / Punto de control</label>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Ej: Entrada Principal, Coordinación, Laboratorio..."
+                value={ubicacion}
+                onChange={(e) => setUbicacion(e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Descripción (opcional)</label>
+              <textarea
+                className="form-control"
+                rows="3"
+                placeholder="Información adicional sobre este punto de control..."
+                value={descripcion}
+                onChange={(e) => setDescripcion(e.target.value)}
+              />
+            </div>
+            <button type="submit" className="btn btn-primary" disabled={cargando}>
+              {cargando ? 'Generando...' : '🔑 Generar QR'}
+            </button>
+          </form>
+          {error && <div style={{ marginTop: '15px', color: 'red' }}>{error}</div>}
         </div>
-      )}
-
-      {qrGenerado && (
-        <div style={{ marginTop: '30px', textAlign: 'center', padding: '20px', background: '#f5f5f5', borderRadius: '10px' }}>
-          <h4>QR para: {qrGenerado.descripcion}</h4>
-          <img src={qrGenerado.imagen} alt="QR" style={{ width: '200px', height: '200px', margin: '20px 0' }} />
-          <p><strong>Ubicación:</strong> {qrGenerado.ubicacion || 'No especificada'}</p>
+      ) : (
+        <div className="card" style={{ textAlign: 'center' }}>
+          <h3 className="card-title">QR Generado</h3>
           
-          <div style={{ marginTop: '15px' }}>
-            <button className="btn btn-success" onClick={handleImprimir} style={{ marginRight: '10px' }}>
-              🖨️ Imprimir QR
-            </button>
-            <button className="btn btn-primary" onClick={() => navigator.clipboard.writeText(qrGenerado.codigo)}>
-              📋 Copiar código
-            </button>
+          <div style={{ 
+            background: 'white', 
+            padding: '20px', 
+            borderRadius: '16px',
+            display: 'inline-block',
+            margin: '20px auto'
+          }}>
+            <img 
+              src={qrGenerado.imagen} 
+              alt="QR Code" 
+              style={{ width: '250px', height: '250px' }}
+            />
           </div>
           
-          <p style={{ marginTop: '15px', fontSize: '12px', color: '#666' }}>
-            Pegue este código QR en un lugar visible. Los profesores lo escanearán al entrar y salir.
-          </p>
+          <div style={{ marginTop: '20px' }}>
+            <p><strong>Ubicación:</strong> {ubicacion || 'No especificada'}</p>
+            <p><strong>Descripción:</strong> {descripcion || 'Sin descripción'}</p>
+            <p><strong>Código:</strong> <code>{qrGenerado.codigo}</code></p>
+          </div>
+
+          <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '20px', flexWrap: 'wrap' }}>
+            <button className="btn btn-primary" onClick={handleImprimir}>
+              🖨️ Imprimir QR
+            </button>
+            <button className="btn btn-success" onClick={handleDescargar}>
+              💾 Descargar QR
+            </button>
+            <button className="btn btn-secondary" onClick={() => setQrGenerado(null)}>
+              🔄 Generar otro QR
+            </button>
+          </div>
         </div>
       )}
     </div>

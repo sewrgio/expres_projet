@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../../services/api';
 
@@ -11,11 +11,26 @@ const Register = () => {
     correo: '',
     telefono: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    carrera_id: ''  // 👈 Nuevo campo
   });
+  const [carreras, setCarreras] = useState([]);  // 👈 Lista de carreras
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  // 👈 Cargar carreras al montar el componente
+  useEffect(() => {
+    const cargarCarreras = async () => {
+      try {
+        const response = await api.get('/carreras');
+        setCarreras(response.data);
+      } catch (error) {
+        console.error('Error cargando carreras:', error);
+      }
+    };
+    cargarCarreras();
+  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -35,6 +50,11 @@ const Register = () => {
       return;
     }
 
+    if (!formData.carrera_id) {
+      setError('Debe seleccionar una carrera');
+      return;
+    }
+
     setLoading(true);
     try {
       await api.post('/auth/register', {
@@ -43,7 +63,8 @@ const Register = () => {
         cedula: formData.cedula,
         correo: formData.correo,
         telefono: formData.telefono,
-        password: formData.password
+        password: formData.password,
+        carrera_id: formData.carrera_id  // 👈 Enviar carrera
       });
       setSuccess(true);
       setTimeout(() => navigate('/login'), 2000);
@@ -126,6 +147,25 @@ const Register = () => {
               onChange={handleChange}
             />
           </div>
+
+          {/* 👈 Nuevo campo: Selección de carrera */}
+          <div className="form-group">
+            <select
+              name="carrera_id"
+              className="form-control"
+              value={formData.carrera_id}
+              onChange={handleChange}
+              required
+            >
+              <option value="">Seleccionar Carrera</option>
+              {carreras.map(carr => (
+                <option key={carr.id_carrera} value={carr.id_carrera}>
+                  {carr.nombre_carrera}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div className="form-group">
             <input
               type="password"

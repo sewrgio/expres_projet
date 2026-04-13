@@ -22,7 +22,10 @@ const DashboardProfesor = () => {
         horasHoy: calcularHoras(response.data.asistenciasHoy)
       });
     } catch (error) {
-      console.error('Error cargando estado:', error);
+      // ✅ Silenciar error 403 (no autorizado)
+      if (error.response?.status !== 403) {
+        console.error('Error cargando estado:', error);
+      }
     }
   };
 
@@ -68,7 +71,7 @@ const DashboardProfesor = () => {
         <h3 className="card-title">Acciones Rápidas</h3>
         <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
           <button className="btn btn-primary" onClick={() => navigate('/escanear')}>
-            📷 Escanear QR
+            🆔 Ver Mi QR
           </button>
           <button className="btn btn-success" onClick={() => navigate('/reportes')}>
             📊 Ver Reportes

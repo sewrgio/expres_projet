@@ -4,6 +4,28 @@ import auth from '../middleware/auth.js';
 
 const router = express.Router();
 
+// ✅ NUEVO: Obtener todos los justificativos (para el frontend)
+router.get('/', auth, async (req, res) => {
+  try {
+    let justificativos;
+    
+    if (req.user.esCoordinador) {
+      // Coordinador ve todos
+      justificativos = await Justificativo.obtenerTodos();
+    } else if (req.user.esProfesor) {
+      // Profesor solo ve los suyos
+      justificativos = await Justificativo.findByProfesor(req.user.id_profesor);
+    } else {
+      return res.status(403).json({ error: 'Acceso denegado' });
+    }
+    
+    res.json(justificativos);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
 // Crear justificativo (profesor)
 router.post('/', auth, async (req, res) => {
   if (!req.user.esProfesor) {

@@ -17,10 +17,22 @@ import GestionCoordinadores from './components/Coordinadores/DashboardCoordinato
 import ReporteAsistencia from './components/Reportes/ReporteAsistencia';
 import './styles/global.css';
 
+// 👇 COMPONENTE PROTECTED ROUTE MODIFICADO
 const ProtectedRoute = ({ children, roles }) => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth(); // 👈 Agregamos loading
+  
+  // 👇 Mostrar carga mientras se verifica el token
+  if (loading) {
+    return <div style={{ 
+      display: 'flex', 
+      justifyContent: 'center', 
+      alignItems: 'center', 
+      height: '100vh' 
+    }}>Cargando...</div>;
+  }
   
   if (!user) return <Navigate to="/login" />;
+  
   if (roles && !roles.some(role => user.roles?.includes(role))) {
     return <Navigate to="/" />;
   }
@@ -29,8 +41,17 @@ const ProtectedRoute = ({ children, roles }) => {
 };
 
 function AppRoutes() {
-  const { user } = useAuth();
-  
+  const { user, loading } = useAuth(); // 👈 Agregamos loading si lo necesitas
+
+  if (loading) {
+    return <div style={{ 
+      display: 'flex', 
+      justifyContent: 'center', 
+      alignItems: 'center', 
+      height: '100vh' 
+    }}>Cargando aplicación...</div>;
+  }
+
   return (
     <Routes>
       <Route path="/login" element={<Login />} />

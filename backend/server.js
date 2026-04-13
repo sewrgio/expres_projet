@@ -49,3 +49,10 @@ app.listen(PORT, () => {
   console.log(`   - GET  /api/justificativos`);
   console.log(`   - GET  /api/coordinadores`);
 });
+
+// Middleware para ver todas las peticiones
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`);
+  console.log('Body:', req.body);
+  next();
+});

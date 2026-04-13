@@ -21,14 +21,19 @@ const GestionHorarios = () => {
 
   const cargarDatos = async () => {
     try {
-      const [horariosRes, asignaturasRes] = await Promise.all([
-        api.get('/horarios'),
-        api.get('/horarios/asignaturas-profesores')
-      ]);
+      console.log('🔍 Cargando horarios...');
+      const horariosRes = await api.get('/horarios');
+      console.log('✅ Horarios response:', horariosRes.data);
+      
+      console.log('🔍 Cargando asignaturas-profesores...');
+      const asignaturasRes = await api.get('/horarios/asignaturas-profesores');
+      console.log('✅ Asignaturas response:', asignaturasRes.data);
+      
       setHorarios(horariosRes.data);
       setAsignaturasProfesores(asignaturasRes.data);
     } catch (error) {
-      console.error('Error cargando datos:', error);
+      console.error('❌ Error cargando datos:', error);
+      console.error('❌ Detalle del error:', error.response);
     } finally {
       setCargando(false);
     }
@@ -129,7 +134,14 @@ const GestionHorarios = () => {
         <div className="table-container">
           <table className="table">
             <thead>
-              <tr><th>Asignatura</th><th>Profesor</th><th>Día</th><th>Hora</th><th>Aula</th><th>Acciones</th></tr>
+              <tr>
+                <th>Asignatura</th>
+                <th>Profesor</th>
+                <th>Día</th>
+                <th>Hora</th>
+                <th>Aula</th>
+                <th>Acciones</th>
+              </tr>
             </thead>
             <tbody>
               {horarios.map(h => (
@@ -142,7 +154,9 @@ const GestionHorarios = () => {
                   <td><button className="btn btn-danger" onClick={() => handleDelete(h.id_horario)}>🗑️</button></td>
                 </tr>
               ))}
-              {horarios.length === 0 && <tr><td colSpan="6">No hay horarios</td></tr>}
+              {horarios.length === 0 && (
+                <tr><td colSpan="6" style={{ textAlign: 'center' }}>No hay horarios</td></tr>
+              )}
             </tbody>
           </table>
         </div>

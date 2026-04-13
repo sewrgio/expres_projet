@@ -14,7 +14,8 @@ const ReporteAsistencia = () => {
   const cargarAsistencias = async () => {
     setCargando(true);
     try {
-      let url = '/asistencias';
+      // ✅ CAMBIADO: /asistencias → /asistencias/todas
+      let url = '/asistencias/todas';
       if (fechaInicio && fechaFin) {
         url += `?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`;
       }

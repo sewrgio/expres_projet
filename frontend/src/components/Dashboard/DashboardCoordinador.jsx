@@ -21,7 +21,14 @@ const DashboardCoordinador = () => {
       const [profesores, carreras, asistencias] = await Promise.all([
         api.get('/profesores'),
         api.get('/carreras'),
-        api.get('/asistencias')
+        // ✅ CAMBIADO: /asistencias → /asistencias/todas
+        api.get('/asistencias/todas').catch(err => {
+          if (err.response?.status === 403 || err.response?.status === 404) {
+            console.log('No se pudieron cargar asistencias');
+            return { data: [] };
+          }
+          throw err;
+        })
       ]);
       setStats({
         totalProfesores: profesores.data.length,
@@ -37,6 +44,9 @@ const DashboardCoordinador = () => {
     { title: 'Generar QR', icon: '🔑', description: 'Crea códigos QR para las coordinaciones', path: '/generar-qr', color: '#003366' },
     { title: 'Profesores', icon: '👨‍🏫', description: 'Gestionar profesores y horarios', path: '/profesores', color: '#28a745' },
     { title: 'Carreras', icon: '🎓', description: 'Administrar carreras', path: '/carreras', color: '#17a2b8' },
+    { title: 'Asignaturas', icon: '📚', description: 'Gestionar asignaturas', path: '/asignaturas', color: '#6610f2' },
+    { title: 'Horarios', icon: '⏰', description: 'Gestionar horarios', path: '/horarios', color: '#fd7e14' },
+    { title: 'Justificativos', icon: '📋', description: 'Revisar justificativos', path: '/justificativos', color: '#6f42c1' },
     { title: 'Reportes', icon: '📈', description: 'Ver reportes de asistencia', path: '/reportes', color: '#ffc107' },
   ];
 

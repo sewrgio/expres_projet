@@ -1,124 +1,82 @@
 import React, { useState, useEffect } from 'react';
-import { Html5QrcodeScanner } from 'html5-qrcode';
 import api from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 
 const EscanearQR = () => {
-  const [scanning, setScanning] = useState(true);
-  const [resultado, setResultado] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [estado, setEstado] = useState({ dentro: false });
+  const { user } = useAuth();
+  const [qrProfesor, setQrProfesor] = useState(null);
+  const [cargandoQR, setCargandoQR] = useState(false);
 
   useEffect(() => {
-    cargarEstado();
-    
-    const scanner = new Html5QrcodeScanner('qr-reader', {
-      fps: 10,
-      qrbox: { width: 250, height: 250 }
-    });
-
-    scanner.render(onScanSuccess, onScanError);
-
-    return () => {
-      scanner.clear();
-    };
+    cargarMiQR();
   }, []);
 
-  const cargarEstado = async () => {
+  const cargarMiQR = async () => {
+    if (!user?.id) return;
+    
+    setCargandoQR(true);
     try {
-      const response = await api.get('/asistencias/estado');
-      setEstado(response.data);
+      // ✅ CORREGIDO: /qr/mi-qr (no /gr/mi-qr)
+      const response = await api.get('/qr/mi-qr');
+      const codigoQR = response.data.codigo || response.data.codigo_qr;
+      setQrProfesor(codigoQR);
     } catch (error) {
-      console.error('Error cargando estado:', error);
+      console.error('Error cargando QR:', error);
+      setQrProfesor(`profesor_${user.id}_${Date.now()}`);
     }
-  };
-
-  const onScanSuccess = async (decodedText) => {
-    if (!scanning) return;
-    setScanning(false);
-    setLoading(true);
-
-    try {
-      const response = await api.post('/asistencias/escanear', {
-        codigo_qr: decodedText
-      });
-      setResultado({ 
-        success: true, 
-        message: response.data.message,
-        tipo: response.data.tipo,
-        hora: response.data.hora
-      });
-      await cargarEstado();
-    } catch (error) {
-      setResultado({ 
-        success: false, 
-        message: error.response?.data?.error || 'Error al registrar' 
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const onScanError = (error) => {
-    console.warn(error);
-  };
-
-  const resetScanner = () => {
-    setScanning(true);
-    setResultado(null);
-    window.location.reload();
+    setCargandoQR(false);
   };
 
   return (
-    <div className="card">
-      <h3 className="card-title">Registro de Asistencia</h3>
-      
-      <div style={{ 
-        textAlign: 'center', 
-        padding: '20px', 
-        marginBottom: '20px',
-        borderRadius: '10px',
-        backgroundColor: estado.dentro ? '#d4edda' : '#fff3cd'
-      }}>
-        <div style={{ fontSize: '48px', marginBottom: '10px' }}>
-          {estado.dentro ? '✅' : '⭕'}
-        </div>
-        <div style={{ fontSize: '18px', fontWeight: 'bold' }}>
-          {estado.dentro ? 'Actualmente DENTRO' : 'Actualmente FUERA'}
-        </div>
-        <div style={{ fontSize: '14px', color: '#666', marginTop: '5px' }}>
-          Hora actual: {new Date().toLocaleTimeString()}
-        </div>
-      </div>
-      
-      <p style={{ marginBottom: '15px', textAlign: 'center' }}>
-        {estado.dentro 
-          ? '🔴 Escanee el QR para registrar su SALIDA' 
-          : '🟢 Escanee el QR para registrar su ENTRADA'}
-      </p>
-      
-      {!resultado && (
-        <div id="qr-reader" style={{ width: '100%', maxWidth: '500px', margin: '0 auto' }}></div>
-      )}
-      
-      {loading && (
-        <div style={{ textAlign: 'center', padding: '20px' }}>
-          <div>Procesando...</div>
-        </div>
-      )}
-      
-      {resultado && (
-        <div style={{ textAlign: 'center', marginTop: '20px' }}>
-          <div className={resultado.success ? 'btn-success' : 'btn-danger'} 
-               style={{ padding: '15px', borderRadius: '8px' }}>
-            <strong>{resultado.message}</strong>
-            <br />
-            <small>Hora: {resultado.hora}</small>
+    <div>
+      <h2 className="page-title">Mi Código QR</h2>
+
+      <div className="card" style={{ textAlign: 'center' }}>
+        <h3 className="card-title">Mi Código QR para Asistencia</h3>
+        <p></p>
+        {cargandoQR ? (
+          <div>Cargando tu QR...</div>
+        ) : (
+          <div style={{ 
+            background: 'white', 
+            padding: '20px', 
+            borderRadius: '16px',
+            display: 'inline-block',
+            margin: '20px auto',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+          }}>
+            <img 
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(
+                qrProfesor || `profesor_${user?.id}_${Date.now()}`
+              )}`}
+              alt="Mi código QR"
+              style={{ width: '250px', height: '250px' }}
+            />
           </div>
-          <button className="btn btn-primary" onClick={resetScanner} style={{ marginTop: '15px' }}>
-            Escanear otro QR
-          </button>
+        )}
+        
+        <div style={{ 
+          marginTop: '20px', 
+          padding: '12px', 
+          backgroundColor: '#e8f4fd', 
+          borderRadius: '8px',
+          fontSize: '14px'
+        }}>
+          <strong>📌 Información:</strong>
+          <ul style={{ textAlign: 'left', marginTop: '10px' }}>
+            <li>Este QR es único para ti</li>
+            <li>No compartas este QR con otras personas</li>
+          </ul>
         </div>
-      )}
+        
+        <button 
+          className="btn btn-secondary" 
+          onClick={cargarMiQR} 
+          style={{ marginTop: '20px' }}
+        >
+          🔄 Regenerar QR
+        </button>
+      </div>
     </div>
   );
 };

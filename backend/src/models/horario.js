@@ -4,7 +4,7 @@ const Horario = {
   // Obtener todos los horarios
   async findAll() {
     const result = await pool.query(`
-      SELECT h.*, a.nombre_asignatura, p.id_profesor, u.nombre, u.apellido,
+      SELECT h.*, a.nombre_asignatura, pr.id_profesor, u.nombre, u.apellido,
              c.nombre_carrera
       FROM horario h
       JOIN asignatura_profesor ap ON h.id_asignatura_profesor = ap.id_asignatura_profesor

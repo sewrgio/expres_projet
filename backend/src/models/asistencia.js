@@ -80,6 +80,25 @@ const Asistencia = {
       [profesorId, limite]
     );
     return result.rows;
+  },
+
+  // 👇 NUEVO MÉTODO: Obtener todas las asistencias (para coordinador)
+  async obtenerTodas(limite = 100) {
+    const result = await pool.query(
+      `SELECT a.*, 
+              u.nombre, u.apellido, u.correo,
+              q.descripcion as ubicacion,
+              EXTRACT(HOUR FROM (a.fecha_salida - a.fecha_entrada)) as horas_trabajadas
+       FROM asistencia a
+       JOIN profesor p ON a.id_profesor = p.id_profesor
+       JOIN usuario_rol ur ON p.id_usuario_rol = ur.id_usuario_rol
+       JOIN usuario u ON ur.id_usuario = u.id_usuario
+       LEFT JOIN qr q ON a.id_qr = q.id_qr
+       ORDER BY a.fecha_entrada DESC
+       LIMIT $1`,
+      [limite]
+    );
+    return result.rows;
   }
 };
 

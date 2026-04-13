@@ -7,9 +7,7 @@ const router = express.Router();
 
 // Escanear QR (entrada o salida automático)
 router.post('/escanear', auth, async (req, res) => {
-    const { codigo_qr } = req.body;
-
-    // Verificar que sea profesor
+    // Solo profesores pueden escanear QR
     if (!req.user.esProfesor) {
         return res.status(403).json({ error: 'Solo profesores pueden escanear QR' });
     }
@@ -17,24 +15,20 @@ router.post('/escanear', auth, async (req, res) => {
     const profesorId = req.user.id_profesor;
 
     try {
-        // 1. Validar que el QR existe
         const qr = await QR.validar(codigo_qr);
         if (!qr) {
             return res.status(404).json({ error: 'QR inválido o inactivo' });
         }
 
-        // 2. Verificar estado actual del profesor
         const estado = await Asistencia.verificarEstado(profesorId);
         
         let resultado;
         let tipo;
 
         if (estado.dentro) {
-            // Está DENTRO → Registrar SALIDA
             resultado = await Asistencia.registrarSalida(profesorId, `Salida escaneada en ${qr.ubicacion || 'coordinación'}`);
             tipo = 'salida';
         } else {
-            // Está FUERA → Registrar ENTRADA
             resultado = await Asistencia.registrarEntrada(profesorId, qr.id_qr, `Entrada escaneada en ${qr.ubicacion || 'coordinación'}`);
             tipo = 'entrada';
         }
@@ -53,15 +47,24 @@ router.post('/escanear', auth, async (req, res) => {
     }
 });
 
-// Obtener estado actual del profesor
+// Obtener estado actual del profesor (también para coordinador)
 router.get('/estado', auth, async (req, res) => {
-    if (!req.user.esProfesor) {
+    // Permitir a profesores y coordinadores
+    if (!req.user.esProfesor && !req.user.esCoordinador) {
         return res.status(403).json({ error: 'Acceso denegado' });
     }
 
     try {
-        const estado = await Asistencia.verificarEstado(req.user.id_profesor);
-        const asistenciasHoy = await Asistencia.obtenerAsistenciasHoy(req.user.id_profesor);
+        // Si es coordinador, puede ver el estado de un profesor específico (opcional)
+        let idProfesor = req.user.id_profesor;
+        
+        // Si es coordinador y envía id_profesor en query, puede ver otro profesor
+        if (req.user.esCoordinador && req.query.id_profesor) {
+            idProfesor = req.query.id_profesor;
+        }
+        
+        const estado = await Asistencia.verificarEstado(idProfesor);
+        const asistenciasHoy = await Asistencia.obtenerAsistenciasHoy(idProfesor);
 
         res.json({
             dentro: estado.dentro,
@@ -75,15 +78,38 @@ router.get('/estado', auth, async (req, res) => {
     }
 });
 
-// Obtener historial de asistencias
+// Obtener historial de asistencias (también para coordinador)
 router.get('/historial', auth, async (req, res) => {
-    if (!req.user.esProfesor) {
+    // Permitir a profesores y coordinadores
+    if (!req.user.esProfesor && !req.user.esCoordinador) {
         return res.status(403).json({ error: 'Acceso denegado' });
     }
 
     try {
-        const historial = await Asistencia.obtenerHistorial(req.user.id_profesor);
+        let idProfesor = req.user.id_profesor;
+        
+        // Si es coordinador y envía id_profesor en query, puede ver historial de otro profesor
+        if (req.user.esCoordinador && req.query.id_profesor) {
+            idProfesor = req.query.id_profesor;
+        }
+        
+        const historial = await Asistencia.obtenerHistorial(idProfesor);
         res.json(historial);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error interno' });
+    }
+});
+
+// ✅ NUEVO: Obtener todas las asistencias (solo coordinador)
+router.get('/todas', auth, async (req, res) => {
+    if (!req.user.esCoordinador) {
+        return res.status(403).json({ error: 'Solo coordinadores pueden ver todas las asistencias' });
+    }
+
+    try {
+        const asistencias = await Asistencia.obtenerTodas();
+        res.json(asistencias);
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Error interno' });
