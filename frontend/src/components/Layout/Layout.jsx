@@ -18,16 +18,15 @@ const Layout = ({ children }) => {
   };
 
   const menuItems = [
-    { path: '/', icon: '📊', label: 'Dashboard', roles: ['profesor', 'coordinador'] },
+    { path: '/', icon: '📊', label: 'Dashboard', roles: ['coordinador', 'profesor'] },
     { path: '/escanear', icon: '📷', label: 'Escanear QR', roles: ['profesor'] },
     { path: '/generar-qr', icon: '🔑', label: 'Generar QR', roles: ['coordinador'] },
     { path: '/profesores', icon: '👨‍🏫', label: 'Profesores', roles: ['coordinador'] },
-    { path: '/coordinadores', icon: '👔', label: 'Coordinadores', roles: ['coordinador'] },
+    { path: '/agregar-coordinador', icon: '👔', label: 'Agregar Coordinador', roles: ['coordinador'] },
     { path: '/carreras', icon: '🎓', label: 'Carreras', roles: ['coordinador'] },
     { path: '/asignaturas', icon: '📚', label: 'Asignaturas', roles: ['coordinador'] },
     { path: '/horarios', icon: '⏰', label: 'Horarios', roles: ['coordinador'] },
     { path: '/justificativos', icon: '📋', label: 'Justificativos', roles: ['profesor', 'coordinador'] },
-    { path: '/inasistencias', icon: '⚠️', label: 'Inasistencias', roles: ['coordinador'] },
     { path: '/reportes', icon: '📈', label: 'Reportes', roles: ['profesor', 'coordinador'] },
   ];
 
@@ -55,19 +54,11 @@ const Layout = ({ children }) => {
               {item.icon} {item.label}
             </div>
           ))}
-          {/* ELIMINADO: Cerrar Sesión del menú lateral */}
         </div>
       </div>
       <div className="main-content">
         <div className="top-header">
-          <button 
-            className="btn btn-primary" 
-            onClick={() => setMenuOpen(!menuOpen)}
-            style={{ display: 'none' }}
-          >
-            ☰
-          </button>
-          <h2>Bienvenido, {user?.nombre} {user?.apellido}</h2>
+          <h2>IUJO - Sistema de Control de Asistencias</h2>
           <div className="user-info">
             <div className="user-avatar">
               {user?.nombre?.charAt(0)}{user?.apellido?.charAt(0)}

@@ -13,8 +13,7 @@ import GestionCarreras from './components/Carreras/GestionCarreras';
 import GestionAsignaturas from './components/Asignaturas/GestionAsignaturas';
 import GestionHorarios from './components/Horarios/GestionHorarios';
 import GestionJustificativos from './components/Justificativos/GestionJustificativos';
-import GestionCoordinadores from './components/Coordinadores/GestionCoordinadores';
-import GestionInasistencias from './components/Inasistencias/GestionInasistencias';
+import AgregarCoordinador from './components/Coordinadores/AgregarCoordinador';
 import ReporteAsistencia from './components/Reportes/ReporteAsistencia';
 import './styles/global.css';
 
@@ -83,9 +82,9 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
       
-      <Route path="/coordinadores" element={
+      <Route path="/agregar-coordinador" element={
         <ProtectedRoute roles={['coordinador']}>
-          <Layout><GestionCoordinadores /></Layout>
+          <Layout><AgregarCoordinador /></Layout>
         </ProtectedRoute>
       } />
       
@@ -110,12 +109,6 @@ function AppRoutes() {
       <Route path="/justificativos" element={
         <ProtectedRoute roles={['profesor', 'coordinador']}>
           <Layout><GestionJustificativos /></Layout>
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/inasistencias" element={
-        <ProtectedRoute roles={['coordinador']}>
-          <Layout><GestionInasistencias /></Layout>
         </ProtectedRoute>
       } />
       
