@@ -7,10 +7,20 @@ const Layout = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-  const handleLogout = () => {
+  const handleLogoutClick = () => {
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmLogout = () => {
+    setShowConfirmModal(false);
     logout();
     navigate('/login');
+  };
+
+  const handleCancelLogout = () => {
+    setShowConfirmModal(false);
   };
 
   const isActive = (path) => {
@@ -27,7 +37,7 @@ const Layout = ({ children }) => {
     { path: '/asignaturas', icon: '📚', label: 'Asignaturas', roles: ['coordinador'] },
     { path: '/horarios', icon: '⏰', label: 'Horarios', roles: ['coordinador'] },
     { path: '/justificativos', icon: '📋', label: 'Justificativos', roles: ['profesor', 'coordinador'] },
-    { path: '/reportes', icon: '📈', label: 'Reportes', roles: ['profesor', 'coordinador'] },
+    { path: '/reportes', icon: '📈', label: 'Reportes', roles: ['coordinador'] },
   ];
 
   const filteredMenu = menuItems.filter(item => 
@@ -64,13 +74,31 @@ const Layout = ({ children }) => {
               {user?.nombre?.charAt(0)}{user?.apellido?.charAt(0)}
             </div>
             <span>{user?.nombre} {user?.apellido}</span>
-            <button className="logout-btn" onClick={handleLogout}>
+            <button className="logout-btn" onClick={handleLogoutClick}>
               Salir
             </button>
           </div>
         </div>
         {children}
       </div>
+
+      {/* Modal de confirmación */}
+      {showConfirmModal && (
+        <div className="modal-overlay" onClick={handleCancelLogout}>
+          <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+            <h3 className="modal-title">Cerrar Sesión</h3>
+            <p className="modal-message">¿Estás seguro de que deseas cerrar sesión?</p>
+            <div className="modal-buttons">
+              <button className="modal-btn modal-btn-cancel" onClick={handleCancelLogout}>
+                Cancelar
+              </button>
+              <button className="modal-btn modal-btn-confirm" onClick={handleConfirmLogout}>
+                Aceptar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
