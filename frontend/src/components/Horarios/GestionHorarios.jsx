@@ -14,6 +14,9 @@ const GestionHorarios = () => {
     aula: ''
   });
   const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [horarioToDelete, setHorarioToDelete] = useState(null);
 
   useEffect(() => {
     cargarDatos();
@@ -21,19 +24,14 @@ const GestionHorarios = () => {
 
   const cargarDatos = async () => {
     try {
-      console.log('🔍 Cargando horarios...');
-      const horariosRes = await api.get('/horarios');
-      console.log('✅ Horarios response:', horariosRes.data);
-      
-      console.log('🔍 Cargando asignaturas-profesores...');
-      const asignaturasRes = await api.get('/horarios/asignaturas-profesores');
-      console.log('✅ Asignaturas response:', asignaturasRes.data);
-      
+      const [horariosRes, asignaturasRes] = await Promise.all([
+        api.get('/horarios'),
+        api.get('/horarios/asignaturas-profesores')
+      ]);
       setHorarios(horariosRes.data);
       setAsignaturasProfesores(asignaturasRes.data);
     } catch (error) {
-      console.error('❌ Error cargando datos:', error);
-      console.error('❌ Detalle del error:', error.response);
+      console.error('Error cargando datos:', error);
     } finally {
       setCargando(false);
     }
@@ -41,24 +39,46 @@ const GestionHorarios = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    
+    if (!formData.id_asignatura_profesor || !formData.dia_semana || !formData.hora_inicio || !formData.hora_fin) {
+      setError('Todos los campos son obligatorios');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+
     try {
       await api.post('/horarios', formData);
       setFormData({ id_asignatura_profesor: '', dia_semana: '', hora_inicio: '', hora_fin: '', aula: '' });
       cargarDatos();
     } catch (error) {
-      console.error('Error guardando:', error);
+      setError('Error al guardar horario');
+      setTimeout(() => setError(''), 3000);
     }
   };
 
-  const handleDelete = async (id) => {
-    if (confirm('¿Eliminar este horario?')) {
+  const handleDeleteClick = (horario) => {
+    setHorarioToDelete(horario);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (horarioToDelete) {
       try {
-        await api.delete(`/horarios/${id}`);
+        await api.delete(`/horarios/${horarioToDelete.id_horario}`);
         cargarDatos();
       } catch (error) {
-        console.error('Error eliminando:', error);
+        setError('Error al eliminar horario');
+        setTimeout(() => setError(''), 3000);
       }
     }
+    setShowDeleteModal(false);
+    setHorarioToDelete(null);
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setHorarioToDelete(null);
   };
 
   if (cargando) return <div className="card">Cargando...</div>;
@@ -101,6 +121,7 @@ const GestionHorarios = () => {
               <input
                 type="time"
                 className="form-control"
+                placeholder="Hora inicio"
                 value={formData.hora_inicio}
                 onChange={(e) => setFormData({ ...formData, hora_inicio: e.target.value })}
                 required
@@ -110,6 +131,7 @@ const GestionHorarios = () => {
               <input
                 type="time"
                 className="form-control"
+                placeholder="Hora fin"
                 value={formData.hora_fin}
                 onChange={(e) => setFormData({ ...formData, hora_fin: e.target.value })}
                 required
@@ -125,6 +147,7 @@ const GestionHorarios = () => {
               onChange={(e) => setFormData({ ...formData, aula: e.target.value })}
             />
           </div>
+          {error && <div style={{ color: 'red', marginBottom: '10px' }}>{error}</div>}
           <button type="submit" className="btn btn-primary">Guardar Horario</button>
         </form>
       </div>
@@ -150,17 +173,42 @@ const GestionHorarios = () => {
                   <td>{h.nombre} {h.apellido}</td>
                   <td>{h.dia_semana}</td>
                   <td>{h.hora_inicio} - {h.hora_fin}</td>
-                  <td>{h.aula}</td>
-                  <td><button className="btn btn-danger" onClick={() => handleDelete(h.id_horario)}>🗑️</button></td>
+                  <td>{h.aula || '-'}</td>
+                  <td>
+                    <button className="btn btn-danger" onClick={() => handleDeleteClick(h)}>
+                      🗑️ Eliminar
+                    </button>
+                  </td>
                 </tr>
               ))}
               {horarios.length === 0 && (
-                <tr><td colSpan="6" style={{ textAlign: 'center' }}>No hay horarios</td></tr>
+                <tr><td colSpan="6" style={{ textAlign: 'center' }}>No hay horarios registrados</td></tr>
               )}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* Modal de confirmación para eliminar horario */}
+      {showDeleteModal && (
+        <div className="modal-overlay" onClick={handleCancelDelete}>
+          <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-icon">🗑️</div>
+            <h3 className="modal-title">Eliminar Horario</h3>
+            <p className="modal-message">
+              ¿Estás seguro de que deseas eliminar el horario de <strong>"{horarioToDelete?.nombre_asignatura}"</strong>?
+            </p>
+            <div className="modal-buttons">
+              <button className="modal-btn modal-btn-cancel" onClick={handleCancelDelete}>
+                Cancelar
+              </button>
+              <button className="modal-btn modal-btn-confirm" onClick={handleConfirmDelete}>
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
