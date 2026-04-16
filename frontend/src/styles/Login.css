@@ -1,0 +1,304 @@
+/* src/styles/Login.css */
+
+.login-background {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Fondo azul degradado */
+  background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.login-card {
+  background: white; /* Fondo blanco sólido para que resalten los textos grises */
+  padding: 40px;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+/* Icono circular superior */
+.avatar-container {
+  margin-bottom: 30px;
+}
+
+.avatar-circle {
+  width: 100px;
+  height: 100px;
+  background: #f0f2f5;
+  border-radius: 50%;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #3f51b5;
+  font-size: 50px;
+}
+
+/* Inputs con línea sutil */
+.input-group {
+  display: flex;
+  align-items: center;
+  margin-bottom: 25px;
+  padding: 10px 5px;
+  border-bottom: 1px solid #e0e0e0; /* Línea gris sutil */
+  transition: border-color 0.3s;
+}
+
+.input-group:focus-within {
+  border-bottom: 1px solid #3f51b5; /* Línea azul al escribir */
+}
+
+.input-icon {
+  font-size: 20px;
+  margin-right: 15px;
+  display: flex;
+  align-items: center;
+}
+
+.input-group input {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 16px;
+  color: #333;
+}
+
+/* Recuérdame y Olvidaste tu contraseña */
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  font-size: 14px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #888; /* Texto gris */
+  cursor: pointer;
+}
+
+.forgot-link {
+  color: #888; /* Texto gris */
+  text-decoration: none;
+}
+
+.forgot-link:hover {
+  color: #3f51b5;
+  text-decoration: underline;
+}
+
+/* Botón de Iniciar Sesión */
+.login-button {
+  width: 100%;
+  padding: 14px;
+  background-color: #3f51b5;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s;
+  text-transform: uppercase;
+}
+
+.login-button:hover {
+  background-color: #303f9f;
+}
+
+.login-button:disabled {
+  background-color: #9fa8da;
+  cursor: not-allowed;
+}
+
+/* Link de Crear Cuenta */
+.register-link {
+  margin-top: 25px;
+}
+
+.register-link a {
+  color: #fbc02d; /* Amarillo para el link inferior */
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.error-message {
+  color: #d32f2f;
+  font-size: 13px;
+  margin-bottom: 15px;
+}
+/* Fondo azul degradado */
+.login-background {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, #6a82fb 0%, #2c3e50 100%);
+  background: linear-gradient(135deg, #6a82fb 0%, #2c3e50 100%);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Tarjeta principal */
+.login-card {
+  background: white;
+  padding: 40px;
+  border-radius: 15px;
+  width: 100%;
+  max-width: 400px; /* Ancho por defecto para Login */
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  margin: 20px;
+}
+
+/* Tarjeta de registro más ancha al 100% */
+.register-card-wide {
+  max-width: 500px; /* Coincide con el ancho de la imagen */
+}
+
+/* Icono circular superior */
+.avatar-container {
+  margin-bottom: 25px;
+}
+
+.avatar-circle {
+  width: 80px;
+  height: 80px;
+  background: #f0f2f5;
+  border-radius: 50%;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #3f51b5;
+  font-size: 40px;
+}
+
+/* Título de la tarjeta */
+.login-title {
+  color: #333;
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 30px;
+}
+
+/* Estilo de Inputs con línea sutil */
+.input-group {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px; /* Espaciado ajustado */
+  padding: 10px 5px;
+  border-bottom: 1px solid #e0e0e0;
+  transition: border-color 0.3s;
+}
+
+.input-group:focus-within {
+  border-bottom: 1px solid #3f51b5;
+}
+
+.input-group input {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 16px;
+  color: #333;
+}
+
+/* Grupo de rejilla para 2 columnas (Nombre/Apellido, Contraseñas) */
+.form-group-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Dos columnas iguales */
+  gap: 15px; /* Espaciado entre columnas */
+}
+
+/* Estilos específicos para el selector de Carrera */
+.select-group {
+  position: relative;
+  cursor: pointer;
+}
+
+.input-group select {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 16px;
+  background: transparent;
+  -webkit-appearance: none; /* Oculta la flecha por defecto */
+  -moz-appearance: none;
+  appearance: none;
+}
+
+/* Placeholder gris vs texto negro al seleccionar */
+.select-placeholder {
+  color: #999;
+}
+
+.select-active {
+  color: #333;
+}
+
+/* Icono de flecha para el select */
+.select-arrow {
+  position: absolute;
+  right: 10px;
+  font-size: 14px;
+  color: #888;
+  pointer-events: none; /* Asegura que se pueda hacer clic en el select */
+}
+
+/* Botón de acción (CREAR CUENTA) */
+.login-button {
+  width: 100%;
+  padding: 14px;
+  background-color: #3f51b5;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 15px;
+}
+
+.login-button:hover {
+  background-color: #303f9f;
+}
+
+.login-button:disabled {
+  background-color: #9fa8da;
+  cursor: not-allowed;
+}
+
+/* Mensaje de error */
+.error-message {
+  color: #d32f2f;
+  font-size: 13px;
+  margin-bottom: 15px;
+}
+
+/* Link inferior */
+.register-link {
+  margin-top: 25px;
+  font-size: 14px;
+}
+
+.register-link a {
+  text-decoration: none;
+}
+
+/* Adaptabilidad para móviles */
+@media (max-width: 480px) {
+  .form-group-grid-2 {
+    grid-template-columns: 1fr; /* Una columna en pantallas pequeñas */
+  }
+}

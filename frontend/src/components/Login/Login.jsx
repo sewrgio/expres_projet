@@ -1,27 +1,43 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
+import '../../styles/Login.css';
 
 const Login = () => {
-  const [correo, setCorreo] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  const validateEmail = (email) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
-    
+
+    if (!username || !password) {
+      setError('Todos los campos son obligatorios');
+      return;
+    }
+
+    if (!validateEmail(username)) {
+      setError('Correo electrónico inválido');
+      return;
+    }
+
+    setLoading(true);
     try {
-      const user = await login(correo, password);
-      if (user.roles.includes('coordinador')) {
-        navigate('/');
-      } else {
-        navigate('/');
+      await login(username, password);
+      if (rememberMe) {
+        localStorage.setItem('rememberMe', 'true');
       }
+      navigate('/');
     } catch (err) {
       setError(err.response?.data?.error || 'Error al iniciar sesión');
     } finally {
@@ -30,40 +46,61 @@ const Login = () => {
   };
 
   return (
-    <div className="login-container">
+    <div className="login-background">
       <div className="login-card">
-        <div className="login-logo">📚</div>
-        <h2 className="login-title">Sistema de Control de Asistencias</h2>
-        <p style={{ marginBottom: '20px', color: '#666' }}>IUJO - Instituto Universitario de Jesús Obrero</p>
+        <div className="avatar-container">
+          <div className="avatar-circle">
+            👤
+          </div>
+        </div>
+
         <form onSubmit={handleSubmit}>
-          <div className="form-group">
+          <div className="input-group">
+            <span className="input-icon">👤</span>
             <input
-              type="email"
-              className="form-control"
+              type="text"
               placeholder="Correo electrónico"
-              value={correo}
-              onChange={(e) => setCorreo(e.target.value)}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               required
             />
           </div>
-          <div className="form-group">
+
+          <div className="input-group">
+            <span className="input-icon">🔒</span>
             <input
               type="password"
-              className="form-control"
               placeholder="Contraseña"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
           </div>
-          {error && <div style={{ color: 'red', marginBottom: '15px' }}>{error}</div>}
-          <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
-            {loading ? 'Ingresando...' : 'Ingresar'}
+
+          <div className="form-options">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+              />
+              Recuérdame
+            </label>
+            <Link to="/forgot-password" className="forgot-link">
+              ¿Olvidaste tu contraseña?
+            </Link>
+          </div>
+
+          {error && <div className="error-message">{error}</div>}
+
+          <button type="submit" className="login-button" disabled={loading}>
+            {loading ? 'Cargando...' : 'INICIAR SESIÓN'}
           </button>
         </form>
-        <p style={{ marginTop: '20px' }}>
-          ¿No tienes cuenta? <Link to="/register">Regístrate aquí</Link>
-        </p>
+
+        <div className="register-link">
+          <Link to="/register">Crear cuenta</Link>
+        </div>
       </div>
     </div>
   );
