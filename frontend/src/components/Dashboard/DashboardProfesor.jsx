@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../services/api';
 import { useNavigate } from 'react-router-dom';
@@ -9,11 +9,20 @@ const DashboardProfesor = () => {
   const [estado, setEstado] = useState({ dentro: false, asistenciasHoy: [] });
   const [stats, setStats] = useState({ totalHoy: 0, horasHoy: 0 });
 
-  useEffect(() => {
-    cargarEstado();
+  const calcularHoras = useCallback((asistencias) => {
+    if (!asistencias) return '0.0';
+    let total = 0;
+    asistencias.forEach(asis => {
+      if (asis.fecha_salida) {
+        const entrada = new Date(asis.fecha_entrada);
+        const salida = new Date(asis.fecha_salida);
+        total += (salida - entrada) / (1000 * 60 * 60);
+      }
+    });
+    return total.toFixed(1);
   }, []);
 
-  const cargarEstado = async () => {
+  const cargarEstado = useCallback(async () => {
     try {
       const response = await api.get('/asistencias/estado');
       setEstado(response.data);
@@ -22,25 +31,17 @@ const DashboardProfesor = () => {
         horasHoy: calcularHoras(response.data.asistenciasHoy)
       });
     } catch (error) {
-      // ✅ Silenciar error 403 (no autorizado)
       if (error.response?.status !== 403) {
         console.error('Error cargando estado:', error);
       }
     }
-  };
+  }, [calcularHoras]);
 
-  const calcularHoras = (asistencias) => {
-    let total = 0;
-    asistencias.forEach(asis => {
-      if (asis.fecha_salida) {
-        const entrada = new Date(asis.fecha_entrada);
-        const salida = new Date(asis.fecha_salida);
-        const horas = (salida - entrada) / (1000 * 60 * 60);
-        total += horas;
-      }
-    });
-    return total.toFixed(1);
-  };
+  useEffect(() => {
+    cargarEstado();
+  }, [cargarEstado]);
+
+
 
   return (
     <div>

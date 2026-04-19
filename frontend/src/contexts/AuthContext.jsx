@@ -13,27 +13,21 @@ export const AuthProvider = ({ children }) => {
     const verificarSesion = async () => {
       const token = localStorage.getItem('token');
       const userData = localStorage.getItem('user');
-      
-      console.log('🔍 Verificando sesión...');
-      console.log('Token existe:', !!token);
-      console.log('UserData existe:', !!userData);
-      
+
       if (token && userData) {
         try {
-          // El interceptor de api.js ya agrega el token automáticamente
-          const response = await api.get('/auth/verify');
-          console.log('✅ Token válido:', response.data);
+          await api.get('/auth/verify');
           setUser(JSON.parse(userData));
-        } catch (error) {
-          console.error('❌ Token inválido:', error.response?.status);
+        } catch {
+          // Token inválido o expirado — limpiar sesión
           localStorage.removeItem('token');
           localStorage.removeItem('user');
           setUser(null);
         }
       } else {
-        console.log('⚠️ No hay token o userData');
         setUser(null);
       }
+
       setLoading(false);
     };
 

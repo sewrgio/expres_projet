@@ -1,6 +1,6 @@
+import 'dotenv/config'; // Esto carga las variables de entorno antes de procesar los demás imports
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 
 // Importar rutas
 import authRoutes from './src/routes/auth.js';
@@ -13,15 +13,21 @@ import horarioRoutes from './src/routes/horarios.js';
 import justificativoRoutes from './src/routes/justificativos.js';
 import coordinadorRoutes from './src/routes/coordinadores.js';
 
-dotenv.config();
-
 const app = express();
+
+// Middlewares base (se recomienda que vayan primero)
 app.use(cors());
 app.use(express.json());
 
-// Ruta de prueba
-app.get('/api/test', (req, res) => {
-  res.json({ message: 'API funcionando correctamente' });
+// Middleware de logging (ahora puede acceder al req.body si lo necesitaras en un futuro)
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+  next();
+});
+
+// Ruta de prueba / health check
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 // Rutas de la API
@@ -35,25 +41,20 @@ app.use('/api/horarios', horarioRoutes);
 app.use('/api/justificativos', justificativoRoutes);
 app.use('/api/coordinadores', coordinadorRoutes);
 
+// Manejo de rutas no encontradas (404)
+app.use((req, res) => {
+  res.status(404).json({ error: `Ruta no encontrada: ${req.method} ${req.path}` });
+});
+
+// Manejo global de errores (500)
+app.use((err, req, res, next) => {
+  console.error('Error no manejado:', err.stack);
+  res.status(500).json({ error: 'Error interno del servidor' });
+});
+
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Servidor corriendo en http://0.0.0.0:${PORT}`);
-  console.log(`📚 API endpoints disponibles:`);
-  console.log(`   - POST /api/auth/login`);
-  console.log(`   - GET  /api/profesores`);
-  console.log(`   - GET  /api/carreras`);
-  console.log(`   - POST /api/qr/generar`);
-  console.log(`   - POST /api/asistencias/escanear`);
-  console.log(`   - GET  /api/asignaturas`);
-  console.log(`   - GET  /api/horarios`);
-  console.log(`   - GET  /api/justificativos`);
-  console.log(`   - GET  /api/coordinadores`);
-});
-
-// Middleware para ver todas las peticiones
-app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path}`);
-  console.log('Body:', req.body);
-  next();
+  console.log(`📚 API disponible en /api`);
 });

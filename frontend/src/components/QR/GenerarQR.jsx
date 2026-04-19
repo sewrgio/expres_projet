@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import api from '../../services/api';
-import { useAuth } from '../../contexts/AuthContext';
 
 const GenerarQR = () => {
-  const { user } = useAuth();
   const [descripcion, setDescripcion] = useState('');
   const [ubicacion, setUbicacion] = useState('');
   const [qrGenerado, setQrGenerado] = useState(null);
@@ -14,12 +12,12 @@ const GenerarQR = () => {
     e.preventDefault();
     setCargando(true);
     setError('');
-    
+
     try {
       const response = await api.post('/qr/generar', { descripcion, ubicacion });
       setQrGenerado(response.data.qr);
-    } catch (error) {
-      setError(error.response?.data?.error || 'Error al generar QR');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Error al generar QR');
     } finally {
       setCargando(false);
     }
@@ -27,6 +25,10 @@ const GenerarQR = () => {
 
   const handleImprimir = () => {
     const ventanaImpresion = window.open('', '_blank');
+    if (!ventanaImpresion) {
+      setError('El navegador bloqueó la ventana emergente. Permite las ventanas emergentes e intenta de nuevo.');
+      return;
+    }
     ventanaImpresion.document.write(`
       <html>
         <head>
@@ -40,6 +42,7 @@ const GenerarQR = () => {
               font-family: Arial, sans-serif;
               margin: 0;
               padding: 20px;
+              box-sizing: border-box;
             }
             .qr-container {
               text-align: center;
@@ -69,13 +72,7 @@ const GenerarQR = () => {
               height: 250px;
             }
             @media print {
-              body {
-                margin: 0;
-                padding: 0;
-              }
-              .no-print {
-                display: none;
-              }
+              body { margin: 0; padding: 0; }
             }
           </style>
         </head>
@@ -137,26 +134,31 @@ const GenerarQR = () => {
               {cargando ? 'Generando...' : '🔑 Generar QR'}
             </button>
           </form>
-          {error && <div style={{ marginTop: '15px', color: 'red' }}>{error}</div>}
+          {error && (
+            <div style={{ marginTop: '15px', color: 'red', padding: '10px', background: '#fff0f0', borderRadius: '8px' }}>
+              ⚠️ {error}
+            </div>
+          )}
         </div>
       ) : (
         <div className="card" style={{ textAlign: 'center' }}>
           <h3 className="card-title">QR Generado</h3>
-          
-          <div style={{ 
-            background: 'white', 
-            padding: '20px', 
+
+          <div style={{
+            background: 'white',
+            padding: '20px',
             borderRadius: '16px',
             display: 'inline-block',
-            margin: '20px auto'
+            margin: '20px auto',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
           }}>
-            <img 
-              src={qrGenerado.imagen} 
-              alt="QR Code" 
-              style={{ width: '250px', height: '250px' }}
+            <img
+              src={qrGenerado.imagen}
+              alt="QR Code"
+              style={{ width: '250px', height: '250px', display: 'block' }}
             />
           </div>
-          
+
           <div style={{ marginTop: '20px' }}>
             <p><strong>Ubicación:</strong> {ubicacion || 'No especificada'}</p>
             <p><strong>Descripción:</strong> {descripcion || 'Sin descripción'}</p>

@@ -19,7 +19,7 @@ const ReporteAsistencia = () => {
     setCargando(true);
     try {
       const [asisRes, inasRes] = await Promise.all([
-        api.get('/asistencias'),
+        api.get('/asistencias/todas'),
         api.get('/asistencias/faltas')
       ]);
       setAsistencias(asisRes.data);
@@ -63,16 +63,26 @@ const ReporteAsistencia = () => {
       doc.text('ASISTENCIAS', 14, yOffset);
       yOffset += 7;
       
-      const tableAsistencias = asisFiltradas.map(a => [
-        a.nombre || 'N/A',
-        new Date(a.fecha_entrada).toLocaleDateString(),
-        new Date(a.fecha_entrada).toLocaleTimeString(),
-        a.fecha_salida ? new Date(a.fecha_salida).toLocaleTimeString() : '--',
-        a.ubicacion || 'N/A'
-      ]);
+      const tableAsistencias = asisFiltradas.map(a => {
+        const entrada = new Date(a.fecha_entrada);
+        const salida = a.fecha_salida ? new Date(a.fecha_salida) : null;
+        const totalMinutes = salida ? (salida - entrada) / (1000 * 60) : 0;
+        const horasReloj = salida ? (totalMinutes / 60).toFixed(1) : '--';
+        const horasAcademicas = salida ? (totalMinutes / 45).toFixed(1) : '--';
+
+        return [
+          a.nombre || 'N/A',
+          entrada.toLocaleDateString(),
+          entrada.toLocaleTimeString(),
+          salida ? salida.toLocaleTimeString() : '--',
+          horasReloj,
+          horasAcademicas,
+          a.ubicacion || 'N/A'
+        ];
+      });
       
       doc.autoTable({
-        head: [['Profesor', 'Fecha', 'Entrada', 'Salida', 'Ubicación']],
+        head: [['Personal', 'Fecha', 'Entrada', 'Salida', 'Hrs Reloj', 'Hrs Acad.', 'Ubicación']],
         body: tableAsistencias,
         startY: yOffset,
         theme: 'striped',
@@ -148,25 +158,28 @@ const ReporteAsistencia = () => {
           <div className="table-container">
             <table className="table">
               <thead>
-                <tr><th>Profesor</th><th>Fecha</th><th>Entrada</th><th>Salida</th><th>Horas</th><th>Ubicación</th></tr>
+                <tr><th>Personal</th><th>Fecha</th><th>Entrada</th><th>Salida</th><th>Hrs Reloj</th><th>Hrs Acad.</th><th>Ubicación</th></tr>
               </thead>
               <tbody>
                 {asistenciasFiltradas.map(asis => {
                   const entrada = new Date(asis.fecha_entrada);
                   const salida = asis.fecha_salida ? new Date(asis.fecha_salida) : null;
-                  const horas = salida ? ((salida - entrada) / (1000 * 60 * 60)).toFixed(1) : '-';
+                  const min = salida ? (salida - entrada) / (1000 * 60) : 0;
+                  const hReloj = salida ? (min / 60).toFixed(1) : '-';
+                  const hAcad = salida ? (min / 45).toFixed(1) : '-';
                   return (
                     <tr key={asis.id_asistencia}>
                       <td>{asis.nombre} {asis.apellido}</td>
                       <td>{entrada.toLocaleDateString()}</td>
                       <td>{entrada.toLocaleTimeString()}</td>
                       <td>{salida ? salida.toLocaleTimeString() : '--'}</td>
-                      <td>{horas}</td>
+                      <td>{hReloj}</td>
+                      <td>{hAcad}</td>
                       <td>{asis.ubicacion || '-'}</td>
                     </tr>
                   );
                 })}
-                {asistenciasFiltradas.length === 0 && <tr><td colSpan="6">No hay asistencias</td></tr>}
+                {asistenciasFiltradas.length === 0 && <tr><td colSpan="7">No hay asistencias</td></tr>}
               </tbody>
             </table>
           </div>

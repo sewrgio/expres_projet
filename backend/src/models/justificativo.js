@@ -30,6 +30,31 @@ const Justificativo = {
     return result.rows;
   },
 
+  // ✅ NUEVO: Obtener justificativos SOLO de coordinadores (para auditor)
+  async obtenerDeCoordinadores() {
+    const result = await pool.query(`
+      SELECT j.*, 
+             u.nombre, u.apellido, u.correo, u.cedula,
+             a.fecha_entrada, a.fecha_salida,
+             asig.nombre_asignatura
+      FROM justificativo j
+      JOIN asistencia a ON j.id_asistencia = a.id_asistencia
+      JOIN profesor p ON a.id_profesor = p.id_profesor
+      JOIN usuario_rol ur ON p.id_usuario_rol = ur.id_usuario_rol
+      JOIN usuario u ON ur.id_usuario = u.id_usuario
+      LEFT JOIN horario h ON a.id_horario = h.id_horario
+      LEFT JOIN asignatura_profesor ap ON h.id_asignatura_profesor = ap.id_asignatura_profesor
+      LEFT JOIN asignatura asig ON ap.id_asignatura = asig.id_asignatura
+      WHERE EXISTS (
+        SELECT 1 FROM coordinador c
+        JOIN usuario_rol ur2 ON c.id_usuario_rol = ur2.id_usuario_rol
+        WHERE ur2.id_usuario = u.id_usuario
+      )
+      ORDER BY j.fecha_solicitud DESC
+    `);
+    return result.rows;
+  },
+
   // Obtener justificativos por profesor
   async findByProfesor(profesorId) {
     const result = await pool.query(`

@@ -15,17 +15,21 @@ const GestionJustificativos = () => {
   const [cargando, setCargando] = useState(true);
   const { user } = useAuth();
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { cargarDatos(); }, []);
 
   const cargarDatos = async () => {
     try {
-      if (user?.roles?.includes('profesor')) {
-        const [justRes, asisRes] = await Promise.all([api.get('/justificativos/mis-justificativos'), api.get('/asistencias')]);
-        setJustificativos(justRes.data);
-        setAsistencias(asisRes.data);
+      if (user?.roles?.includes('auditor')) {
+        const res = await api.get('/justificativos');
+        setJustificativos(res.data);
       } else if (user?.roles?.includes('coordinador')) {
         const res = await api.get('/justificativos/pendientes');
         setJustificativos(res.data);
+      } else if (user?.roles?.includes('profesor')) {
+        const [justRes, asisRes] = await Promise.all([api.get('/justificativos/mis-justificativos'), api.get('/asistencias')]);
+        setJustificativos(justRes.data);
+        setAsistencias(asisRes.data);
       }
     } catch (error) { console.error(error); } finally { setCargando(false); }
   };
@@ -70,7 +74,7 @@ const GestionJustificativos = () => {
 
   return (
     <>
-      {user?.roles?.includes('profesor') && (
+      {(user?.roles?.includes('profesor') || user?.roles?.includes('coordinador')) && !user?.roles?.includes('auditor') && (
         <div className="card">
           <h3 className="card-title">Solicitar Justificativo</h3>
           {!mostrarForm ? <button className="btn btn-primary" onClick={() => setMostrarForm(true)}>+ Nueva Solicitud</button> :
@@ -87,7 +91,7 @@ const GestionJustificativos = () => {
         </div>
       )}
 
-      {user?.roles?.includes('coordinador') && (
+      {(user?.roles?.includes('coordinador') || user?.roles?.includes('auditor')) && (
         <div className="card">
           <h3 className="card-title">Reportes de Justificativos</h3>
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
@@ -102,10 +106,10 @@ const GestionJustificativos = () => {
       )}
 
       <div className="card">
-        <h3 className="card-title">{user?.roles?.includes('coordinador') ? 'Solicitudes Pendientes' : 'Mis Justificativos'}</h3>
+        <h3 className="card-title">{(user?.roles?.includes('coordinador') || user?.roles?.includes('auditor')) ? 'Solicitudes de Justificativos' : 'Mis Justificativos'}</h3>
         <div className="table-container">
           <table className="table">
-            <thead><tr><th>Fecha</th><th>Asignatura</th><th>Motivo</th><th>Estado</th><th>Respuesta</th>{user?.roles?.includes('coordinador') && <th>Acciones</th>}</tr></thead>
+            <thead><tr><th>Fecha</th><th>Asignatura</th><th>Motivo</th><th>Estado</th><th>Respuesta</th>{(user?.roles?.includes('coordinador') || user?.roles?.includes('auditor')) && <th>Acciones</th>}</tr></thead>
             <tbody>
               {justificativos.map(j => (
                 <tr key={j.id_justificativo}>
@@ -114,7 +118,7 @@ const GestionJustificativos = () => {
                   <td>{j.motivo}</td>
                   <td><span className={`status-badge ${j.estado === 'aprobado' ? 'status-success' : j.estado === 'rechazado' ? 'status-danger' : 'status-warning'}`}>{j.estado}</span></td>
                   <td>{j.observaciones_coordinador || '-'}</td>
-                  {user?.roles?.includes('coordinador') && j.estado === 'pendiente' && (<td><button className="btn btn-success" style={{ marginRight: '5px' }} onClick={() => handleAprobar(j.id_justificativo)}>✅</button><button className="btn btn-danger" onClick={() => handleRechazar(j.id_justificativo)}>❌</button></td>)}
+                  {(user?.roles?.includes('coordinador') || user?.roles?.includes('auditor')) && j.estado === 'pendiente' && (<td><button className="btn btn-success" style={{ marginRight: '5px' }} onClick={() => handleAprobar(j.id_justificativo)}>✅</button><button className="btn btn-danger" onClick={() => handleRechazar(j.id_justificativo)}>❌</button></td>)}
                 </tr>
               ))}
               {justificativos.length === 0 && <tr><td colSpan="6">No hay solicitudes</td></tr>}

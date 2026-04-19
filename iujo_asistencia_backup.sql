@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict Pg1zuY8l88DpnDzucm4BnB8ayQuu97SXyYu1yiSvqIg3C8NdiSv5ew1CjXvqMbD
+\restrict Z5NMGbjxZaPwWyTGsjfK6DNQppVoErff5k1KFDpzHa8s5n4weVLIUPdhghNA7HV
 
--- Dumped from database version 18.3
--- Dumped by pg_dump version 18.3
+-- Dumped from database version 18.2
+-- Dumped by pg_dump version 18.2
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -644,6 +644,7 @@ COPY public.qr (id_qr, id_coordinador, codigo_qr, fecha_creacion, activo, descri
 COPY public.rol (id_rol, nombre_rol, descripcion, activo) FROM stdin;
 1	profesor	\N	t
 2	coordinador	\N	t
+3	auditor	Auditor del sistema	t
 \.
 
 
@@ -654,6 +655,7 @@ COPY public.rol (id_rol, nombre_rol, descripcion, activo) FROM stdin;
 COPY public.usuario (id_usuario, nombre, apellido, cedula, correo, telefono, activo, contrasena) FROM stdin;
 2	Cesar	Nucete	123456	cesar.nucete123@gmail.com	1234567	t	$2a$10$yV1pI8KBA9l7uQz/UiVR4.jaHxgXQME6VBUHB/lvVX5J334R.skym
 3	Juan	Coordinador	88888888	coordinador@iujo.com	04121234567	t	$2a$10$QD2UdNWqkHqZk0oP31esIuxtyyGufgPklcJIxxpUApLH7wKhuSFBK
+4	Admin	Auditor	V-00000000	auditor@iujo.edu	0000	t	$2a$10$QD2UdNWqkHqZk0oP31esIuxtyyGufgPklcJIxxpUApLH7wKhuSFBK
 \.
 
 
@@ -664,6 +666,7 @@ COPY public.usuario (id_usuario, nombre, apellido, cedula, correo, telefono, act
 COPY public.usuario_rol (id_usuario_rol, id_usuario, id_rol, fecha_desde, fecha_hasta, activo) FROM stdin;
 2	2	1	2026-04-12	\N	t
 3	3	2	2026-04-12	\N	t
+4	4	3	2026-04-18	\N	t
 \.
 
 
@@ -762,21 +765,21 @@ SELECT pg_catalog.setval('public.qr_id_qr_seq', 5, true);
 -- Name: rol_id_rol_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.rol_id_rol_seq', 2, true);
+SELECT pg_catalog.setval('public.rol_id_rol_seq', 3, true);
 
 
 --
 -- Name: usuario_id_usuario_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.usuario_id_usuario_seq', 3, true);
+SELECT pg_catalog.setval('public.usuario_id_usuario_seq', 4, true);
 
 
 --
 -- Name: usuario_rol_id_usuario_rol_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.usuario_rol_id_usuario_rol_seq', 3, true);
+SELECT pg_catalog.setval('public.usuario_rol_id_usuario_rol_seq', 4, true);
 
 
 --
@@ -1135,5 +1138,5 @@ ALTER TABLE ONLY public.usuario_rol
 -- PostgreSQL database dump complete
 --
 
-\unrestrict Pg1zuY8l88DpnDzucm4BnB8ayQuu97SXyYu1yiSvqIg3C8NdiSv5ew1CjXvqMbD
+\unrestrict Z5NMGbjxZaPwWyTGsjfK6DNQppVoErff5k1KFDpzHa8s5n4weVLIUPdhghNA7HV
 

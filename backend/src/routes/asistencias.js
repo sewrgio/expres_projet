@@ -7,9 +7,24 @@ const router = express.Router();
 
 // Escanear QR (entrada o salida automático)
 router.post('/escanear', auth, async (req, res) => {
-    // Solo profesores pueden escanear QR
-    if (!req.user.esProfesor) {
-        return res.status(403).json({ error: 'Solo profesores pueden escanear QR' });
+    // Permitir a profesores, coordinadores y auditores
+    if (!req.user.esProfesor && !req.user.esCoordinador && req.user.rol !== 'auditor') {
+        return res.status(403).json({ error: 'No tienes permiso para escanear QR' });
+    }
+
+    const { codigo_qr } = req.body;
+
+    if (!codigo_qr) {
+        return res.status(400).json({ error: 'El código QR es requerido' });
+    }
+
+    // Validación de horario (7:00 AM a 9:00 PM)
+    const horaActual = new Date().getHours();
+    if (horaActual < 7 || horaActual >= 21) {
+        return res.status(400).json({ 
+            success: false, 
+            error: 'El horario de escaneo es solo de 7:00 AM a 9:00 PM' 
+        });
     }
 
     const profesorId = req.user.id_profesor;
@@ -110,6 +125,18 @@ router.get('/todas', auth, async (req, res) => {
     try {
         const asistencias = await Asistencia.obtenerTodas();
         res.json(asistencias);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error interno' });
+    }
+});
+
+// ✅ NUEVO: Obtener faltas/inasistencias (para auditor/coordinador)
+router.get('/faltas', auth, async (req, res) => {
+    try {
+        // Por ahora retornamos un arreglo vacío para la tabla de inasistencias
+        // Hasta que se defina la lógica exacta de cálculo de faltas
+        res.json([]);
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Error interno' });

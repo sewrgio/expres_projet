@@ -8,9 +8,11 @@ const GestionCarreras = () => {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [carreraToDelete, setCarreraToDelete] = useState(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     cargarCarreras();
   }, []);
 
@@ -29,19 +31,37 @@ const GestionCarreras = () => {
     e.preventDefault();
     if (!nombre.trim()) return;
 
+    if (editando) {
+      setShowEditModal(true);
+      return;
+    }
+
     try {
-      if (editando) {
-        await api.put(`/carreras/${editando}`, { nombre_carrera: nombre });
-        setEditando(null);
-      } else {
-        await api.post('/carreras', { nombre_carrera: nombre });
-      }
+      await api.post('/carreras', { nombre_carrera: nombre });
       setNombre('');
       cargarCarreras();
     } catch (error) {
       setError(error.response?.data?.error || 'Error al guardar');
       setTimeout(() => setError(''), 3000);
     }
+  };
+
+  const handleConfirmEdit = async () => {
+    try {
+      await api.put(`/carreras/${editando}`, { nombre_carrera: nombre });
+      setEditando(null);
+      setNombre('');
+      setShowEditModal(false);
+      cargarCarreras();
+    } catch (error) {
+      setError(error.response?.data?.error || 'Error al actualizar');
+      setTimeout(() => setError(''), 3000);
+      setShowEditModal(false);
+    }
+  };
+
+  const handleCancelEditModal = () => {
+    setShowEditModal(false);
   };
 
   const handleEdit = (carrera) => {
@@ -160,6 +180,27 @@ const GestionCarreras = () => {
               </button>
               <button className="modal-btn modal-btn-confirm" onClick={handleConfirmDelete}>
                 Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmación para editar carrera */}
+      {showEditModal && (
+        <div className="modal-overlay" onClick={handleCancelEditModal}>
+          <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-icon">✏️</div>
+            <h3 className="modal-title">Editar Carrera</h3>
+            <p className="modal-message">
+              ¿Estás seguro de que deseas guardar los cambios realizados en esta carrera?
+            </p>
+            <div className="modal-buttons">
+              <button className="modal-btn modal-btn-cancel" onClick={handleCancelEditModal}>
+                Cancelar
+              </button>
+              <button className="modal-btn modal-btn-confirm" onClick={handleConfirmEdit}>
+                Guardar Cambios
               </button>
             </div>
           </div>

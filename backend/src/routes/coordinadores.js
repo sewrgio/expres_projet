@@ -6,7 +6,7 @@ import bcrypt from 'bcryptjs';
 
 const router = express.Router();
 
-// Obtener todos los coordinadores (solo admin/coordinador)
+// Obtener todos los coordinadores (solo auditor/coordinador)
 router.get('/', auth, async (req, res) => {
   try {
     const coordinadores = await Coordinador.findAll();
@@ -33,7 +33,7 @@ router.get('/:id', auth, async (req, res) => {
 
 // Obtener usuarios disponibles para ser coordinadores
 router.get('/disponibles/usuarios', auth, async (req, res) => {
-  if (!req.user.esCoordinador) {
+  if (!req.user.esCoordinador && req.user.rol !== 'auditor') {
     return res.status(403).json({ error: 'Acceso denegado' });
   }
   try {
@@ -47,7 +47,7 @@ router.get('/disponibles/usuarios', auth, async (req, res) => {
 
 // Obtener carreras sin coordinador
 router.get('/disponibles/carreras', auth, async (req, res) => {
-  if (!req.user.esCoordinador) {
+  if (!req.user.esCoordinador && req.user.rol !== 'auditor') {
     return res.status(403).json({ error: 'Acceso denegado' });
   }
   try {
@@ -61,8 +61,8 @@ router.get('/disponibles/carreras', auth, async (req, res) => {
 
 // Crear nuevo coordinador (con usuario nuevo o existente)
 router.post('/', auth, async (req, res) => {
-  if (!req.user.esCoordinador) {
-    return res.status(403).json({ error: 'Acceso denegado' });
+  if (req.user.rol !== 'auditor') {
+    return res.status(403).json({ error: 'Solo el auditor puede agregar coordinadores' });
   }
 
   const { nombre, apellido, cedula, correo, telefono, password, id_carrera, usuarioExistenteId } = req.body;
@@ -107,8 +107,8 @@ router.post('/', auth, async (req, res) => {
 
 // Actualizar coordinador
 router.put('/:id', auth, async (req, res) => {
-  if (!req.user.esCoordinador) {
-    return res.status(403).json({ error: 'Acceso denegado' });
+  if (req.user.rol !== 'auditor') {
+    return res.status(403).json({ error: 'Solo el auditor puede editar coordinadores' });
   }
 
   const { id_carrera } = req.body;
@@ -123,8 +123,8 @@ router.put('/:id', auth, async (req, res) => {
 
 // Eliminar coordinador
 router.delete('/:id', auth, async (req, res) => {
-  if (!req.user.esCoordinador) {
-    return res.status(403).json({ error: 'Acceso denegado' });
+  if (req.user.rol !== 'auditor') {
+    return res.status(403).json({ error: 'Solo el auditor puede eliminar coordinadores' });
   }
 
   try {
