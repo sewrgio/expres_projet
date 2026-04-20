@@ -1,8 +1,10 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import Usuario from '../models/usuario.js';
 import pool from '../config/db.js';
+import { sendVerificationEmail, sendRecoveryCode } from '../services/emailService.js';
 
 const router = express.Router();
 
@@ -23,11 +25,12 @@ router.post('/register', async (req, res) => {
     await client.query('BEGIN');
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    const verificationToken = crypto.randomBytes(32).toString('hex');
 
     const userRes = await client.query(
-      `INSERT INTO usuario (nombre, apellido, cedula, correo, telefono, contrasena, activo)
-       VALUES ($1, $2, $3, $4, $5, $6, true) RETURNING id_usuario`,
-      [nombre, apellido, cedula, correo, telefono, hashedPassword]
+      `INSERT INTO usuario (nombre, apellido, cedula, correo, telefono, contrasena, activo, email_verificado, codigo_verificacion)
+       VALUES ($1, $2, $3, $4, $5, $6, true, false, $7) RETURNING id_usuario`,
+      [nombre, apellido, cedula, correo, telefono, hashedPassword, verificationToken]
     );
     const userId = userRes.rows[0].id_usuario;
 
@@ -57,7 +60,17 @@ router.post('/register', async (req, res) => {
 
     await client.query('COMMIT');
 
-    res.status(201).json({ success: true, message: 'Registrado con éxito' });
+    // Intentar enviar correo de verificación
+    try {
+      console.log(`Intentando enviar email de verificación a ${correo}...`);
+      await sendVerificationEmail(correo, nombre, verificationToken);
+      console.log('Email de verificación enviado con éxito');
+    } catch (mailError) {
+      console.error('Error enviando email de verificación:', mailError.message);
+      // No fallamos el registro, pero avisamos en el log
+    }
+
+    res.status(201).json({ success: true, message: 'Registrado con éxito. Por favor verifica tu correo.' });
 
   } catch (error) {
     if (client) {
@@ -76,6 +89,27 @@ router.post('/register', async (req, res) => {
   }
 });
 
+// --- VERIFICAR EMAIL ---
+router.get('/verify-email', async (req, res) => {
+  const { token } = req.query;
+
+  if (!token) {
+    return res.status(400).json({ error: 'Token es requerido' });
+  }
+
+  try {
+    const user = await Usuario.verifyEmail(token);
+    if (!user) {
+      return res.status(400).json({ error: 'Token inválido o expirado' });
+    }
+
+    res.json({ success: true, message: 'Correo verificado con éxito' });
+  } catch (error) {
+    console.error('Error verificando email:', error.message);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
 // --- LOGIN ---
 router.post('/login', async (req, res) => {
   const { correo, password } = req.body;
@@ -89,6 +123,10 @@ router.post('/login', async (req, res) => {
 
     if (!usuario) {
       return res.status(401).json({ error: 'Credenciales inválidas' });
+    }
+
+    if (!usuario.email_verificado) {
+      return res.status(403).json({ error: 'Por favor, verifica tu correo antes de iniciar sesión' });
     }
 
     const passValido = await bcrypt.compare(password, usuario.contrasena);
@@ -157,6 +195,9 @@ router.post('/login', async (req, res) => {
       { expiresIn: '8h' }
     );
 
+    // Actualizar session_token para invalidar sesiones anteriores
+    await Usuario.updateSessionToken(usuario.id_usuario, token);
+
     res.json({
       success: true,
       token,
@@ -178,6 +219,74 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// --- RECUPERACIÓN DE CONTRASEÑA ---
+
+// 1. Solicitar recuperación
+router.post('/forgot-password', async (req, res) => {
+  const { correo } = req.body;
+
+  try {
+    const usuario = await Usuario.findByEmail(correo);
+    if (!usuario) {
+      return res.status(404).json({ error: 'No existe un usuario con ese correo' });
+    }
+
+    const code = Math.floor(1000 + Math.random() * 9000).toString();
+    await Usuario.setRecoveryCode(correo, code);
+
+    console.log(`Intentando enviar código de recuperación a ${correo}...`);
+    try {
+      await sendRecoveryCode(correo, code);
+      console.log('Código de recuperación enviado con éxito');
+      res.json({ success: true, message: 'Código de recuperación enviado' });
+    } catch (mailError) {
+      console.error('Error enviando email de recuperación:', mailError.message);
+      res.status(500).json({ error: 'Error al enviar el correo. Por favor intenta más tarde.', detalle: mailError.message });
+    }
+
+  } catch (error) {
+    console.error('Error en forgot-password:', error.message);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// 2. Validar código
+router.post('/verify-recovery-code', async (req, res) => {
+  const { correo, codigo } = req.body;
+
+  try {
+    const user = await Usuario.validateRecoveryCode(correo, codigo);
+    if (!user) {
+      return res.status(400).json({ error: 'Código inválido' });
+    }
+
+    res.json({ success: true, message: 'Código válido' });
+  } catch (error) {
+    console.error('Error en verify-recovery-code:', error.message);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// 3. Resetear contraseña
+router.post('/reset-password', async (req, res) => {
+  const { correo, codigo, password } = req.body;
+
+  try {
+    const user = await Usuario.validateRecoveryCode(correo, codigo);
+    if (!user) {
+      return res.status(400).json({ error: 'Código inválido o expirado' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await Usuario.updatePassword(correo, hashedPassword);
+
+    res.json({ success: true, message: 'Contraseña actualizada con éxito' });
+  } catch (error) {
+    console.error('Error en reset-password:', error.message);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
 // --- VERIFICAR TOKEN ---
 router.get('/verify', async (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
@@ -190,7 +299,7 @@ router.get('/verify', async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'iujo_secret_key_2024');
 
     const userQuery = await pool.query(
-      'SELECT id_usuario, nombre, apellido, correo FROM usuario WHERE id_usuario = $1 AND activo = true',
+      'SELECT id_usuario, nombre, apellido, correo, session_token FROM usuario WHERE id_usuario = $1 AND activo = true',
       [decoded.id]
     );
 
@@ -198,7 +307,14 @@ router.get('/verify', async (req, res) => {
       return res.status(401).json({ error: 'Usuario no encontrado' });
     }
 
-    res.json({ valid: true, user: userQuery.rows[0] });
+    const usuario = userQuery.rows[0];
+
+    // Verificar si el token es el último generado (prevenir sesiones simultáneas)
+    if (usuario.session_token !== token) {
+      return res.status(401).json({ error: 'Sesión invalidada. Alguien más inició sesión.' });
+    }
+
+    res.json({ valid: true, user: usuario });
   } catch (error) {
     console.error('Error verificando token:', error.message);
     res.status(401).json({ error: 'Token inválido o expirado' });

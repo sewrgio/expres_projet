@@ -33,10 +33,7 @@ const Login = () => {
 
     setLoading(true);
     try {
-      await login(username, password);
-      if (rememberMe) {
-        localStorage.setItem('rememberMe', 'true');
-      }
+      await login(username, password, rememberMe);
       navigate('/');
     } catch (err) {
       setError(err.response?.data?.error || 'Error al iniciar sesión');

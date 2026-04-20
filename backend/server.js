@@ -12,6 +12,7 @@ import asignaturaRoutes from './src/routes/asignaturas.js';
 import horarioRoutes from './src/routes/horarios.js';
 import justificativoRoutes from './src/routes/justificativos.js';
 import coordinadorRoutes from './src/routes/coordinadores.js';
+import { sendRecoveryCode } from './src/services/emailService.js';
 
 const app = express();
 
@@ -28,6 +29,16 @@ app.use((req, res, next) => {
 // Ruta de prueba / health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Ruta de diagnóstico SMTP (solo en desarrollo)
+app.get('/api/test-email', async (req, res) => {
+  try {
+    await sendRecoveryCode(process.env.EMAIL_USER, '0000');
+    res.json({ success: true, message: `Correo de prueba enviado a ${process.env.EMAIL_USER}` });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
 });
 
 // Rutas de la API
