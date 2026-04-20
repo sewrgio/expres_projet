@@ -112,7 +112,8 @@ router.get('/verify-email', async (req, res) => {
 
 // --- LOGIN ---
 router.post('/login', async (req, res) => {
-  const { correo, password } = req.body;
+  const { correo, password, platform } = req.body;
+  const plataforma = platform || 'web';
 
   if (!correo || !password) {
     return res.status(400).json({ error: 'Correo y contraseña son requeridos' });
@@ -195,8 +196,8 @@ router.post('/login', async (req, res) => {
       { expiresIn: '8h' }
     );
 
-    // Actualizar session_token para invalidar sesiones anteriores
-    await Usuario.updateSessionToken(usuario.id_usuario, token);
+    // Actualizar session_token según plataforma (web o app)
+    await Usuario.updateSessionToken(usuario.id_usuario, token, plataforma);
 
     res.json({
       success: true,
@@ -290,6 +291,7 @@ router.post('/reset-password', async (req, res) => {
 // --- VERIFICAR TOKEN ---
 router.get('/verify', async (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
+  const platform = req.headers['x-platform'] || 'web';
 
   if (!token) {
     return res.status(401).json({ error: 'No token provided' });
@@ -298,8 +300,9 @@ router.get('/verify', async (req, res) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'iujo_secret_key_2024');
 
+    const column = platform === 'app' ? 'session_token_app' : 'session_token';
     const userQuery = await pool.query(
-      'SELECT id_usuario, nombre, apellido, correo, session_token FROM usuario WHERE id_usuario = $1 AND activo = true',
+      `SELECT id_usuario, nombre, apellido, correo, ${column} as active_token FROM usuario WHERE id_usuario = $1 AND activo = true`,
       [decoded.id]
     );
 
@@ -309,12 +312,11 @@ router.get('/verify', async (req, res) => {
 
     const usuario = userQuery.rows[0];
 
-    // Verificar si el token es el último generado (prevenir sesiones simultáneas)
-    if (usuario.session_token !== token) {
-      return res.status(401).json({ error: 'Sesión invalidada. Alguien más inició sesión.' });
+    if (usuario.active_token !== token) {
+      return res.status(401).json({ error: 'Sesión cerrada. Se inició sesión en otro dispositivo.' });
     }
 
-    res.json({ valid: true, user: usuario });
+    res.json({ valid: true, user: { id_usuario: usuario.id_usuario, nombre: usuario.nombre, apellido: usuario.apellido, correo: usuario.correo } });
   } catch (error) {
     console.error('Error verificando token:', error.message);
     res.status(401).json({ error: 'Token inválido o expirado' });

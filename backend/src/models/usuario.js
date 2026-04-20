@@ -5,7 +5,7 @@ const Usuario = {
   async findByEmail(correo) {
     const result = await pool.query(
       `SELECT u.id_usuario, u.nombre, u.apellido, u.cedula, u.correo, u.telefono, u.contrasena, u.activo,
-        u.email_verificado, u.codigo_verificacion, u.codigo_recuperacion, u.session_token,
+        u.email_verificado, u.codigo_verificacion, u.codigo_recuperacion, u.session_token, u.session_token_app,
         (CASE WHEN p.id_profesor IS NOT NULL THEN true ELSE false END) as es_profesor,
         (CASE WHEN c.id_coordinador IS NOT NULL THEN true ELSE false END) as es_coordinador
        FROM usuario u
@@ -18,9 +18,11 @@ const Usuario = {
     return result.rows[0];
   },
 
-  async updateSessionToken(id, token) {
+  // platform: 'web' o 'app'
+  async updateSessionToken(id, token, platform = 'web') {
+    const column = platform === 'app' ? 'session_token_app' : 'session_token';
     await pool.query(
-      'UPDATE usuario SET session_token = $1 WHERE id_usuario = $2',
+      `UPDATE usuario SET ${column} = $1 WHERE id_usuario = $2`,
       [token, id]
     );
   },
