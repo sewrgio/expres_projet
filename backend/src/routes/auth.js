@@ -146,8 +146,9 @@ router.post('/login', async (req, res) => {
       [usuario.id_usuario]
     );
 
+    let rolesEncontrados = [];
     if (rolQuery.rows.length > 0) {
-      const rolesEncontrados = rolQuery.rows.map(r => r.nombre_rol);
+      rolesEncontrados = rolQuery.rows.map(r => r.nombre_rol);
       if (rolesEncontrados.includes('auditor')) {
         rol = 'auditor';
       } else if (rolesEncontrados.includes('coordinador')) {
@@ -155,30 +156,38 @@ router.post('/login', async (req, res) => {
       }
     }
 
-    // Obtener id_profesor para profesores
+    // Obtener id_profesor e id_carrera para profesores
     let idProfesor = null;
-    if (rol === 'profesor') {
+    let idCarreraProfesor = null;
+    if (rolesEncontrados.includes('profesor')) {
       const profesorQuery = await pool.query(
-        `SELECT p.id_profesor
+        `SELECT p.id_profesor, pc.id_carrera
          FROM profesor p
          JOIN usuario_rol ur ON p.id_usuario_rol = ur.id_usuario_rol
-         WHERE ur.id_usuario = $1`,
+         LEFT JOIN profesor_carrera pc ON p.id_profesor = pc.id_profesor
+         WHERE ur.id_usuario = $1 AND ur.activo = true AND (pc.activo = true OR pc.activo IS NULL)`,
         [usuario.id_usuario]
       );
       if (profesorQuery.rows.length > 0) {
         idProfesor = profesorQuery.rows[0].id_profesor;
+        idCarreraProfesor = profesorQuery.rows[0].id_carrera;
       }
     }
 
     // Obtener id_coordinador para coordinadores
     let idCoordinador = null;
-    if (rol === 'coordinador') {
+    let idCarreraCoordinador = null;
+    if (rolesEncontrados.includes('coordinador')) {
       const coordinadorQuery = await pool.query(
-        `SELECT id_coordinador FROM coordinador WHERE id_coordinador = $1`,
+        `SELECT c.id_coordinador, c.id_carrera 
+         FROM coordinador c 
+         JOIN usuario_rol ur ON c.id_usuario_rol = ur.id_usuario_rol
+         WHERE ur.id_usuario = $1 AND ur.activo = true`,
         [usuario.id_usuario]
       );
       if (coordinadorQuery.rows.length > 0) {
         idCoordinador = coordinadorQuery.rows[0].id_coordinador;
+        idCarreraCoordinador = coordinadorQuery.rows[0].id_carrera;
       }
     }
 
@@ -190,7 +199,8 @@ router.post('/login', async (req, res) => {
         esProfesor: rol === 'profesor',
         esCoordinador: rol === 'coordinador',
         id_profesor: idProfesor,
-        id_coordinador: idCoordinador
+        id_coordinador: idCoordinador,
+        id_carrera: idCarreraCoordinador || idCarreraProfesor
       },
       process.env.JWT_SECRET || 'iujo_secret_key_2024',
       { expiresIn: '8h' }
@@ -208,9 +218,10 @@ router.post('/login', async (req, res) => {
         apellido: usuario.apellido,
         correo: usuario.correo,
         rol,
-        roles: [rol],
+        roles: rolesEncontrados,
         id_profesor: idProfesor,
-        id_coordinador: idCoordinador
+        id_coordinador: idCoordinador,
+        id_carrera: idCarreraCoordinador || idCarreraProfesor
       }
     });
 
@@ -312,11 +323,41 @@ router.get('/verify', async (req, res) => {
 
     const usuario = userQuery.rows[0];
 
+    // Obtener id_carrera si es coordinador
+    let idCarrera = null;
+    const rolesQuery = await pool.query(
+      `SELECT r.nombre_rol FROM usuario_rol ur JOIN rol r ON ur.id_rol = r.id_rol WHERE ur.id_usuario = $1 AND ur.activo = true`,
+      [usuario.id_usuario]
+    );
+    const roles = rolesQuery.rows.map(r => r.nombre_rol);
+
+    if (roles.includes('coordinador')) {
+      const coordQuery = await pool.query(`SELECT id_carrera FROM coordinador c JOIN usuario_rol ur ON c.id_usuario_rol = ur.id_usuario_rol WHERE ur.id_usuario = $1 AND ur.activo = true`, [usuario.id_usuario]);
+      if (coordQuery.rows.length > 0) {
+        idCarrera = coordQuery.rows[0].id_carrera;
+      }
+    } else if (roles.includes('profesor')) {
+      const profQuery = await pool.query(`SELECT pc.id_carrera FROM profesor_carrera pc JOIN profesor p ON pc.id_profesor = p.id_profesor JOIN usuario_rol ur ON p.id_usuario_rol = ur.id_usuario_rol WHERE ur.id_usuario = $1 AND ur.activo = true AND pc.activo = true`, [usuario.id_usuario]);
+      if (profQuery.rows.length > 0) {
+        idCarrera = profQuery.rows[0].id_carrera;
+      }
+    }
+
     if (usuario.active_token !== token) {
       return res.status(401).json({ error: 'Sesión cerrada. Se inició sesión en otro dispositivo.' });
     }
 
-    res.json({ valid: true, user: { id_usuario: usuario.id_usuario, nombre: usuario.nombre, apellido: usuario.apellido, correo: usuario.correo } });
+    res.json({ 
+      valid: true, 
+      user: { 
+        id_usuario: usuario.id_usuario, 
+        nombre: usuario.nombre, 
+        apellido: usuario.apellido, 
+        correo: usuario.correo,
+        roles: roles,
+        id_carrera: idCarrera
+      } 
+    });
   } catch (error) {
     console.error('Error verificando token:', error.message);
     res.status(401).json({ error: 'Token inválido o expirado' });

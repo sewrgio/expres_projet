@@ -5,6 +5,19 @@ import auth from '../middleware/auth.js';
 
 const router = express.Router();
 
+// Obtener mis asistencias
+router.get('/', auth, async (req, res) => {
+    try {
+        const idProfesor = req.user.id_profesor;
+        if (!idProfesor) return res.json([]);
+        const historial = await Asistencia.obtenerHistorial(idProfesor);
+        res.json(historial);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error interno' });
+    }
+});
+
 // Escanear QR (entrada o salida automático)
 router.post('/escanear', auth, async (req, res) => {
     // Permitir a profesores, coordinadores y auditores
@@ -125,6 +138,20 @@ router.get('/todas', auth, async (req, res) => {
     try {
         const asistencias = await Asistencia.obtenerTodas();
         res.json(asistencias);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error interno' });
+    }
+});
+
+// ✅ NUEVO: Obtener asistencias por profesor
+router.get('/profesor/:idProfesor', auth, async (req, res) => {
+    if (!req.user.esCoordinador && req.user.rol !== 'auditor') {
+        return res.status(403).json({ error: 'Acceso denegado' });
+    }
+    try {
+        const historial = await Asistencia.obtenerHistorial(req.params.idProfesor);
+        res.json(historial);
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Error interno' });

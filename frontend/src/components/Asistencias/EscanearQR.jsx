@@ -42,6 +42,10 @@ const EscanearQR = () => {
 
         {cargandoQR ? (
           <div style={{ padding: '40px', color: '#666' }}>Cargando tu QR...</div>
+        ) : (!user?.roles?.includes('profesor') && !user?.roles?.includes('coordinador')) ? (
+          <div style={{ padding: '40px', color: '#666' }}>
+            ℹ️ Tu cuenta no tiene registros de asistencia asignados.
+          </div>
         ) : error ? (
           <div style={{
             padding: '20px',
@@ -76,19 +80,31 @@ const EscanearQR = () => {
             </div>
 
             <div style={{
-              marginTop: '20px',
-              padding: '12px',
-              backgroundColor: '#e8f4fd',
-              borderRadius: '8px',
-              fontSize: '14px',
-              maxWidth: '400px',
-              margin: '20px auto 0'
+              marginTop: '30px',
+              padding: '20px',
+              background: 'linear-gradient(135.46deg, #E8F4FD 0%, #D1E9FA 100%)',
+              borderRadius: '16px',
+              fontSize: '15px',
+              maxWidth: '450px',
+              margin: '25px auto 0',
+              border: '1px solid rgba(52, 152, 219, 0.2)',
+              boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
+              color: '#2c3e50'
             }}>
-              <strong>📌 Información:</strong>
-              <ul style={{ textAlign: 'left', marginTop: '10px' }}>
-                <li>Este QR es único para ti</li>
-                <li>No compartas este QR con otras personas</li>
-              </ul>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', justifyContent: 'center' }}>
+                <span style={{ fontSize: '20px' }}>📌</span>
+                <strong style={{ fontSize: '16px', color: '#2980b9' }}>Información de Seguridad</strong>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'left' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                  <span style={{ color: '#3498db' }}>•</span>
+                  <span>Este código QR es <strong>personal e intransferible</strong> para tu registro de asistencia.</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                  <span style={{ color: '#3498db' }}>•</span>
+                  <span>Por seguridad, <strong>no compartas ni captures</strong> este código con otras personas.</span>
+                </div>
+              </div>
             </div>
 
             <button

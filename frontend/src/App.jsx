@@ -75,7 +75,7 @@ function AppRoutes() {
       } />
       
       <Route path="/escanear" element={
-        <ProtectedRoute roles={['profesor', 'coordinador', 'auditor']}>
+        <ProtectedRoute roles={['profesor', 'coordinador']}>
           <Layout><EscanearQR /></Layout>
         </ProtectedRoute>
       } />
@@ -117,7 +117,7 @@ function AppRoutes() {
       } />
       
       <Route path="/justificativos" element={
-        <ProtectedRoute roles={['profesor', 'coordinador']}>
+        <ProtectedRoute roles={['profesor', 'coordinador', 'auditor']}>
           <Layout><GestionJustificativos /></Layout>
         </ProtectedRoute>
       } />

@@ -19,6 +19,7 @@ const app = express();
 // Middlewares base (se recomienda que vayan primero)
 app.use(cors());
 app.use(express.json());
+app.use('/uploads', express.static('uploads'));
 
 // Middleware de logging (ahora puede acceder al req.body si lo necesitaras en un futuro)
 app.use((req, res, next) => {

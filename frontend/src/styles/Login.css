@@ -202,3 +202,26 @@
     grid-template-columns: 1fr;
   }
 }
+
+.password-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gray-text);
+  transition: all 0.2s ease;
+  border-radius: 4px;
+}
+
+.password-toggle:hover {
+  color: var(--primary-blue);
+  background-color: var(--primary-blue-light);
+}
+
+.password-toggle svg {
+  display: block;
+}

@@ -58,8 +58,11 @@ const Asistencia = {
   async obtenerAsistenciasHoy(profesorId) {
     const hoy = new Date().toISOString().split('T')[0];
     const result = await pool.query(
-      `SELECT a.*, q.descripcion as ubicacion
+      `SELECT a.*, u.nombre, u.apellido, q.descripcion as ubicacion
        FROM asistencia a
+       JOIN profesor p ON a.id_profesor = p.id_profesor
+       JOIN usuario_rol ur ON p.id_usuario_rol = ur.id_usuario_rol
+       JOIN usuario u ON ur.id_usuario = u.id_usuario
        LEFT JOIN qr q ON a.id_qr = q.id_qr
        WHERE a.id_profesor = $1 AND DATE(a.fecha_entrada) = $2
        ORDER BY a.fecha_entrada DESC`,
@@ -70,9 +73,12 @@ const Asistencia = {
 
   async obtenerHistorial(profesorId, limite = 30) {
     const result = await pool.query(
-      `SELECT a.*, q.descripcion as ubicacion,
+      `SELECT a.*, u.nombre, u.apellido, q.descripcion as ubicacion,
               EXTRACT(HOUR FROM (a.fecha_salida - a.fecha_entrada)) as horas_trabajadas
        FROM asistencia a
+       JOIN profesor p ON a.id_profesor = p.id_profesor
+       JOIN usuario_rol ur ON p.id_usuario_rol = ur.id_usuario_rol
+       JOIN usuario u ON ur.id_usuario = u.id_usuario
        LEFT JOIN qr q ON a.id_qr = q.id_qr
        WHERE a.id_profesor = $1
        ORDER BY a.fecha_entrada DESC

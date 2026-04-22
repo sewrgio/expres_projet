@@ -29,7 +29,7 @@ const Layout = ({ children }) => {
 
   const menuItems = [
     { path: '/', icon: '📊', label: 'Dashboard', roles: ['auditor', 'coordinador', 'profesor'] },
-    { path: '/escanear', icon: '📷', label: 'Escanear QR', roles: ['auditor', 'coordinador', 'profesor'] },
+    { path: '/escanear', icon: '📷', label: 'Escanear QR', roles: ['coordinador', 'profesor'] },
     { path: '/generar-qr', icon: '🔑', label: 'Generar QR', roles: ['coordinador'] },
     { path: '/profesores', icon: '👨‍🏫', label: 'Profesores', roles: ['coordinador'] },
     { path: '/agregar-coordinador', icon: '👔', label: 'Agregar Coordinador', roles: ['auditor'] },
@@ -37,7 +37,7 @@ const Layout = ({ children }) => {
     { path: '/carreras', icon: '🎓', label: 'Carreras', roles: ['auditor'] },
     { path: '/asignaturas', icon: '📚', label: 'Asignaturas', roles: ['coordinador'] },
     { path: '/horarios', icon: '⏰', label: 'Horarios', roles: ['coordinador'] },
-    { path: '/justificativos', icon: '📋', label: 'Justificativos', roles: ['profesor', 'coordinador'] },
+    { path: '/justificativos', icon: '📋', label: 'Justificativos', roles: ['profesor', 'coordinador', 'auditor'] },
     { path: '/reportes', icon: '📈', label: 'Reportes', roles: ['auditor', 'coordinador'] },
   ];
 
