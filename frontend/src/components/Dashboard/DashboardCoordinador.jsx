@@ -1,6 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../services/api';
+import {
+  IconDashboard, IconKey, IconTeachers, IconAddAdmin,
+  IconGraduation, IconBookOpen, IconClock, IconClipboard,
+  IconUsers, IconChart, IconScanQR
+} from '../Icons/SystemIcons';
+import LocationAlert from '../LocationAlert/LocationAlert';
 import GenerarQR from '../QR/GenerarQR';
 import ListaProfesores from '../Profesores/ListaProfesores';
 import AgregarCoordinador from '../Coordinadores/AgregarCoordinador';
@@ -18,7 +24,7 @@ const DashboardCoordinador = () => {
   const [distancia, setDistancia] = useState(null);
   const [enArea, setEnArea] = useState(false);
 
-  const IUJO_COORDS = { lat: 10.510744, lon: -66.936957 };
+  const IUJO_COORDS = { lat: 10.510717, lon: -66.936949 };
 
   const calcularDistancia = (lat1, lon1, lat2, lon2) => {
     const R = 6371;
@@ -38,6 +44,7 @@ const DashboardCoordinador = () => {
       (pos) => {
         const d = calcularDistancia(pos.coords.latitude, pos.coords.longitude, IUJO_COORDS.lat, IUJO_COORDS.lon);
         setDistancia(d);
+        setEnArea(d <= 1.0);
       },
       (err) => console.error(err),
       { enableHighAccuracy: true }
@@ -78,16 +85,16 @@ const DashboardCoordinador = () => {
   }, [cargarEstado, monitorearUbicacion]);
 
   const tabs = [
-    { id: 'dashboard', nombre: 'Dashboard', icon: '📊', roles: ['auditor', 'coordinador'] },
-    { id: 'qr', nombre: 'Generar QR', icon: '🔑', roles: ['coordinador'] },
-    { id: 'profesores', nombre: 'Profesores', icon: '👨‍🏫', roles: ['coordinador'] },
-    { id: 'coordinadores', nombre: 'Agregar Coordinador', icon: '👔', roles: ['auditor'] },
-    { id: 'carreras', nombre: 'Carreras', icon: '🎓', roles: ['auditor'] },
-    { id: 'asignaturas', nombre: 'Asignaturas', icon: '📚', roles: ['coordinador'] },
-    { id: 'horarios', nombre: 'Horarios', icon: '⏰', roles: ['coordinador'] },
-    { id: 'justificativos', nombre: 'Justificativos', icon: '📋', roles: ['coordinador', 'auditor'] },
-    { id: 'control-coordinadores', nombre: 'Control Coordinadores', icon: '👥', roles: ['auditor'] },
-    { id: 'reportes', nombre: 'Reportes', icon: '📈', roles: ['auditor', 'coordinador'] },
+    { id: 'dashboard', nombre: 'Dashboard', icon: <IconDashboard />, roles: ['auditor', 'coordinador'] },
+    { id: 'qr', nombre: 'Generar QR', icon: <IconKey />, roles: ['coordinador'] },
+    { id: 'profesores', nombre: 'Profesores', icon: <IconTeachers />, roles: ['coordinador'] },
+    { id: 'coordinadores', nombre: 'Agregar Coordinador', icon: <IconAddAdmin />, roles: ['auditor'] },
+    { id: 'carreras', nombre: 'Carreras', icon: <IconGraduation />, roles: ['auditor'] },
+    { id: 'asignaturas', nombre: 'Asignaturas', icon: <IconBookOpen />, roles: ['coordinador'] },
+    { id: 'horarios', nombre: 'Horarios', icon: <IconClock />, roles: ['coordinador'] },
+    { id: 'justificativos', nombre: 'Justificativos', icon: <IconClipboard />, roles: ['coordinador', 'auditor'] },
+    { id: 'control-coordinadores', nombre: 'Control Coordinadores', icon: <IconUsers />, roles: ['auditor'] },
+    { id: 'reportes', nombre: 'Reportes', icon: <IconChart />, roles: ['auditor', 'coordinador'] },
   ];
 
   const filteredTabs = tabs.filter(tab => tab.roles.some(r => user?.roles?.includes(r)));
@@ -131,29 +138,8 @@ const DashboardCoordinador = () => {
         </div>
       </div>
 
+      <LocationAlert enArea={enArea} distancia={distancia} />
       <div className="row" style={{ marginBottom: '20px' }}>
-        <div className="card" style={{ 
-          borderLeft: `8px solid ${enArea ? '#2ecc71' : '#e74c3c'}`,
-          transition: 'all 0.3s ease'
-        }}>
-          <div style={{ fontSize: '48px', textAlign: 'center' }}>
-            {enArea ? '✅' : '⭕'}
-          </div>
-          <div style={{ 
-            textAlign: 'center', 
-            fontSize: '18px', 
-            fontWeight: 'bold', 
-            marginTop: '10px', 
-            color: enArea ? '#27ae60' : '#c0392b' 
-          }}>
-            {enArea ? 'PUEDE ESCANEAR' : 'NO SE PUEDE ESCANEAR'}
-          </div>
-          {distancia !== null && (
-            <div style={{ textAlign: 'center', fontSize: '13px', color: '#666', marginTop: '8px' }}>
-              Distancia: {distancia < 1 ? `${(distancia * 1000).toFixed(0)} metros` : `${distancia.toFixed(2)} km`}
-            </div>
-          )}
-        </div>
         <div className="card">
           <div style={{ fontSize: '48px', fontWeight: 'bold', color: 'var(--iujo-blue)', textAlign: 'center' }}>
             {stats.totalHoy}

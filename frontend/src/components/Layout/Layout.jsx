@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
+import {
+  IconDashboard, IconScanQR, IconKey, IconTeachers,
+  IconAddAdmin, IconUsers, IconGraduation, IconBookOpen,
+  IconClock, IconClipboard, IconChart, IconMenu
+} from '../Icons/SystemIcons';
 
 const Layout = ({ children }) => {
   const { user, logout } = useAuth();
@@ -28,17 +33,17 @@ const Layout = ({ children }) => {
   };
 
   const menuItems = [
-    { path: '/', icon: '📊', label: 'Dashboard', roles: ['auditor', 'coordinador', 'profesor'] },
-    { path: '/escanear', icon: '📷', label: 'Escanear QR', roles: ['coordinador', 'profesor'] },
-    { path: '/generar-qr', icon: '🔑', label: 'Generar QR', roles: ['coordinador'] },
-    { path: '/profesores', icon: '👨‍🏫', label: 'Profesores', roles: ['coordinador'] },
-    { path: '/agregar-coordinador', icon: '👔', label: 'Agregar Coordinador', roles: ['auditor'] },
-    { path: '/control-coordinadores', icon: '👥', label: 'Control Coordinadores', roles: ['auditor'] },
-    { path: '/carreras', icon: '🎓', label: 'Carreras', roles: ['auditor'] },
-    { path: '/asignaturas', icon: '📚', label: 'Asignaturas', roles: ['coordinador'] },
-    { path: '/horarios', icon: '⏰', label: 'Horarios', roles: ['coordinador'] },
-    { path: '/justificativos', icon: '📋', label: 'Justificativos', roles: ['profesor', 'coordinador', 'auditor'] },
-    { path: '/reportes', icon: '📈', label: 'Reportes', roles: ['auditor', 'coordinador'] },
+    { path: '/', icon: <IconDashboard />, label: 'Dashboard', roles: ['auditor', 'coordinador', 'profesor'] },
+    { path: '/escanear', icon: <IconScanQR />, label: 'Escanear QR', roles: ['coordinador', 'profesor'] },
+    { path: '/generar-qr', icon: <IconKey />, label: 'Generar QR', roles: ['coordinador'] },
+    { path: '/profesores', icon: <IconTeachers />, label: 'Profesores', roles: ['coordinador'] },
+    { path: '/agregar-coordinador', icon: <IconAddAdmin />, label: 'Agregar Coordinador', roles: ['auditor'] },
+    { path: '/control-coordinadores', icon: <IconUsers />, label: 'Control Coordinadores', roles: ['auditor'] },
+    { path: '/carreras', icon: <IconGraduation />, label: 'Carreras', roles: ['auditor'] },
+    { path: '/asignaturas', icon: <IconBookOpen />, label: 'Asignaturas', roles: ['coordinador'] },
+    { path: '/horarios', icon: <IconClock />, label: 'Horarios', roles: ['coordinador'] },
+    { path: '/justificativos', icon: <IconClipboard />, label: 'Justificativos', roles: ['profesor', 'coordinador', 'auditor'] },
+    { path: '/reportes', icon: <IconChart />, label: 'Reportes', roles: ['auditor', 'coordinador'] },
   ];
 
   const filteredMenu = menuItems.filter(item => 
@@ -49,7 +54,7 @@ const Layout = ({ children }) => {
     <div className="app">
       <div className={`sidebar ${menuOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
-          <div className="sidebar-logo">📚</div>
+          <div className="sidebar-logo"><IconBookOpen /></div>
           <div className="sidebar-title">IUJO Asistencia</div>
           <div style={{ fontSize: '12px', marginTop: '5px', opacity: 0.8 }}>
             {user?.roles?.includes('auditor') ? 'Auditor' : user?.roles?.includes('coordinador') ? 'Coordinador' : 'Profesor'}
@@ -72,7 +77,7 @@ const Layout = ({ children }) => {
           <h2>IUJO - Sistema de Control de Asistencias</h2>
           <div className="user-info">
             <div className="user-avatar">
-              {user?.nombre?.charAt(0)}{user?.apellido?.charAt(0)}
+              IUJO
             </div>
             <span>{user?.nombre} {user?.apellido}</span>
             <button className="logout-btn" onClick={handleLogoutClick}>

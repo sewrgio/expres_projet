@@ -70,15 +70,15 @@ router.post('/', auth, upload.single('documento'), async (req, res) => {
     return res.status(403).json({ error: 'Solo profesores y coordinadores pueden solicitar justificativos' });
   }
 
-  const { id_asistencia, motivo } = req.body;
+  const { id_asistencia } = req.body;
   const documento_url = req.file ? `/uploads/justificativos/${req.file.filename}` : req.body.documento_url;
 
-  if (!id_asistencia || !motivo) {
-    return res.status(400).json({ error: 'La asistencia y el motivo son obligatorios' });
+  if (!id_asistencia) {
+    return res.status(400).json({ error: 'La asistencia es obligatoria' });
   }
 
   try {
-    const justificativo = await Justificativo.create(id_asistencia, motivo, documento_url);
+    const justificativo = await Justificativo.create(id_asistencia, '', documento_url);
     res.status(201).json(justificativo);
   } catch (error) {
     console.error(error);

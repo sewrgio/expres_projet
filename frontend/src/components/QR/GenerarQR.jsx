@@ -78,7 +78,7 @@ const GenerarQR = () => {
         </head>
         <body>
           <div class="qr-container">
-            <div class="qr-title">📚 IUJO Asistencia</div>
+            <div class="qr-title">IUJO Asistencia</div>
             <div class="qr-subtitle">Código QR para Registro</div>
             <img src="${qrGenerado.imagen}" alt="QR Code" />
             <div class="qr-info">

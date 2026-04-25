@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../services/api';
 import { useNavigate } from 'react-router-dom';
+import LocationAlert from '../LocationAlert/LocationAlert';
 
 const DashboardProfesor = () => {
   const { user } = useAuth();
@@ -11,7 +12,7 @@ const DashboardProfesor = () => {
   const [distancia, setDistancia] = useState(null);
   const [enArea, setEnArea] = useState(false);
 
-  const IUJO_COORDS = { lat: 10.510744, lon: -66.936957 };
+  const IUJO_COORDS = { lat: 10.510717, lon: -66.936949 };
 
   const calcularDistancia = (lat1, lon1, lat2, lon2) => {
     const R = 6371; // Radio de la Tierra en km
@@ -40,7 +41,7 @@ const DashboardProfesor = () => {
           IUJO_COORDS.lon
         );
         setDistancia(d);
-        setEnArea(d <= 1.5); // 1.5km flexible
+        setEnArea(d <= 1.0); // 1km flexible
       },
       (err) => console.error('Error de geolocalización:', err),
       { enableHighAccuracy: true }
@@ -85,31 +86,8 @@ const DashboardProfesor = () => {
 
   return (
     <div>
+      <LocationAlert enArea={enArea} distancia={distancia} />
       <div className="row">
-        <div className="card" style={{ 
-          borderLeft: `8px solid ${enArea ? '#2ecc71' : '#e74c3c'}`,
-          transition: 'all 0.3s ease'
-        }}>
-          <div style={{ fontSize: '48px', textAlign: 'center' }}>
-            {enArea ? '✅' : '⭕'}
-          </div>
-          <div style={{ 
-            textAlign: 'center', 
-            fontSize: '18px', 
-            fontWeight: 'bold', 
-            marginTop: '10px', 
-            color: enArea ? '#27ae60' : '#c0392b' 
-          }}>
-            {enArea ? 'PUEDE ESCANEAR' : 'No está en los parámetros establecidos'}
-          </div>
-          {distancia !== null && (
-            <div style={{ textAlign: 'center', fontSize: '13px', color: '#666', marginTop: '8px' }}>
-              Ubicación: {enArea ? 'Dentro del campus' : 'Fuera del campus'}
-              <br />
-              Distancia: {distancia < 1 ? `${(distancia * 1000).toFixed(0)} metros` : `${distancia.toFixed(2)} km`}
-            </div>
-          )}
-        </div>
         <div className="card">
           <div style={{ fontSize: '48px', fontWeight: 'bold', color: 'var(--iujo-blue)', textAlign: 'center' }}>
             {stats.totalHoy}

@@ -38,6 +38,7 @@ const Usuario = {
     // Al usar una columna dinámica, debemos ser cuidadosos. 
     // Como 'column' solo puede ser uno de dos valores fijos, es seguro.
     const query = `UPDATE usuario SET ${column} = $1 WHERE id_usuario = $2`;
+    console.log('Ejecutando query:', query, 'con token length:', token.length, 'y usuario ID:', id_usuario);
     await pool.query(query, [token, id_usuario]);
   },
 

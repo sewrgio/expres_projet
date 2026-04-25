@@ -13,15 +13,18 @@ const Justificativo = {
   // ✅ NUEVO: Obtener todos los justificativos (para coordinador)
   async obtenerTodos() {
     const result = await pool.query(`
-      SELECT j.*, 
+      SELECT j.*,
              u.nombre, u.apellido, u.correo, u.cedula,
              a.fecha_entrada, a.fecha_salida,
-             asig.nombre_asignatura
+             asig.nombre_asignatura,
+             c.nombre_carrera
       FROM justificativo j
       JOIN asistencia a ON j.id_asistencia = a.id_asistencia
       JOIN profesor p ON a.id_profesor = p.id_profesor
       JOIN usuario_rol ur ON p.id_usuario_rol = ur.id_usuario_rol
       JOIN usuario u ON ur.id_usuario = u.id_usuario
+      LEFT JOIN profesor_carrera pc ON p.id_profesor = pc.id_profesor
+      LEFT JOIN carrera c ON pc.id_carrera = c.id_carrera
       LEFT JOIN horario h ON a.id_horario = h.id_horario
       LEFT JOIN asignatura_profesor ap ON h.id_asignatura_profesor = ap.id_asignatura_profesor
       LEFT JOIN asignatura asig ON ap.id_asignatura = asig.id_asignatura
@@ -33,21 +36,24 @@ const Justificativo = {
   // ✅ NUEVO: Obtener justificativos SOLO de coordinadores (para auditor)
   async obtenerDeCoordinadores() {
     const result = await pool.query(`
-      SELECT j.*, 
+      SELECT j.*,
              u.nombre, u.apellido, u.correo, u.cedula,
              a.fecha_entrada, a.fecha_salida,
-             asig.nombre_asignatura
+             asig.nombre_asignatura,
+             c.nombre_carrera
       FROM justificativo j
       JOIN asistencia a ON j.id_asistencia = a.id_asistencia
       JOIN profesor p ON a.id_profesor = p.id_profesor
       JOIN usuario_rol ur ON p.id_usuario_rol = ur.id_usuario_rol
       JOIN usuario u ON ur.id_usuario = u.id_usuario
+      LEFT JOIN profesor_carrera pc ON p.id_profesor = pc.id_profesor
+      LEFT JOIN carrera c ON pc.id_carrera = c.id_carrera
       LEFT JOIN horario h ON a.id_horario = h.id_horario
       LEFT JOIN asignatura_profesor ap ON h.id_asignatura_profesor = ap.id_asignatura_profesor
       LEFT JOIN asignatura asig ON ap.id_asignatura = asig.id_asignatura
       WHERE EXISTS (
-        SELECT 1 FROM coordinador c
-        JOIN usuario_rol ur2 ON c.id_usuario_rol = ur2.id_usuario_rol
+        SELECT 1 FROM coordinador coord
+        JOIN usuario_rol ur2 ON coord.id_usuario_rol = ur2.id_usuario_rol
         WHERE ur2.id_usuario = u.id_usuario
       )
       ORDER BY j.fecha_solicitud DESC

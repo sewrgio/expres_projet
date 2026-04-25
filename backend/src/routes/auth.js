@@ -24,7 +24,19 @@ router.post('/register', async (req, res) => {
 
     await client.query('BEGIN');
 
+    // 1. Insertar usuario
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const verificationToken = crypto.randomBytes(32).toString('hex');
 
+    const userRes = await client.query(
+      `INSERT INTO usuario (nombre, apellido, cedula, correo, telefono, contrasena, codigo_verificacion, fecha_codigo_verificacion, activo)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), true)
+       RETURNING id_usuario`,
+      [nombre, apellido, cedula, correo, telefono, hashedPassword, verificationToken]
+    );
+    const userId = userRes.rows[0].id_usuario;
+
+    // 2. Asignar rol
     const rolNombre = rol || 'profesor';
 
     const rolRes = await client.query(
@@ -35,12 +47,14 @@ router.post('/register', async (req, res) => {
     );
     const userRolId = rolRes.rows[0].id_usuario_rol;
 
+    // 3. Crear perfil de profesor
     await client.query(
       `INSERT INTO profesor (id_profesor, id_usuario_rol, fecha_ingreso, activo)
        VALUES ($1, $2, CURRENT_DATE, true)`,
       [userId, userRolId]
     );
 
+    // 4. Asignar carrera si se proporciona
     if (carrera_id) {
       await client.query(
         `INSERT INTO profesor_carrera (id_profesor, id_carrera, dedicacion, fecha_desde, activo)
@@ -111,24 +125,28 @@ router.post('/login', async (req, res) => {
   }
 
   try {
+    console.log('Intentando login para correo:', correo);
     const usuario = await Usuario.findByEmail(correo);
+    console.log('Usuario encontrado:', usuario ? 'Sí' : 'No');
 
     if (!usuario) {
-      return res.status(401).json({ error: 'Credenciales inválidas' });
+      return res.status(401).json({ error: 'No existe una cuenta con este correo electrónico' });
     }
 
     if (!usuario.email_verificado) {
-      return res.status(403).json({ error: 'Por favor, verifica tu correo antes de iniciar sesión' });
+      return res.status(403).json({ error: 'Por favor, verifica tu correo electrónico antes de iniciar sesión' });
     }
 
     const passValido = await bcrypt.compare(password, usuario.contrasena);
+    console.log('Contraseña válida:', passValido);
 
     if (!passValido) {
-      return res.status(401).json({ error: 'Credenciales inválidas' });
+      return res.status(401).json({ error: 'La contraseña es incorrecta' });
     }
 
     // Determinar el rol del usuario
     let rol = 'profesor';
+    console.log('Buscando roles para usuario ID:', usuario.id_usuario);
     const rolQuery = await pool.query(
       `SELECT r.nombre_rol
        FROM usuario_rol ur
@@ -136,6 +154,7 @@ router.post('/login', async (req, res) => {
        WHERE ur.id_usuario = $1 AND ur.activo = true`,
       [usuario.id_usuario]
     );
+    console.log('Roles encontrados:', rolQuery.rows);
 
     let rolesEncontrados = [];
     if (rolQuery.rows.length > 0) {
@@ -151,6 +170,7 @@ router.post('/login', async (req, res) => {
     let idProfesor = null;
     let idCarreraProfesor = null;
     if (rolesEncontrados.includes('profesor')) {
+      console.log('Buscando datos de profesor...');
       const profesorQuery = await pool.query(
         `SELECT p.id_profesor, pc.id_carrera
          FROM profesor p
@@ -159,6 +179,7 @@ router.post('/login', async (req, res) => {
          WHERE ur.id_usuario = $1 AND ur.activo = true AND (pc.activo = true OR pc.activo IS NULL)`,
         [usuario.id_usuario]
       );
+      console.log('Profesor encontrado:', profesorQuery.rows);
       if (profesorQuery.rows.length > 0) {
         idProfesor = profesorQuery.rows[0].id_profesor;
         idCarreraProfesor = profesorQuery.rows[0].id_carrera;
@@ -169,6 +190,7 @@ router.post('/login', async (req, res) => {
     let idCoordinador = null;
     let idCarreraCoordinador = null;
     if (rolesEncontrados.includes('coordinador')) {
+      console.log('Buscando datos de coordinador...');
       const coordinadorQuery = await pool.query(
         `SELECT c.id_coordinador, c.id_carrera 
          FROM coordinador c 
@@ -176,12 +198,14 @@ router.post('/login', async (req, res) => {
          WHERE ur.id_usuario = $1 AND ur.activo = true`,
         [usuario.id_usuario]
       );
+      console.log('Coordinador encontrado:', coordinadorQuery.rows);
       if (coordinadorQuery.rows.length > 0) {
         idCoordinador = coordinadorQuery.rows[0].id_coordinador;
         idCarreraCoordinador = coordinadorQuery.rows[0].id_carrera;
       }
     }
 
+    console.log('Generando token JWT...');
     const token = jwt.sign(
       {
         id: usuario.id_usuario,
@@ -196,9 +220,12 @@ router.post('/login', async (req, res) => {
       process.env.JWT_SECRET || 'iujo_secret_key_2024',
       { expiresIn: '8h' }
     );
+    console.log('Token generado exitosamente');
 
     // Actualizar session_token según plataforma (web o app)
+    console.log('Actualizando session_token...');
     await Usuario.updateSessionToken(usuario.id_usuario, token, plataforma);
+    console.log('Session token actualizado');
 
     res.json({
       success: true,

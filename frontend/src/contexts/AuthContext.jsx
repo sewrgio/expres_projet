@@ -76,11 +76,18 @@ export const AuthProvider = ({ children }) => {
       const token = getToken();
       const userData = getUserData();
 
+      console.log('Verificando sesión - Token encontrado:', !!token);
+      console.log('Verificando sesión - User data encontrado:', !!userData);
+      console.log('localStorage token:', localStorage.getItem('token'));
+      console.log('sessionStorage token:', sessionStorage.getItem('token'));
+
       if (token && userData) {
         try {
           await api.get('/auth/verify');
           setUser(JSON.parse(userData));
-        } catch {
+          console.log('Sesión verificada exitosamente');
+        } catch (err) {
+          console.error('Error verificando sesión:', err);
           clearAllStorage();
           setUser(null);
         }
@@ -100,13 +107,16 @@ export const AuthProvider = ({ children }) => {
 
     clearAllStorage();
 
+    console.log('Login - rememberMe:', rememberMe);
     if (rememberMe) {
       localStorage.setItem('rememberMe', 'true');
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(usuario));
+      console.log('Token guardado en localStorage');
     } else {
       sessionStorage.setItem('token', token);
       sessionStorage.setItem('user', JSON.stringify(usuario));
+      console.log('Token guardado en sessionStorage');
     }
 
     setUser(usuario);

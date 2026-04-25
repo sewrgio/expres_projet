@@ -11,7 +11,7 @@ const GestionJustificativos = () => {
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFin, setFechaFin] = useState('');
   const [tipoReporte, setTipoReporte] = useState('semanal');
-  const [formData, setFormData] = useState({ id_asistencia: '', motivo: '', documento_url: '', fecha_man: '', id_asignatura: '' });
+  const [formData, setFormData] = useState({ id_asistencia: '', documento_url: '', fecha_man: '', id_asignatura: '' });
   const [asignaturas, setAsignaturas] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [terminoBusquedaTabla, setTerminoBusquedaTabla] = useState('');
@@ -72,13 +72,14 @@ const GestionJustificativos = () => {
     doc.setFontSize(12);
     doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 35);
     doc.text(`Período: ${fechaInicio || 'Inicio'} - ${fechaFin || 'Fin'}`, 14, 45);
-    const tableColumn = ["Profesor", "Fecha", "Asignatura", "Motivo", "Estado"];
+    const tableColumn = ["Profesor", "Cédula", "Carrera", "Fecha", "Asignatura", "Estado"];
     let dataParaPdf = justificativos;
     const tableRows = dataParaPdf.map(j => [
-      j.nombre || 'N/A',
+      `${j.nombre || 'N/A'} ${j.apellido || ''}`,
+      j.cedula || 'N/A',
+      j.nombre_carrera || 'N/A',
       new Date(j.fecha_solicitud).toLocaleDateString(),
       j.nombre_asignatura || 'N/A',
-      j.motivo.substring(0, 50),
       j.estado
     ]);
     doc.autoTable({ head: [tableColumn], body: tableRows, startY: 55, theme: 'striped', headStyles: { fillColor: [0, 51, 102], textColor: 255 } });
@@ -90,14 +91,13 @@ const GestionJustificativos = () => {
     try {
       const data = new FormData();
       data.append('id_asistencia', formData.id_asistencia);
-      data.append('motivo', formData.motivo);
       if (archivo) {
         data.append('documento', archivo);
       } else {
         data.append('documento_url', formData.documento_url);
       }
       await api.post('/justificativos', data, { headers: { 'Content-Type': 'multipart/form-data' } });
-      setFormData({ id_asistencia: '', motivo: '', documento_url: '' });
+      setFormData({ id_asistencia: '', documento_url: '' });
       setArchivo(null);
       setMostrarForm(false);
       cargarDatos();
@@ -228,9 +228,6 @@ const GestionJustificativos = () => {
                 )}
               </div>
               <div className="form-group">
-                <textarea className="form-control" rows="3" placeholder="Motivo" value={formData.motivo} onChange={(e) => setFormData({ ...formData, motivo: e.target.value })} required />
-              </div>
-              <div className="form-group">
                 <div className="file-upload-wrapper" style={{ border: '2px dashed #ddd', borderRadius: '8px', padding: '20px', textAlign: 'center', backgroundColor: '#f9f9f9', transition: 'all 0.3s' }}>
                   <label htmlFor="file-upload" style={{ cursor: 'pointer', display: 'block' }}>
                     <div style={{ fontSize: '24px', marginBottom: '10px' }}>📁</div>
@@ -282,25 +279,31 @@ const GestionJustificativos = () => {
         </div>
         <div className="table-container">
           <table className="table">
-            <thead><tr><th>Fecha</th><th>Profesor</th><th>Asignatura</th><th>Motivo</th><th>Estado</th><th>Respuesta</th>{(user?.roles?.includes('coordinador') || user?.roles?.includes('auditor')) && <th>Acciones</th>}</tr></thead>
+            <thead><tr><th>Fecha</th><th>Profesor</th><th>Cédula</th><th>Carrera</th><th>Asignatura</th><th>Estado</th><th>Respuesta</th>{(user?.roles?.includes('coordinador') || user?.roles?.includes('auditor')) && <th>Acciones</th>}</tr></thead>
             <tbody>
               {justificativos
                 .filter(j => {
-                  if (!terminoBusquedaTabla) return true;
-                  const nombreCompleto = `${j.nombre || ''} ${j.apellido || ''}`.toLowerCase();
-                  return nombreCompleto.includes(terminoBusquedaTabla.toLowerCase());
+                  const termino = terminoBusquedaTabla.toLowerCase();
+                  return (
+                    (j.nombre && j.nombre.toLowerCase().includes(termino)) ||
+                    (j.apellido && j.apellido.toLowerCase().includes(termino)) ||
+                    (j.nombre_asignatura && j.nombre_asignatura.toLowerCase().includes(termino)) ||
+                    (j.cedula && j.cedula.toLowerCase().includes(termino)) ||
+                    (j.nombre_carrera && j.nombre_carrera.toLowerCase().includes(termino))
+                  );
                 })
                 .map(j => (
-                <tr key={j.id_justificativo}>
-                  <td>{new Date(j.fecha_solicitud).toLocaleDateString()}</td>
-                  <td><strong>{j.nombre} {j.apellido}</strong></td>
-                  <td>{j.nombre_asignatura}</td>
-                  <td>{j.motivo}</td>
-                  <td><span className={`status-badge ${j.estado === 'aprobado' ? 'status-success' : j.estado === 'rechazado' ? 'status-danger' : 'status-warning'}`}>{j.estado}</span></td>
-                  <td>{j.observaciones_coordinador || '-'}</td>
-                  {(user?.roles?.includes('coordinador') || user?.roles?.includes('auditor')) && j.estado === 'pendiente' && (<td><button className="btn btn-success" style={{ marginRight: '5px' }} onClick={() => handleAprobar(j.id_justificativo)}>✅</button><button className="btn btn-danger" onClick={() => handleRechazar(j.id_justificativo)}>❌</button></td>)}
-                </tr>
-              ))}
+                  <tr key={j.id_justificativo}>
+                    <td>{new Date(j.fecha_solicitud).toLocaleDateString()}</td>
+                    <td><strong>{j.nombre} {j.apellido}</strong></td>
+                    <td>{j.cedula || '-'}</td>
+                    <td>{j.nombre_carrera || '-'}</td>
+                    <td>{j.nombre_asignatura}</td>
+                    <td><span className={`status-badge ${j.estado === 'aprobado' ? 'status-success' : j.estado === 'rechazado' ? 'status-danger' : 'status-warning'}`}>{j.estado}</span></td>
+                    <td>{j.observaciones_coordinador || '-'}</td>
+                    {(user?.roles?.includes('coordinador') || user?.roles?.includes('auditor')) && j.estado === 'pendiente' && (<td><button className="btn btn-success" style={{ marginRight: '5px' }} onClick={() => handleAprobar(j.id_justificativo)}>✅</button><button className="btn btn-danger" onClick={() => handleRechazar(j.id_justificativo)}>❌</button></td>)}
+                  </tr>
+                ))}
               {justificativos.length === 0 && <tr><td colSpan="7">No hay solicitudes</td></tr>}
             </tbody>
           </table>
