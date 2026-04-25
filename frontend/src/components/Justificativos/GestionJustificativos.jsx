@@ -78,7 +78,13 @@ const GestionJustificativos = () => {
     doc.text(`Período: ${fechaInicio || 'Inicio'} - ${fechaFin || 'Fin'}`, 14, 45);
     
     const tableColumn = ["Profesor", "Fecha", "Asignatura", "Motivo", "Estado"];
-    const tableRows = justificativos.map(j => [
+    let dataParaPdf = justificativos;
+    if (dataParaPdf.length > 1000) {
+        alert('⚠️ Reporte muy extenso. Se limitará a los primeros 1000 justificativos.');
+        dataParaPdf = dataParaPdf.slice(0, 1000);
+    }
+
+    const tableRows = dataParaPdf.map(j => [
       j.nombre || 'N/A',
       new Date(j.fecha_solicitud).toLocaleDateString(),
       j.nombre_asignatura || 'N/A',

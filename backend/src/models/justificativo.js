@@ -62,9 +62,9 @@ const Justificativo = {
              h.dia_semana, asig.nombre_asignatura
       FROM justificativo j
       JOIN asistencia a ON j.id_asistencia = a.id_asistencia
-      JOIN horario h ON a.id_horario = h.id_horario
-      JOIN asignatura_profesor ap ON h.id_asignatura_profesor = ap.id_asignatura_profesor
-      JOIN asignatura asig ON ap.id_asignatura = asig.id_asignatura
+      LEFT JOIN horario h ON a.id_horario = h.id_horario
+      LEFT JOIN asignatura_profesor ap ON h.id_asignatura_profesor = ap.id_asignatura_profesor
+      LEFT JOIN asignatura asig ON ap.id_asignatura = asig.id_asignatura
       WHERE a.id_profesor = $1
       ORDER BY j.fecha_solicitud DESC
     `, [profesorId]);
@@ -81,9 +81,9 @@ const Justificativo = {
       JOIN profesor p ON a.id_profesor = p.id_profesor
       JOIN usuario_rol ur ON p.id_usuario_rol = ur.id_usuario_rol
       JOIN usuario u ON ur.id_usuario = u.id_usuario
-      JOIN horario h ON a.id_horario = h.id_horario
-      JOIN asignatura_profesor ap ON h.id_asignatura_profesor = ap.id_asignatura_profesor
-      JOIN asignatura asig ON ap.id_asignatura = asig.id_asignatura
+      LEFT JOIN horario h ON a.id_horario = h.id_horario
+      LEFT JOIN asignatura_profesor ap ON h.id_asignatura_profesor = ap.id_asignatura_profesor
+      LEFT JOIN asignatura asig ON ap.id_asignatura = asig.id_asignatura
       JOIN profesor_carrera pc ON p.id_profesor = pc.id_profesor
       WHERE pc.id_carrera = (SELECT id_carrera FROM coordinador WHERE id_coordinador = $1)
       ORDER BY j.fecha_solicitud DESC

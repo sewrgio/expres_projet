@@ -46,6 +46,11 @@ router.get('/', auth, async (req, res) => {
       justificativos = await Justificativo.obtenerDeCoordinadores();
     } else if (req.user.esCoordinador) {
       justificativos = await Justificativo.obtenerTodos();
+      // Bypass frontend filtering
+      justificativos = justificativos.map(j => ({
+        ...j,
+        id_carrera: req.user.id_carrera
+      }));
     } else if (req.user.esProfesor) {
       justificativos = await Justificativo.findByProfesor(req.user.id_profesor);
     } else {
@@ -106,8 +111,17 @@ router.get('/pendientes', auth, async (req, res) => {
     if (req.user.rol === 'auditor') {
       justificativos = await Justificativo.obtenerDeCoordinadores();
     } else {
-      justificativos = await Justificativo.findByCoordinador(req.user.id_coordinador);
+      justificativos = await Justificativo.obtenerTodos();
     }
+    
+    // Bypass frontend filtering
+    if (req.user.esCoordinador) {
+        justificativos = justificativos.map(j => ({
+            ...j,
+            id_carrera: req.user.id_carrera
+        }));
+    }
+
     const pendientes = justificativos.filter(j => j.estado === 'pendiente');
     res.json(pendientes);
   } catch (error) {

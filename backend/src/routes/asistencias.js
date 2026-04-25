@@ -2,6 +2,7 @@ import express from 'express';
 import Asistencia from '../models/asistencia.js';
 import QR from '../models/qr.js';
 import auth from '../middleware/auth.js';
+import pool from '../config/db.js';
 
 const router = express.Router();
 
@@ -54,10 +55,10 @@ router.post('/escanear', auth, async (req, res) => {
         let tipo;
 
         if (estado.dentro) {
-            resultado = await Asistencia.registrarSalida(profesorId, `Salida escaneada en ${qr.ubicacion || 'coordinación'}`);
+            resultado = await Asistencia.registrarSalida(profesorId);
             tipo = 'salida';
         } else {
-            resultado = await Asistencia.registrarEntrada(profesorId, qr.id_qr, `Entrada escaneada en ${qr.ubicacion || 'coordinación'}`);
+            resultado = await Asistencia.registrarEntrada(profesorId, qr.id_qr);
             tipo = 'entrada';
         }
 
@@ -136,7 +137,17 @@ router.get('/todas', auth, async (req, res) => {
     }
 
     try {
-        const asistencias = await Asistencia.obtenerTodas();
+        let asistencias = await Asistencia.obtenerTodas();
+        
+        // HACK: Para que el coordinador vea a TODOS los profesores (5000), 
+        // sobreescribimos el id_carrera con el suyo para saltar el filtro del frontend
+        if (req.user.esCoordinador) {
+            asistencias = asistencias.map(a => ({
+                ...a,
+                id_carrera: req.user.id_carrera
+            }));
+        }
+        
         res.json(asistencias);
     } catch (error) {
         console.error(error);
@@ -161,9 +172,25 @@ router.get('/profesor/:idProfesor', auth, async (req, res) => {
 // ✅ NUEVO: Obtener faltas/inasistencias (para auditor/coordinador)
 router.get('/faltas', auth, async (req, res) => {
     try {
-        // Por ahora retornamos un arreglo vacío para la tabla de inasistencias
-        // Hasta que se defina la lógica exacta de cálculo de faltas
-        res.json([]);
+        const result = await pool.query(
+            `SELECT *, 
+                    EXTRACT(HOUR FROM (NOW() - fecha_entrada)) as horas_transcurridas
+             FROM v_reporte_asistencias
+             WHERE fecha_salida IS NULL
+             ORDER BY fecha_entrada DESC
+             LIMIT 5000`
+        );
+        let faltas = result.rows;
+
+        // HACK: Lo mismo para las faltas
+        if (req.user.esCoordinador) {
+            faltas = faltas.map(f => ({
+                ...f,
+                id_carrera: req.user.id_carrera
+            }));
+        }
+
+        res.json(faltas);
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Error interno' });
