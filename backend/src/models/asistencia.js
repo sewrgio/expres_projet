@@ -21,38 +21,6 @@ const Asistencia = {
     return result.rows[0];
   },
 
-  async registrarSalida(profesorId) {
-    const hoy = new Date().toISOString().split('T')[0];
-    const result = await pool.query(
-      `UPDATE asistencia 
-       SET fecha_salida = NOW()
-       WHERE id_profesor = $1 
-         AND DATE(fecha_entrada) = $2 
-         AND fecha_salida IS NULL
-       RETURNING *`,
-      [profesorId, hoy]
-    );
-    
-    if (result.rows.length === 0) {
-      throw new Error('No hay una entrada activa para registrar salida');
-    }
-    return result.rows[0];
-  },
-
-  async verificarEstado(profesorId) {
-    const hoy = new Date().toISOString().split('T')[0];
-    const result = await pool.query(
-      `SELECT * FROM asistencia 
-       WHERE id_profesor = $1 
-         AND DATE(fecha_entrada) = $2 
-         AND fecha_salida IS NULL`,
-      [profesorId, hoy]
-    );
-    return {
-      dentro: result.rows.length > 0,
-      asistenciaActual: result.rows[0] || null
-    };
-  },
 
   async obtenerAsistenciasHoy(profesorId) {
     const hoy = new Date().toISOString().split('T')[0];

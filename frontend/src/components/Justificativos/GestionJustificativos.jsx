@@ -29,11 +29,8 @@ const GestionJustificativos = () => {
 
   const cargarDatos = async () => {
     try {
-      // Obtener todos los profesores para el buscador (el filtrado por carrera se hace en el frontend o backend)
       const profRes = await api.get('/profesores/todos');
       const todosLosProfesores = profRes.data;
-
-      // Filtrar profesores por carrera del usuario logueado
       const miCarreraId = user?.id_carrera;
       const profesoresFiltrados = todosLosProfesores.filter(p => p.id_carrera === miCarreraId);
       setProfesores(profesoresFiltrados);
@@ -70,20 +67,13 @@ const GestionJustificativos = () => {
   const generarPDF = () => {
     const doc = new jsPDF();
     const title = tipoReporte === 'semanal' ? 'REPORTE SEMANAL DE JUSTIFICATIVOS' : 'REPORTE MENSUAL DE JUSTIFICATIVOS';
-    
     doc.setFontSize(18);
     doc.text(title, 14, 20);
     doc.setFontSize(12);
     doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 35);
     doc.text(`Período: ${fechaInicio || 'Inicio'} - ${fechaFin || 'Fin'}`, 14, 45);
-    
     const tableColumn = ["Profesor", "Fecha", "Asignatura", "Motivo", "Estado"];
     let dataParaPdf = justificativos;
-    if (dataParaPdf.length > 1000) {
-        alert('⚠️ Reporte muy extenso. Se limitará a los primeros 1000 justificativos.');
-        dataParaPdf = dataParaPdf.slice(0, 1000);
-    }
-
     const tableRows = dataParaPdf.map(j => [
       j.nombre || 'N/A',
       new Date(j.fecha_solicitud).toLocaleDateString(),
@@ -91,7 +81,6 @@ const GestionJustificativos = () => {
       j.motivo.substring(0, 50),
       j.estado
     ]);
-    
     doc.autoTable({ head: [tableColumn], body: tableRows, startY: 55, theme: 'striped', headStyles: { fillColor: [0, 51, 102], textColor: 255 } });
     doc.save(`justificativos_${tipoReporte}_${Date.now()}.pdf`);
   };
@@ -107,11 +96,7 @@ const GestionJustificativos = () => {
       } else {
         data.append('documento_url', formData.documento_url);
       }
-
-      await api.post('/justificativos', data, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      
+      await api.post('/justificativos', data, { headers: { 'Content-Type': 'multipart/form-data' } });
       setFormData({ id_asistencia: '', motivo: '', documento_url: '' });
       setArchivo(null);
       setMostrarForm(false);
@@ -129,27 +114,44 @@ const GestionJustificativos = () => {
       {(user?.roles?.includes('profesor') || user?.roles?.includes('coordinador')) && !user?.roles?.includes('auditor') && (
         <div className="card">
           <h3 className="card-title">Solicitar Justificativo</h3>
-          {!mostrarForm ? <button className="btn btn-primary" onClick={() => setMostrarForm(true)}>+ Nueva Solicitud</button> :
+          {!mostrarForm ? (
+            <button className="btn btn-primary" onClick={() => {
+              setMostrarForm(true);
+              if (user?.roles?.includes('profesor') && !user?.roles?.includes('coordinador')) {
+                  const miProf = profesores.find(p => p.id_usuario === user.id_usuario);
+                  if (miProf) { buscarAsistenciasProfesor(miProf); }
+              }
+            }}>Agregar</button>
+          ) : (
             <form onSubmit={handleSubmit}>
               <div className="form-group" style={{ position: 'relative' }}>
-                <label style={{ fontSize: '13px', fontWeight: '600', color: '#555', marginBottom: '8px', display: 'block' }}>1. Buscar Profesor por Nombre:</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="🔍 Escribe nombre y apellido del profesor..."
-                  value={busquedaProfesor}
-                  onFocus={() => setMostrarListaProfesores(true)}
-                  onChange={(e) => {
-                    setBusquedaProfesor(e.target.value);
-                    setMostrarListaProfesores(true);
-                    if (profesorSeleccionado) {
-                      setProfesorSeleccionado(null);
-                      setAsistencias([]);
-                      setFormData({ ...formData, id_asistencia: '' });
-                      setBusquedaAsistencia('');
-                    }
-                  }}
-                />
+                {(!user?.roles?.includes('profesor') || user?.roles?.includes('coordinador')) ? (
+                  <>
+                    <label style={{ fontSize: '13px', fontWeight: '600', color: '#555', marginBottom: '8px', display: 'block' }}>1. Buscar Profesor por Nombre:</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="🔍 Escribe nombre y apellido del profesor..."
+                      value={busquedaProfesor}
+                      onFocus={() => setMostrarListaProfesores(true)}
+                      onChange={(e) => {
+                        setBusquedaProfesor(e.target.value);
+                        setMostrarListaProfesores(true);
+                        if (profesorSeleccionado) {
+                          setProfesorSeleccionado(null);
+                          setAsistencias([]);
+                          setFormData({ ...formData, id_asistencia: '' });
+                          setBusquedaAsistencia('');
+                        }
+                      }}
+                    />
+                  </>
+                ) : (
+                  <div style={{ padding: '10px', backgroundColor: '#f0f7ff', borderRadius: '4px', marginBottom: '15px' }}>
+                    <span style={{ fontSize: '13px', color: '#2980b9' }}>📋 Creando solicitud para: <strong>{user.nombre} {user.apellido}</strong></span>
+                  </div>
+                )}
+                
                 {mostrarListaProfesores && (
                   <div className="search-results" style={{ position: 'absolute', width: '100%', zIndex: 100, backgroundColor: 'white', maxHeight: '200px', overflowY: 'auto', border: '1px solid #ddd', borderRadius: '4px', marginTop: '2px', boxShadow: '0 8px 16px rgba(0,0,0,0.15)' }}>
                     <div style={{ padding: '8px', borderBottom: '1px solid #eee', textAlign: 'right' }}>
@@ -176,11 +178,15 @@ const GestionJustificativos = () => {
                 )}
                 {profesorSeleccionado && (
                   <div style={{ marginTop: '10px' }}>
-                    <div style={{ fontSize: '13px', color: '#2ecc71', fontWeight: '500', marginBottom: '15px' }}>
-                      ✅ Profesor seleccionado: <strong>{profesorSeleccionado.nombre} {profesorSeleccionado.apellido}</strong>
-                    </div>
+                    {(!user?.roles?.includes('profesor') || user?.roles?.includes('coordinador')) && (
+                      <div style={{ fontSize: '13px', color: '#2ecc71', fontWeight: '500', marginBottom: '15px' }}>
+                        ✅ Profesor seleccionado: <strong>{profesorSeleccionado.nombre} {profesorSeleccionado.apellido}</strong>
+                      </div>
+                    )}
                     
-                    <label style={{ fontSize: '13px', fontWeight: '600', color: '#555', marginBottom: '8px', display: 'block' }}>2. Seleccionar Asistencia/Falta del Profesor:</label>
+                    <label style={{ fontSize: '13px', fontWeight: '600', color: '#555', marginBottom: '8px', display: 'block' }}>
+                      {(!user?.roles?.includes('profesor') || user?.roles?.includes('coordinador')) ? '2.' : '1.'} Seleccionar Asistencia/Falta:
+                    </label>
                     <div style={{ position: 'relative' }}>
                       <input
                         type="text"
@@ -231,33 +237,14 @@ const GestionJustificativos = () => {
                     <div style={{ fontWeight: '600', color: '#555' }}>
                       {archivo ? archivo.name : 'Haz clic para subir imagen o PDF'}
                     </div>
-                    <div style={{ fontSize: '12px', color: '#888', marginTop: '5px' }}>
-                      Formatos permitidos: JPG, PNG, PDF (Máx. 5MB)
-                    </div>
                   </label>
-                  <input 
-                    id="file-upload"
-                    type="file" 
-                    className="form-control" 
-                    style={{ display: 'none' }}
-                    accept=".jpg,.jpeg,.png,.pdf"
-                    onChange={(e) => setArchivo(e.target.files[0])} 
-                  />
-                  {archivo && (
-                    <button 
-                      type="button" 
-                      onClick={() => setArchivo(null)}
-                      style={{ marginTop: '10px', background: 'none', border: 'none', color: '#e74c3c', cursor: 'pointer', fontSize: '12px' }}
-                    >
-                      Remover archivo
-                    </button>
-                  )}
+                  <input id="file-upload" type="file" className="form-control" style={{ display: 'none' }} accept=".jpg,.jpeg,.png,.pdf" onChange={(e) => setArchivo(e.target.files[0])} />
                 </div>
               </div>
               <button type="submit" className="btn btn-primary">Enviar</button>
               <button type="button" className="btn btn-warning" style={{ marginLeft: '10px' }} onClick={() => setMostrarForm(false)}>Cancelar</button>
             </form>
-          }
+          )}
         </div>
       )}
 
@@ -290,7 +277,6 @@ const GestionJustificativos = () => {
                 onChange={(e) => setTerminoBusquedaTabla(e.target.value)}
                 style={{ paddingLeft: '35px' }}
               />
-              <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#999' }}></span>
             </div>
           )}
         </div>

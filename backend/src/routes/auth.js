@@ -24,15 +24,6 @@ router.post('/register', async (req, res) => {
 
     await client.query('BEGIN');
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const verificationToken = crypto.randomBytes(32).toString('hex');
-
-    const userRes = await client.query(
-      `INSERT INTO usuario (nombre, apellido, cedula, correo, telefono, contrasena, activo, email_verificado, codigo_verificacion)
-       VALUES ($1, $2, $3, $4, $5, $6, true, false, $7) RETURNING id_usuario`,
-      [nombre, apellido, cedula, correo, telefono, hashedPassword, verificationToken]
-    );
-    const userId = userRes.rows[0].id_usuario;
 
     const rolNombre = rol || 'profesor';
 

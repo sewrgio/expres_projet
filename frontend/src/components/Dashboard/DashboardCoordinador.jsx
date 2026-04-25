@@ -38,7 +38,6 @@ const DashboardCoordinador = () => {
       (pos) => {
         const d = calcularDistancia(pos.coords.latitude, pos.coords.longitude, IUJO_COORDS.lat, IUJO_COORDS.lon);
         setDistancia(d);
-        setEnArea(d <= 1.0);
       },
       (err) => console.error(err),
       { enableHighAccuracy: true }

@@ -5,7 +5,7 @@ const Usuario = {
   async findByEmail(correo) {
     const result = await pool.query(
       `SELECT u.id_usuario, u.nombre, u.apellido, u.cedula, u.correo, u.telefono, u.contrasena, u.activo,
-        u.email_verificado, u.codigo_verificacion, u.codigo_recuperacion, u.session_token, u.session_token_app,
+        u.email_verificado, u.codigo_verificacion, u.codigo_recuperacion, u.session_token, u.session_token_app, u.fecha_codigo_verificacion,
         (CASE WHEN p.id_profesor IS NOT NULL THEN true ELSE false END) as es_profesor,
         (CASE WHEN c.id_coordinador IS NOT NULL THEN true ELSE false END) as es_coordinador
        FROM usuario u
@@ -18,21 +18,27 @@ const Usuario = {
     return result.rows[0];
   },
 
-  // platform: 'web' o 'app'
-  async updateSessionToken(id, token, platform = 'web') {
-    const column = platform === 'app' ? 'session_token_app' : 'session_token';
-    await pool.query(
-      `UPDATE usuario SET ${column} = $1 WHERE id_usuario = $2`,
-      [token, id]
-    );
-  },
-
   async verifyEmail(token) {
+    // Verificar si el token existe y si no ha expirado (24 horas)
     const result = await pool.query(
-      'UPDATE usuario SET email_verificado = true, codigo_verificacion = NULL WHERE codigo_verificacion = $1 RETURNING id_usuario',
+      `UPDATE usuario 
+       SET email_verificado = true, codigo_verificacion = NULL, fecha_codigo_verificacion = NULL
+       WHERE codigo_verificacion = $1 
+       AND (fecha_codigo_verificacion > NOW() - INTERVAL '24 hours')
+       RETURNING id_usuario`,
       [token]
     );
     return result.rows[0];
+  },
+
+  async updateSessionToken(id_usuario, token, platform) {
+    // Sanitización básica para la columna (white-list)
+    const column = platform === 'app' ? 'session_token_app' : 'session_token';
+    
+    // Al usar una columna dinámica, debemos ser cuidadosos. 
+    // Como 'column' solo puede ser uno de dos valores fijos, es seguro.
+    const query = `UPDATE usuario SET ${column} = $1 WHERE id_usuario = $2`;
+    await pool.query(query, [token, id_usuario]);
   },
 
   async setRecoveryCode(email, code) {

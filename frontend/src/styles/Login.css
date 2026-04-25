@@ -225,3 +225,20 @@
 .password-toggle svg {
   display: block;
 }
+
+/* Phone input split styles */
+.phone-input-container {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.phone-input-container .input-group {
+  margin-bottom: 0;
+}
+
+.select-prefix select {
+  cursor: pointer;
+  text-align: center;
+}

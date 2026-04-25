@@ -40,7 +40,7 @@ const DashboardProfesor = () => {
           IUJO_COORDS.lon
         );
         setDistancia(d);
-        setEnArea(d <= 1.0); // 1km
+        setEnArea(d <= 1.5); // 1.5km flexible
       },
       (err) => console.error('Error de geolocalización:', err),
       { enableHighAccuracy: true }
@@ -83,8 +83,6 @@ const DashboardProfesor = () => {
     return () => cleanGeolocation && cleanGeolocation();
   }, [cargarEstado, monitorearUbicacion]);
 
-
-
   return (
     <div>
       <div className="row">
@@ -102,7 +100,7 @@ const DashboardProfesor = () => {
             marginTop: '10px', 
             color: enArea ? '#27ae60' : '#c0392b' 
           }}>
-            {enArea ? 'PUEDE ESCANEAR' : 'NO SE PUEDE ESCANEAR'}
+            {enArea ? 'PUEDE ESCANEAR' : 'No está en los parámetros establecidos'}
           </div>
           {distancia !== null && (
             <div style={{ textAlign: 'center', fontSize: '13px', color: '#666', marginTop: '8px' }}>
@@ -129,20 +127,19 @@ const DashboardProfesor = () => {
       <div className="card">
         <h3 className="card-title">Acciones Rápidas</h3>
         <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
-          <button 
-            className="btn btn-primary" 
-            onClick={() => navigate('/escanear')}
-            disabled={!enArea}
-            style={{ 
-              opacity: enArea ? 1 : 0.6, 
-              cursor: enArea ? 'pointer' : 'not-allowed',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}
-          >
-            🆔 {enArea ? 'Ver Mi QR' : 'QR Bloqueado'}
-          </button>
+          {enArea && (
+            <button 
+              className="btn btn-primary" 
+              onClick={() => navigate('/escanear')}
+              style={{ 
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+            >
+              🆔 Ver Mi QR
+            </button>
+          )}
           <button className="btn btn-success" onClick={() => navigate('/justificativos')}>
             📋 Justificativos
           </button>
