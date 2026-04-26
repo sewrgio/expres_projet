@@ -36,6 +36,18 @@ const QR = {
       [id_qr]
     );
     return result.rows[0];
+  },
+
+  async obtenerQRsEstaticos() {
+    const qrEstaticos = [
+      { nombre: 'Informática', codigo: 'COORD_INFORMATICA' },
+      { nombre: 'Educación', codigo: 'COORD_EDUCACION' },
+      { nombre: 'Electrónica', codigo: 'COORD_ELECTRONICA' },
+      { nombre: 'Contaduría', codigo: 'COORD_CONTADURIA' },
+      { nombre: 'Dirección', codigo: 'COORD_DIRECCION' },
+      { nombre: 'Administración de Empresas', codigo: 'COORD_ADMIN_EMPRESAS' }
+    ];
+    return qrEstaticos;
   }
 };
 

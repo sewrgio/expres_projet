@@ -33,7 +33,7 @@ router.get('/:id', auth, async (req, res) => {
 
 // Obtener usuarios disponibles para ser coordinadores
 router.get('/disponibles/usuarios', auth, async (req, res) => {
-  if (!req.user.esCoordinador && req.user.rol !== 'auditor') {
+  if (!req.user.esCoordinador && !req.user.roles.includes('auditor')) {
     return res.status(403).json({ error: 'Acceso denegado' });
   }
   try {
@@ -47,7 +47,7 @@ router.get('/disponibles/usuarios', auth, async (req, res) => {
 
 // Obtener carreras sin coordinador
 router.get('/disponibles/carreras', auth, async (req, res) => {
-  if (!req.user.esCoordinador && req.user.rol !== 'auditor') {
+  if (!req.user.esCoordinador && !req.user.roles.includes('auditor')) {
     return res.status(403).json({ error: 'Acceso denegado' });
   }
   try {
@@ -61,7 +61,7 @@ router.get('/disponibles/carreras', auth, async (req, res) => {
 
 // Crear nuevo coordinador (con usuario nuevo o existente)
 router.post('/', auth, async (req, res) => {
-  if (req.user.rol !== 'auditor') {
+  if (!req.user.roles.includes('auditor')) {
     return res.status(403).json({ error: 'Solo el auditor puede agregar coordinadores' });
   }
 
@@ -107,7 +107,7 @@ router.post('/', auth, async (req, res) => {
 
 // Actualizar coordinador
 router.put('/:id', auth, async (req, res) => {
-  if (req.user.rol !== 'auditor') {
+  if (!req.user.roles.includes('auditor')) {
     return res.status(403).json({ error: 'Solo el auditor puede editar coordinadores' });
   }
 
@@ -123,7 +123,7 @@ router.put('/:id', auth, async (req, res) => {
 
 // Eliminar coordinador
 router.delete('/:id', auth, async (req, res) => {
-  if (req.user.rol !== 'auditor') {
+  if (!req.user.roles.includes('auditor')) {
     return res.status(403).json({ error: 'Solo el auditor puede eliminar coordinadores' });
   }
 

@@ -33,7 +33,7 @@ const Layout = ({ children }) => {
   };
 
   const menuItems = [
-    { path: '/', icon: <IconDashboard />, label: 'Dashboard', roles: ['auditor', 'coordinador', 'profesor'] },
+    { path: '/', icon: <IconDashboard />, label: 'Panel Principal', roles: ['auditor', 'coordinador', 'profesor'] },
     { path: '/escanear', icon: <IconScanQR />, label: 'Escanear QR', roles: ['coordinador', 'profesor'] },
     { path: '/generar-qr', icon: <IconKey />, label: 'Generar QR', roles: ['coordinador'] },
     { path: '/profesores', icon: <IconTeachers />, label: 'Profesores', roles: ['coordinador'] },

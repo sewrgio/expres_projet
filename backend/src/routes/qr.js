@@ -72,7 +72,7 @@ router.get('/mi-qr', auth, async (req, res) => {
   try {
     const idUsuario = req.user.id;
     let identificador;
-    
+
     if (req.user.esProfesor) {
       identificador = `profesor_${req.user.id_profesor}`;
     } else if (req.user.esCoordinador) {
@@ -80,22 +80,52 @@ router.get('/mi-qr', auth, async (req, res) => {
     } else {
       identificador = `auditor_${idUsuario}`;
     }
-    
+
     // Generar un código único
     const codigoQR = `${identificador}_${Date.now()}`;
-    
+
     // Generar imagen QR en base64
     const qrImage = await QRCode.toDataURL(codigoQR);
-    
+
     res.json({
       success: true,
       codigo: codigoQR,
       imagen: qrImage
     });
-    
+
   } catch (error) {
     console.error('Error obteniendo QR:', error);
     res.status(500).json({ error: 'Error al obtener QR' });
+  }
+});
+
+// ✅ NUEVO: Obtener QRs estáticos de Coordinación
+router.get('/estaticos', auth, async (req, res) => {
+  if (!req.user.esCoordinador && !req.user.roles.includes('auditor')) {
+    return res.status(403).json({ error: 'Solo coordinadores y auditores pueden ver QRs estáticos' });
+  }
+
+  try {
+    const qrEstaticos = await QR.obtenerQRsEstaticos();
+
+    // Generar imágenes QR para cada código estático
+    const qrConImagenes = await Promise.all(
+      qrEstaticos.map(async (qr) => {
+        const qrImage = await QRCode.toDataURL(qr.codigo);
+        return {
+          ...qr,
+          imagen: qrImage
+        };
+      })
+    );
+
+    res.json({
+      success: true,
+      qrs: qrConImagenes
+    });
+  } catch (error) {
+    console.error('Error obteniendo QRs estáticos:', error);
+    res.status(500).json({ error: 'Error al obtener QRs estáticos' });
   }
 });
 

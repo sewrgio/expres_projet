@@ -22,7 +22,7 @@ router.get('/', auth, async (req, res) => {
 // Escanear QR (entrada o salida automático)
 router.post('/escanear', auth, async (req, res) => {
     // Permitir a profesores, coordinadores y auditores
-    if (!req.user.esProfesor && !req.user.esCoordinador && req.user.rol !== 'auditor') {
+    if (!req.user.esProfesor && !req.user.esCoordinador && !req.user.roles.includes('auditor')) {
         return res.status(403).json({ error: 'No tienes permiso para escanear QR' });
     }
 
@@ -138,16 +138,17 @@ router.get('/todas', auth, async (req, res) => {
 
     try {
         let asistencias = await Asistencia.obtenerTodas();
-        
-        // HACK: Para que el coordinador vea a TODOS los profesores (5000), 
+
+        // HACK: Para que el coordinador vea a TODOS los profesores (5000),
         // sobreescribimos el id_carrera con el suyo para saltar el filtro del frontend
         if (req.user.esCoordinador) {
+            const idCarrera = req.user.carreras.length > 0 ? req.user.carreras[0].id : null;
             asistencias = asistencias.map(a => ({
                 ...a,
-                id_carrera: req.user.id_carrera
+                id_carrera: idCarrera
             }));
         }
-        
+
         res.json(asistencias);
     } catch (error) {
         console.error(error);
@@ -157,7 +158,7 @@ router.get('/todas', auth, async (req, res) => {
 
 // ✅ NUEVO: Obtener asistencias por profesor
 router.get('/profesor/:idProfesor', auth, async (req, res) => {
-    if (!req.user.esCoordinador && req.user.rol !== 'auditor') {
+    if (!req.user.esCoordinador && !req.user.roles.includes('auditor')) {
         return res.status(403).json({ error: 'Acceso denegado' });
     }
     try {
@@ -173,7 +174,7 @@ router.get('/profesor/:idProfesor', auth, async (req, res) => {
 router.get('/faltas', auth, async (req, res) => {
     try {
         const result = await pool.query(
-            `SELECT *, 
+            `SELECT *,
                     EXTRACT(HOUR FROM (NOW() - fecha_entrada)) as horas_transcurridas
              FROM v_reporte_asistencias
              WHERE fecha_salida IS NULL
@@ -184,9 +185,10 @@ router.get('/faltas', auth, async (req, res) => {
 
         // HACK: Lo mismo para las faltas
         if (req.user.esCoordinador) {
+            const idCarrera = req.user.carreras.length > 0 ? req.user.carreras[0].id : null;
             faltas = faltas.map(f => ({
                 ...f,
-                id_carrera: req.user.id_carrera
+                id_carrera: idCarrera
             }));
         }
 

@@ -10,7 +10,7 @@ const router = express.Router();
 
 // --- REGISTRO ---
 router.post('/register', async (req, res) => {
-  const { nombre, apellido, cedula, correo, telefono, password, rol, carrera_id } = req.body;
+  const { nombre, apellido, cedula, correo, telefono, password, roles, carreras } = req.body;
 
   let client;
 
@@ -36,31 +36,74 @@ router.post('/register', async (req, res) => {
     );
     const userId = userRes.rows[0].id_usuario;
 
-    // 2. Asignar rol
-    const rolNombre = rol || 'profesor';
+    // 2. Asignar roles (auditor es exclusivo, otros pueden ser múltiples)
+    const rolesAsignar = Array.isArray(roles) ? roles : (roles ? [roles] : ['profesor']);
 
-    const rolRes = await client.query(
-      `INSERT INTO usuario_rol (id_usuario, id_rol, fecha_desde, activo)
-       VALUES ($1, (SELECT id_rol FROM rol WHERE nombre_rol = $2), CURRENT_DATE, true)
-       RETURNING id_usuario_rol`,
-      [userId, rolNombre]
-    );
-    const userRolId = rolRes.rows[0].id_usuario_rol;
+    // Validar: auditor no puede combinarse con otros roles
+    if (rolesAsignar.includes('auditor') && rolesAsignar.length > 1) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'El rol de auditor es exclusivo y no puede combinarse con otros roles' });
+    }
 
-    // 3. Crear perfil de profesor
-    await client.query(
-      `INSERT INTO profesor (id_profesor, id_usuario_rol, fecha_ingreso, activo)
-       VALUES ($1, $2, CURRENT_DATE, true)`,
-      [userId, userRolId]
-    );
-
-    // 4. Asignar carrera si se proporciona
-    if (carrera_id) {
-      await client.query(
-        `INSERT INTO profesor_carrera (id_profesor, id_carrera, dedicacion, fecha_desde, activo)
-         VALUES ($1, $2, 'TIEMPO_COMPLETO', CURRENT_DATE, true)`,
-        [userId, carrera_id]
+    // Validar: solo puede existir un auditor en el sistema
+    if (rolesAsignar.includes('auditor')) {
+      const auditorExistente = await client.query(
+        `SELECT COUNT(*) as count
+         FROM usuario_rol ur
+         JOIN rol r ON ur.id_rol = r.id_rol
+         WHERE r.nombre_rol = 'auditor' AND ur.activo = true`
       );
+      if (parseInt(auditorExistente.rows[0].count) > 0) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ error: 'Ya existe un auditor en el sistema. Solo puede haber un auditor.' });
+      }
+    }
+
+    const userRolIds = [];
+
+    for (const rolNombre of rolesAsignar) {
+      const rolRes = await client.query(
+        `INSERT INTO usuario_rol (id_usuario, id_rol, fecha_desde, activo)
+         VALUES ($1, (SELECT id_rol FROM rol WHERE nombre_rol = $2), CURRENT_DATE, true)
+         RETURNING id_usuario_rol`,
+        [userId, rolNombre]
+      );
+      userRolIds.push(rolRes.rows[0].id_usuario_rol);
+    }
+
+    // 3. Crear perfil de profesor si tiene rol de profesor
+    if (rolesAsignar.includes('profesor')) {
+      const profesorRolId = userRolIds[rolesAsignar.indexOf('profesor')] || userRolIds[0];
+      await client.query(
+        `INSERT INTO profesor (id_profesor, id_usuario_rol, fecha_ingreso, activo)
+         VALUES ($1, $2, CURRENT_DATE, true)`,
+        [userId, profesorRolId]
+      );
+
+      // 4. Asignar carreras múltiples si se proporcionan
+      if (carreras && Array.isArray(carreras) && carreras.length > 0) {
+        for (const carreraId of carreras) {
+          await client.query(
+            `INSERT INTO profesor_carrera (id_profesor, id_carrera, dedicacion, fecha_desde, activo)
+             VALUES ($1, $2, 'TIEMPO_COMPLETO', CURRENT_DATE, true)`,
+            [userId, carreraId]
+          );
+        }
+      }
+    }
+
+    // 5. Crear perfil de coordinador si tiene rol de coordinador
+    if (rolesAsignar.includes('coordinador')) {
+      const coordinadorRolId = userRolIds[rolesAsignar.indexOf('coordinador')] || userRolIds[0];
+      // Coordinadores solo pueden tener UNA carrera (la primera si se proporciona)
+      const carreraCoordinador = (carreras && Array.isArray(carreras) && carreras.length > 0) ? carreras[0] : null;
+      if (carreraCoordinador) {
+        await client.query(
+          `INSERT INTO coordinador (id_coordinador, id_usuario_rol, id_carrera, fecha_nombramiento, activo)
+           VALUES ($1, $2, $3, CURRENT_DATE, true)`,
+          [userId, coordinadorRolId, carreraCoordinador]
+        );
+      }
     }
 
     await client.query('COMMIT');
@@ -144,8 +187,7 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'La contraseña es incorrecta' });
     }
 
-    // Determinar el rol del usuario
-    let rol = 'profesor';
+    // Determinar los roles del usuario (soporte para múltiples roles)
     console.log('Buscando roles para usuario ID:', usuario.id_usuario);
     const rolQuery = await pool.query(
       `SELECT r.nombre_rol
@@ -159,63 +201,76 @@ router.post('/login', async (req, res) => {
     let rolesEncontrados = [];
     if (rolQuery.rows.length > 0) {
       rolesEncontrados = rolQuery.rows.map(r => r.nombre_rol);
-      if (rolesEncontrados.includes('auditor')) {
-        rol = 'auditor';
-      } else if (rolesEncontrados.includes('coordinador')) {
-        rol = 'coordinador';
-      }
     }
 
-    // Obtener id_profesor e id_carrera para profesores
+    // Obtener id_profesor y carreras múltiples para profesores
     let idProfesor = null;
-    let idCarreraProfesor = null;
+    let carrerasProfesor = [];
     if (rolesEncontrados.includes('profesor')) {
       console.log('Buscando datos de profesor...');
       const profesorQuery = await pool.query(
-        `SELECT p.id_profesor, pc.id_carrera
+        `SELECT DISTINCT p.id_profesor, pc.id_carrera, c.nombre_carrera
          FROM profesor p
          JOIN usuario_rol ur ON p.id_usuario_rol = ur.id_usuario_rol
-         LEFT JOIN profesor_carrera pc ON p.id_profesor = pc.id_profesor
-         WHERE ur.id_usuario = $1 AND ur.activo = true AND (pc.activo = true OR pc.activo IS NULL)`,
+         LEFT JOIN profesor_carrera pc ON p.id_profesor = pc.id_profesor AND pc.activo = true
+         LEFT JOIN carrera c ON pc.id_carrera = c.id_carrera
+         WHERE ur.id_usuario = $1 AND ur.activo = true`,
         [usuario.id_usuario]
       );
       console.log('Profesor encontrado:', profesorQuery.rows);
       if (profesorQuery.rows.length > 0) {
         idProfesor = profesorQuery.rows[0].id_profesor;
-        idCarreraProfesor = profesorQuery.rows[0].id_carrera;
+        carrerasProfesor = profesorQuery.rows
+          .filter(row => row.id_carrera)
+          .map(row => ({ id: row.id_carrera, nombre: row.nombre_carrera }));
       }
     }
 
-    // Obtener id_coordinador para coordinadores
+    // Obtener id_coordinador y carrera única para coordinadores
     let idCoordinador = null;
-    let idCarreraCoordinador = null;
+    let carreraCoordinador = null;
     if (rolesEncontrados.includes('coordinador')) {
       console.log('Buscando datos de coordinador...');
       const coordinadorQuery = await pool.query(
-        `SELECT c.id_coordinador, c.id_carrera 
-         FROM coordinador c 
+        `SELECT c.id_coordinador, c.id_carrera, ca.nombre_carrera
+         FROM coordinador c
          JOIN usuario_rol ur ON c.id_usuario_rol = ur.id_usuario_rol
+         LEFT JOIN carrera ca ON c.id_carrera = ca.id_carrera
          WHERE ur.id_usuario = $1 AND ur.activo = true`,
         [usuario.id_usuario]
       );
       console.log('Coordinador encontrado:', coordinadorQuery.rows);
       if (coordinadorQuery.rows.length > 0) {
         idCoordinador = coordinadorQuery.rows[0].id_coordinador;
-        idCarreraCoordinador = coordinadorQuery.rows[0].id_carrera;
+        if (coordinadorQuery.rows[0].id_carrera) {
+          carreraCoordinador = {
+            id: coordinadorQuery.rows[0].id_carrera,
+            nombre: coordinadorQuery.rows[0].nombre_carrera
+          };
+        }
       }
     }
+
+    // Combinar carreras: profesores pueden tener múltiples, coordinadores solo una
+    const todasCarreras = [...carrerasProfesor];
+    if (carreraCoordinador) {
+      todasCarreras.push(carreraCoordinador);
+    }
+    const idsCarreras = [...new Set(todasCarreras.map(c => c.id))];
 
     console.log('Generando token JWT...');
     const token = jwt.sign(
       {
         id: usuario.id_usuario,
         correo: usuario.correo,
-        rol,
-        esProfesor: rol === 'profesor',
-        esCoordinador: rol === 'coordinador',
+        roles: rolesEncontrados,
+        esProfesor: rolesEncontrados.includes('profesor'),
+        esCoordinador: rolesEncontrados.includes('coordinador'),
+        esAuditor: rolesEncontrados.includes('auditor'),
         id_profesor: idProfesor,
         id_coordinador: idCoordinador,
-        id_carrera: idCarreraCoordinador || idCarreraProfesor
+        carreras: todasCarreras,
+        ids_carreras: idsCarreras
       },
       process.env.JWT_SECRET || 'iujo_secret_key_2024',
       { expiresIn: '8h' }
@@ -235,11 +290,14 @@ router.post('/login', async (req, res) => {
         nombre: usuario.nombre,
         apellido: usuario.apellido,
         correo: usuario.correo,
-        rol,
         roles: rolesEncontrados,
+        esProfesor: rolesEncontrados.includes('profesor'),
+        esCoordinador: rolesEncontrados.includes('coordinador'),
+        esAuditor: rolesEncontrados.includes('auditor'),
         id_profesor: idProfesor,
         id_coordinador: idCoordinador,
-        id_carrera: idCarreraCoordinador || idCarreraProfesor
+        carreras: todasCarreras,
+        ids_carreras: idsCarreras
       }
     });
 

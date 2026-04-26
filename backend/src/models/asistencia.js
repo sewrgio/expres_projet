@@ -55,6 +55,30 @@ const Asistencia = {
     return result.rows;
   },
 
+  async verificarEstado(profesorId) {
+    const hoy = new Date().toISOString().split('T')[0];
+    const result = await pool.query(
+      `SELECT * FROM asistencia
+       WHERE id_profesor = $1 AND DATE(fecha_entrada) = $2
+       ORDER BY fecha_entrada DESC
+       LIMIT 1`,
+      [profesorId, hoy]
+    );
+
+    if (result.rows.length === 0) {
+      return {
+        dentro: false,
+        asistenciaActual: null
+      };
+    }
+
+    const asistencia = result.rows[0];
+    return {
+      dentro: asistencia.fecha_salida === null,
+      asistenciaActual: asistencia
+    };
+  },
+
   // 👇 NUEVO MÉTODO: Obtener todas las asistencias (para coordinador)
   async obtenerTodas(limite = 5000) {
     const result = await pool.query(

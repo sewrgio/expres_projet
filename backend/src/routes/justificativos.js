@@ -41,15 +41,16 @@ const upload = multer({
 router.get('/', auth, async (req, res) => {
   try {
     let justificativos;
-    
-    if (req.user.rol === 'auditor') {
+
+    if (req.user.roles.includes('auditor')) {
       justificativos = await Justificativo.obtenerDeCoordinadores();
     } else if (req.user.esCoordinador) {
       justificativos = await Justificativo.obtenerTodos();
       // Bypass frontend filtering
+      const idCarrera = req.user.carreras.length > 0 ? req.user.carreras[0].id : null;
       justificativos = justificativos.map(j => ({
         ...j,
-        id_carrera: req.user.id_carrera
+        id_carrera: idCarrera
       }));
     } else if (req.user.esProfesor) {
       justificativos = await Justificativo.findByProfesor(req.user.id_profesor);
@@ -103,22 +104,23 @@ router.get('/mis-justificativos', auth, async (req, res) => {
 
 // Obtener justificativos pendientes (coordinador y auditor)
 router.get('/pendientes', auth, async (req, res) => {
-  if (!req.user.esCoordinador && req.user.rol !== 'auditor') {
+  if (!req.user.esCoordinador && !req.user.roles.includes('auditor')) {
     return res.status(403).json({ error: 'Acceso denegado' });
   }
   try {
     let justificativos;
-    if (req.user.rol === 'auditor') {
+    if (req.user.roles.includes('auditor')) {
       justificativos = await Justificativo.obtenerDeCoordinadores();
     } else {
       justificativos = await Justificativo.obtenerTodos();
     }
-    
+
     // Bypass frontend filtering
     if (req.user.esCoordinador) {
+        const idCarrera = req.user.carreras.length > 0 ? req.user.carreras[0].id : null;
         justificativos = justificativos.map(j => ({
             ...j,
-            id_carrera: req.user.id_carrera
+            id_carrera: idCarrera
         }));
     }
 
@@ -132,7 +134,7 @@ router.get('/pendientes', auth, async (req, res) => {
 
 // Aprobar justificativo
 router.put('/aprobar/:id', auth, async (req, res) => {
-  if (!req.user.esCoordinador && req.user.rol !== 'auditor') {
+  if (!req.user.esCoordinador && !req.user.roles.includes('auditor')) {
     return res.status(403).json({ error: 'Acceso denegado' });
   }
   const { observaciones } = req.body;
@@ -147,7 +149,7 @@ router.put('/aprobar/:id', auth, async (req, res) => {
 
 // Rechazar justificativo
 router.put('/rechazar/:id', auth, async (req, res) => {
-  if (!req.user.esCoordinador && req.user.rol !== 'auditor') {
+  if (!req.user.esCoordinador && !req.user.roles.includes('auditor')) {
     return res.status(403).json({ error: 'Acceso denegado' });
   }
   const { observaciones } = req.body;

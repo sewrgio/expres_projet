@@ -32,10 +32,10 @@ router.get('/', auth, async (req, res) => {
 
 // ✅ NUEVO: Obtener todos los profesores (para asignar a asignaturas o justificativos)
 router.get('/todos', auth, async (req, res) => {
-  if (!req.user.esCoordinador && req.user.rol !== 'auditor') {
+  if (!req.user.esCoordinador && !req.user.roles.includes('auditor')) {
     return res.status(403).json({ error: 'Acceso denegado' });
   }
-  
+
   try {
     let query = `
       SELECT p.id_profesor, u.nombre, u.apellido, u.correo
@@ -47,16 +47,16 @@ router.get('/todos', auth, async (req, res) => {
     const params = [];
 
     // Si es coordinador (y no auditor), filtrar por su carrera
-    if (req.user.esCoordinador && req.user.rol !== 'auditor' && req.user.id_carrera) {
+    if (req.user.esCoordinador && !req.user.roles.includes('auditor') && req.user.ids_carreras.length > 0) {
       query += ` AND EXISTS (
-        SELECT 1 FROM profesor_carrera pc 
-        WHERE pc.id_profesor = p.id_profesor AND pc.id_carrera = $1 AND pc.activo = true
+        SELECT 1 FROM profesor_carrera pc
+        WHERE pc.id_profesor = p.id_profesor AND pc.id_carrera = ANY($1) AND pc.activo = true
       )`;
-      params.push(req.user.id_carrera);
+      params.push(req.user.ids_carreras);
     }
 
     query += ` ORDER BY u.nombre`;
-    
+
     const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (error) {

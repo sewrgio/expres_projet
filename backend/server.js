@@ -12,6 +12,8 @@ import asignaturaRoutes from './src/routes/asignaturas.js';
 import horarioRoutes from './src/routes/horarios.js';
 import justificativoRoutes from './src/routes/justificativos.js';
 import coordinadorRoutes from './src/routes/coordinadores.js';
+import ubicacionRoutes from './src/routes/ubicacion.js';
+import geofencingRoutes from './src/routes/geofencing.js';
 import { sendRecoveryCode } from './src/services/emailService.js';
 
 const app = express();
@@ -52,6 +54,8 @@ app.use('/api/asignaturas', asignaturaRoutes);
 app.use('/api/horarios', horarioRoutes);
 app.use('/api/justificativos', justificativoRoutes);
 app.use('/api/coordinadores', coordinadorRoutes);
+app.use('/api/ubicacion', ubicacionRoutes);
+app.use('/api/geofencing', geofencingRoutes);
 
 // Manejo de rutas no encontradas (404)
 app.use((req, res) => {

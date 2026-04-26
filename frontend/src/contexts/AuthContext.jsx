@@ -7,12 +7,22 @@ const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
 // Helpers para manejar el storage según "Recuérdame"
+const getStorageType = () => {
+  return localStorage.getItem('rememberMe') === 'true' ? 'localStorage' : 'sessionStorage';
+};
+
 const getToken = () => {
-  return localStorage.getItem('token') || sessionStorage.getItem('token');
+  const storage = getStorageType();
+  return storage === 'localStorage'
+    ? localStorage.getItem('token')
+    : sessionStorage.getItem('token');
 };
 
 const getUserData = () => {
-  return localStorage.getItem('user') || sessionStorage.getItem('user');
+  const storage = getStorageType();
+  return storage === 'localStorage'
+    ? localStorage.getItem('user')
+    : sessionStorage.getItem('user');
 };
 
 const clearAllStorage = () => {
@@ -73,13 +83,16 @@ export const AuthProvider = ({ children }) => {
   // --- Verificar sesión al cargar ---
   useEffect(() => {
     const verificarSesion = async () => {
+      const storage = getStorageType();
       const token = getToken();
       const userData = getUserData();
 
+      console.log('Verificando sesión - Storage type:', storage);
       console.log('Verificando sesión - Token encontrado:', !!token);
       console.log('Verificando sesión - User data encontrado:', !!userData);
       console.log('localStorage token:', localStorage.getItem('token'));
       console.log('sessionStorage token:', sessionStorage.getItem('token'));
+      console.log('rememberMe flag:', localStorage.getItem('rememberMe'));
 
       if (token && userData) {
         try {

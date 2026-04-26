@@ -85,7 +85,7 @@ const DashboardCoordinador = () => {
   }, [cargarEstado, monitorearUbicacion]);
 
   const tabs = [
-    { id: 'dashboard', nombre: 'Dashboard', icon: <IconDashboard />, roles: ['auditor', 'coordinador'] },
+    { id: 'dashboard', nombre: 'Panel Principal', icon: <IconDashboard />, roles: ['auditor', 'coordinador'] },
     { id: 'qr', nombre: 'Generar QR', icon: <IconKey />, roles: ['coordinador'] },
     { id: 'profesores', nombre: 'Profesores', icon: <IconTeachers />, roles: ['coordinador'] },
     { id: 'coordinadores', nombre: 'Agregar Coordinador', icon: <IconAddAdmin />, roles: ['auditor'] },
