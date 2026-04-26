@@ -28,16 +28,17 @@ const Layout = ({ children }) => {
   };
 
   const menuItems = [
-    { path: '/', icon: '📊', label: 'Dashboard', roles: ['coordinador', 'profesor'] },
-    { path: '/escanear', icon: '📷', label: 'Escanear QR', roles: ['profesor'] },
+    { path: '/', icon: '📊', label: 'Dashboard', roles: ['auditor', 'coordinador', 'profesor'] },
+    { path: '/escanear', icon: '📷', label: 'Escanear QR', roles: ['coordinador', 'profesor'] },
     { path: '/generar-qr', icon: '🔑', label: 'Generar QR', roles: ['coordinador'] },
     { path: '/profesores', icon: '👨‍🏫', label: 'Profesores', roles: ['coordinador'] },
-    { path: '/agregar-coordinador', icon: '👔', label: 'Agregar Coordinador', roles: ['coordinador'] },
-    { path: '/carreras', icon: '🎓', label: 'Carreras', roles: ['coordinador'] },
+    { path: '/agregar-coordinador', icon: '👔', label: 'Agregar Coordinador', roles: ['auditor'] },
+    { path: '/control-coordinadores', icon: '👥', label: 'Control Coordinadores', roles: ['auditor'] },
+    { path: '/carreras', icon: '🎓', label: 'Carreras', roles: ['auditor'] },
     { path: '/asignaturas', icon: '📚', label: 'Asignaturas', roles: ['coordinador'] },
     { path: '/horarios', icon: '⏰', label: 'Horarios', roles: ['coordinador'] },
-    { path: '/justificativos', icon: '📋', label: 'Justificativos', roles: ['profesor', 'coordinador'] },
-    { path: '/reportes', icon: '📈', label: 'Reportes', roles: ['coordinador'] },
+    { path: '/justificativos', icon: '📋', label: 'Justificativos', roles: ['profesor', 'coordinador', 'auditor'] },
+    { path: '/reportes', icon: '📈', label: 'Reportes', roles: ['auditor', 'coordinador'] },
   ];
 
   const filteredMenu = menuItems.filter(item => 
@@ -51,7 +52,7 @@ const Layout = ({ children }) => {
           <div className="sidebar-logo">📚</div>
           <div className="sidebar-title">IUJO Asistencia</div>
           <div style={{ fontSize: '12px', marginTop: '5px', opacity: 0.8 }}>
-            {user?.roles?.includes('coordinador') ? 'Coordinador' : 'Profesor'}
+            {user?.roles?.includes('auditor') ? 'Auditor' : user?.roles?.includes('coordinador') ? 'Coordinador' : 'Profesor'}
           </div>
         </div>
         <div className="sidebar-nav">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../services/api';
 import { useNavigate } from 'react-router-dom';
@@ -8,12 +8,61 @@ const DashboardProfesor = () => {
   const navigate = useNavigate();
   const [estado, setEstado] = useState({ dentro: false, asistenciasHoy: [] });
   const [stats, setStats] = useState({ totalHoy: 0, horasHoy: 0 });
+  const [distancia, setDistancia] = useState(null);
+  const [enArea, setEnArea] = useState(false);
 
-  useEffect(() => {
-    cargarEstado();
+  const IUJO_COORDS = { lat: 10.510744, lon: -66.936957 };
+
+  const calcularDistancia = (lat1, lon1, lat2, lon2) => {
+    const R = 6371; // Radio de la Tierra en km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
+  const monitorearUbicacion = useCallback(() => {
+    if (!navigator.geolocation) {
+      console.error('Geolocalización no soportada');
+      return;
+    }
+
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        const d = calcularDistancia(
+          pos.coords.latitude, 
+          pos.coords.longitude, 
+          IUJO_COORDS.lat, 
+          IUJO_COORDS.lon
+        );
+        setDistancia(d);
+        setEnArea(d <= 1.0); // 1km
+      },
+      (err) => console.error('Error de geolocalización:', err),
+      { enableHighAccuracy: true }
+    );
+
+    return () => navigator.geolocation.clearWatch(watchId);
   }, []);
 
-  const cargarEstado = async () => {
+  const calcularHoras = useCallback((asistencias) => {
+    if (!asistencias) return '0.0';
+    let total = 0;
+    asistencias.forEach(asis => {
+      if (asis.fecha_salida) {
+        const entrada = new Date(asis.fecha_entrada);
+        const salida = new Date(asis.fecha_salida);
+        total += (salida - entrada) / (1000 * 60 * 60);
+      }
+    });
+    return total.toFixed(1);
+  }, []);
+
+  const cargarEstado = useCallback(async () => {
     try {
       const response = await api.get('/asistencias/estado');
       setEstado(response.data);
@@ -22,36 +71,46 @@ const DashboardProfesor = () => {
         horasHoy: calcularHoras(response.data.asistenciasHoy)
       });
     } catch (error) {
-      // ✅ Silenciar error 403 (no autorizado)
       if (error.response?.status !== 403) {
         console.error('Error cargando estado:', error);
       }
     }
-  };
+  }, [calcularHoras]);
 
-  const calcularHoras = (asistencias) => {
-    let total = 0;
-    asistencias.forEach(asis => {
-      if (asis.fecha_salida) {
-        const entrada = new Date(asis.fecha_entrada);
-        const salida = new Date(asis.fecha_salida);
-        const horas = (salida - entrada) / (1000 * 60 * 60);
-        total += horas;
-      }
-    });
-    return total.toFixed(1);
-  };
+  useEffect(() => {
+    cargarEstado();
+    const cleanGeolocation = monitorearUbicacion();
+    return () => cleanGeolocation && cleanGeolocation();
+  }, [cargarEstado, monitorearUbicacion]);
+
+
 
   return (
     <div>
       <div className="row">
-        <div className="card">
+        <div className="card" style={{ 
+          borderLeft: `8px solid ${enArea ? '#2ecc71' : '#e74c3c'}`,
+          transition: 'all 0.3s ease'
+        }}>
           <div style={{ fontSize: '48px', textAlign: 'center' }}>
-            {estado.dentro ? '✅' : '⭕'}
+            {enArea ? '✅' : '⭕'}
           </div>
-          <div style={{ textAlign: 'center', fontSize: '18px', fontWeight: 'bold', marginTop: '10px' }}>
-            {estado.dentro ? 'Actualmente DENTRO' : 'Actualmente FUERA'}
+          <div style={{ 
+            textAlign: 'center', 
+            fontSize: '18px', 
+            fontWeight: 'bold', 
+            marginTop: '10px', 
+            color: enArea ? '#27ae60' : '#c0392b' 
+          }}>
+            {enArea ? 'PUEDE ESCANEAR' : 'NO SE PUEDE ESCANEAR'}
           </div>
+          {distancia !== null && (
+            <div style={{ textAlign: 'center', fontSize: '13px', color: '#666', marginTop: '8px' }}>
+              Ubicación: {enArea ? 'Dentro del campus' : 'Fuera del campus'}
+              <br />
+              Distancia: {distancia < 1 ? `${(distancia * 1000).toFixed(0)} metros` : `${distancia.toFixed(2)} km`}
+            </div>
+          )}
         </div>
         <div className="card">
           <div style={{ fontSize: '48px', fontWeight: 'bold', color: 'var(--iujo-blue)', textAlign: 'center' }}>
@@ -70,11 +129,22 @@ const DashboardProfesor = () => {
       <div className="card">
         <h3 className="card-title">Acciones Rápidas</h3>
         <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
-          <button className="btn btn-primary" onClick={() => navigate('/escanear')}>
-            🆔 Ver Mi QR
+          <button 
+            className="btn btn-primary" 
+            onClick={() => navigate('/escanear')}
+            disabled={!enArea}
+            style={{ 
+              opacity: enArea ? 1 : 0.6, 
+              cursor: enArea ? 'pointer' : 'not-allowed',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            🆔 {enArea ? 'Ver Mi QR' : 'QR Bloqueado'}
           </button>
-          <button className="btn btn-success" onClick={() => navigate('/reportes')}>
-            📊 Ver Reportes
+          <button className="btn btn-success" onClick={() => navigate('/justificativos')}>
+            📋 Justificativos
           </button>
         </div>
       </div>

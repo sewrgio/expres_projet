@@ -2,14 +2,43 @@ import express from 'express';
 import Asistencia from '../models/asistencia.js';
 import QR from '../models/qr.js';
 import auth from '../middleware/auth.js';
+import pool from '../config/db.js';
 
 const router = express.Router();
 
+// Obtener mis asistencias
+router.get('/', auth, async (req, res) => {
+    try {
+        const idProfesor = req.user.id_profesor;
+        if (!idProfesor) return res.json([]);
+        const historial = await Asistencia.obtenerHistorial(idProfesor);
+        res.json(historial);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error interno' });
+    }
+});
+
 // Escanear QR (entrada o salida automático)
 router.post('/escanear', auth, async (req, res) => {
-    // Solo profesores pueden escanear QR
-    if (!req.user.esProfesor) {
-        return res.status(403).json({ error: 'Solo profesores pueden escanear QR' });
+    // Permitir a profesores, coordinadores y auditores
+    if (!req.user.esProfesor && !req.user.esCoordinador && req.user.rol !== 'auditor') {
+        return res.status(403).json({ error: 'No tienes permiso para escanear QR' });
+    }
+
+    const { codigo_qr } = req.body;
+
+    if (!codigo_qr) {
+        return res.status(400).json({ error: 'El código QR es requerido' });
+    }
+
+    // Validación de horario (7:00 AM a 9:00 PM)
+    const horaActual = new Date().getHours();
+    if (horaActual < 7 || horaActual >= 21) {
+        return res.status(400).json({ 
+            success: false, 
+            error: 'El horario de escaneo es solo de 7:00 AM a 9:00 PM' 
+        });
     }
 
     const profesorId = req.user.id_profesor;
@@ -26,10 +55,10 @@ router.post('/escanear', auth, async (req, res) => {
         let tipo;
 
         if (estado.dentro) {
-            resultado = await Asistencia.registrarSalida(profesorId, `Salida escaneada en ${qr.ubicacion || 'coordinación'}`);
+            resultado = await Asistencia.registrarSalida(profesorId);
             tipo = 'salida';
         } else {
-            resultado = await Asistencia.registrarEntrada(profesorId, qr.id_qr, `Entrada escaneada en ${qr.ubicacion || 'coordinación'}`);
+            resultado = await Asistencia.registrarEntrada(profesorId, qr.id_qr);
             tipo = 'entrada';
         }
 
@@ -108,8 +137,60 @@ router.get('/todas', auth, async (req, res) => {
     }
 
     try {
-        const asistencias = await Asistencia.obtenerTodas();
+        let asistencias = await Asistencia.obtenerTodas();
+        
+        // HACK: Para que el coordinador vea a TODOS los profesores (5000), 
+        // sobreescribimos el id_carrera con el suyo para saltar el filtro del frontend
+        if (req.user.esCoordinador) {
+            asistencias = asistencias.map(a => ({
+                ...a,
+                id_carrera: req.user.id_carrera
+            }));
+        }
+        
         res.json(asistencias);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error interno' });
+    }
+});
+
+// ✅ NUEVO: Obtener asistencias por profesor
+router.get('/profesor/:idProfesor', auth, async (req, res) => {
+    if (!req.user.esCoordinador && req.user.rol !== 'auditor') {
+        return res.status(403).json({ error: 'Acceso denegado' });
+    }
+    try {
+        const historial = await Asistencia.obtenerHistorial(req.params.idProfesor);
+        res.json(historial);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error interno' });
+    }
+});
+
+// ✅ NUEVO: Obtener faltas/inasistencias (para auditor/coordinador)
+router.get('/faltas', auth, async (req, res) => {
+    try {
+        const result = await pool.query(
+            `SELECT *, 
+                    EXTRACT(HOUR FROM (NOW() - fecha_entrada)) as horas_transcurridas
+             FROM v_reporte_asistencias
+             WHERE fecha_salida IS NULL
+             ORDER BY fecha_entrada DESC
+             LIMIT 5000`
+        );
+        let faltas = result.rows;
+
+        // HACK: Lo mismo para las faltas
+        if (req.user.esCoordinador) {
+            faltas = faltas.map(f => ({
+                ...f,
+                id_carrera: req.user.id_carrera
+            }));
+        }
+
+        res.json(faltas);
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Error interno' });

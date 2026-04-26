@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../../services/api';
-import '../../styles/Login.css'; // Asegúrate de que el nombre del archivo CSS coincida
+import '../../styles/Login.css';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -19,7 +19,6 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  // Opciones de carrera
   const carreras = [
     "Informática",
     "Educación",
@@ -37,7 +36,6 @@ const Register = () => {
     let value = e.target.value;
     const name = e.target.name;
 
-    // Lógica de validación rápida mientras se escribe
     if (name === 'nombre' || name === 'apellido') {
       value = value.replace(/[^a-zA-ZáéíóúñÁÉÍÓÚÑ\s]/g, '');
     }
@@ -53,7 +51,6 @@ const Register = () => {
     e.preventDefault();
     setError('');
 
-    // Validaciones finales
     if (!formData.carrera) {
       setError('Debe seleccionar una carrera');
       return;
@@ -66,8 +63,8 @@ const Register = () => {
       setError('Las contraseñas no coinciden');
       return;
     }
-    if (formData.password.length < 4) {
-      setError('La contraseña debe tener al menos 4 caracteres');
+    if (formData.password.length < 6) {
+      setError('La contraseña debe tener al menos 6 caracteres');
       return;
     }
 
@@ -83,7 +80,6 @@ const Register = () => {
         password: formData.password
       });
       setSuccess(true);
-      setTimeout(() => navigate('/login'), 2000);
     } catch (err) {
       setError(err.response?.data?.error || 'Error al registrar');
     } finally {
@@ -95,9 +91,13 @@ const Register = () => {
     return (
       <div className="login-background">
         <div className="login-card">
-          <div className="avatar-circle" style={{ color: '#4CAF50' }}>✅</div>
-          <h2 style={{ color: '#333', marginTop: '20px' }}>¡Registro exitoso!</h2>
-          <p style={{ color: '#888' }}>Redirigiendo al inicio de sesión...</p>
+          <div className="avatar-circle" style={{ fontSize: '40px', color: '#4CAF50' }}>✉️</div>
+          <h2 style={{ color: '#333', marginTop: '20px' }}>¡Registro casi listo!</h2>
+          <p style={{ color: '#666', marginTop: '10px' }}>Hemos enviado un correo de confirmación a <strong>{formData.correo}</strong>.</p>
+          <p style={{ color: '#888', fontSize: '14px' }}>Por favor, verifica tu bandeja de entrada para activar tu cuenta.</p>
+          <button onClick={() => navigate('/login')} className="login-button" style={{ marginTop: '20px' }}>
+            VOLVER AL LOGIN
+          </button>
         </div>
       </div>
     );
@@ -106,16 +106,12 @@ const Register = () => {
   return (
     <div className="login-background">
       <div className="login-card register-card-wide">
-        {/* Icono de registro superior */}
         <div className="avatar-container">
-          <div className="avatar-circle">
-            📝
-          </div>
+          <div className="avatar-circle">📝</div>
         </div>
         <h2 className="login-title">Registro de Profesor</h2>
         
         <form onSubmit={handleSubmit}>
-          {/* Grupo: Nombre y Apellido (2 Columnas) */}
           <div className="form-group-grid-2">
             <div className="input-group">
               <input type="text" name="nombre" placeholder="Nombre" value={formData.nombre} onChange={handleChange} required />
@@ -125,12 +121,10 @@ const Register = () => {
             </div>
           </div>
 
-          {/* Cédula (Ancho completo) */}
           <div className="input-group">
             <input type="text" name="cedula" placeholder="Cédula" value={formData.cedula} onChange={handleChange} required />
           </div>
 
-          {/* Selector de Carrera (Ancho completo) */}
           <div className="input-group select-group">
             <select 
               name="carrera" 
@@ -147,7 +141,6 @@ const Register = () => {
             <span className="select-arrow">⬇️</span>
           </div>
 
-          {/* Correo y Teléfono (Ancho completo) */}
           <div className="input-group">
             <input type="email" name="correo" placeholder="Correo electrónico" value={formData.correo} onChange={handleChange} required />
           </div>
@@ -155,7 +148,6 @@ const Register = () => {
             <input type="tel" name="telefono" placeholder="Teléfono" value={formData.telefono} onChange={handleChange} required />
           </div>
 
-          {/* Grupo: Contraseña y Confirmar (2 Columnas) */}
           <div className="form-group-grid-2">
             <div className="input-group">
               <input type="password" name="password" placeholder="Contraseña" value={formData.password} onChange={handleChange} required />
@@ -167,13 +159,11 @@ const Register = () => {
 
           {error && <div className="error-message">{error}</div>}
 
-          {/* Botón de acción */}
           <button type="submit" className="login-button" disabled={loading}>
             {loading ? 'REGISTRANDO...' : 'CREAR CUENTA'}
           </button>
         </form>
         
-        {/* Link inferior */}
         <div className="register-link">
            <span style={{color: '#888'}}>¿Ya tienes cuenta? </span>
            <Link to="/login" style={{color: '#3f51b5', fontWeight: 'bold'}}>Inicia sesión</Link>

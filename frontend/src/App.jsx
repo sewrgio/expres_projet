@@ -15,6 +15,10 @@ import GestionHorarios from './components/Horarios/GestionHorarios';
 import GestionJustificativos from './components/Justificativos/GestionJustificativos';
 import AgregarCoordinador from './components/Coordinadores/AgregarCoordinador';
 import ReporteAsistencia from './components/Reportes/ReporteAsistencia';
+import VerifyEmail from './components/Auth/VerifyEmail';
+import ForgotPassword from './components/Auth/ForgotPassword';
+import RecoveryCode from './components/Auth/RecoveryCode';
+import ResetPassword from './components/Auth/ResetPassword';
 import './styles/global.css';
 
 const ProtectedRoute = ({ children, roles }) => {
@@ -54,10 +58,16 @@ function AppRoutes() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/recovery-code" element={<RecoveryCode />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       
       <Route path="/" element={
         <ProtectedRoute>
-          {user?.roles?.includes('coordinador') ? 
+          {user?.roles?.includes('auditor') ? 
+            <Layout><DashboardCoordinador /></Layout> : 
+           user?.roles?.includes('coordinador') ? 
             <Layout><DashboardCoordinador /></Layout> : 
             <Layout><DashboardProfesor /></Layout>
           }
@@ -65,7 +75,7 @@ function AppRoutes() {
       } />
       
       <Route path="/escanear" element={
-        <ProtectedRoute roles={['profesor']}>
+        <ProtectedRoute roles={['profesor', 'coordinador']}>
           <Layout><EscanearQR /></Layout>
         </ProtectedRoute>
       } />
@@ -83,13 +93,13 @@ function AppRoutes() {
       } />
       
       <Route path="/agregar-coordinador" element={
-        <ProtectedRoute roles={['coordinador']}>
+        <ProtectedRoute roles={['auditor']}>
           <Layout><AgregarCoordinador /></Layout>
         </ProtectedRoute>
       } />
       
       <Route path="/carreras" element={
-        <ProtectedRoute roles={['coordinador']}>
+        <ProtectedRoute roles={['auditor']}>
           <Layout><GestionCarreras /></Layout>
         </ProtectedRoute>
       } />
@@ -107,14 +117,20 @@ function AppRoutes() {
       } />
       
       <Route path="/justificativos" element={
-        <ProtectedRoute roles={['profesor', 'coordinador']}>
+        <ProtectedRoute roles={['profesor', 'coordinador', 'auditor']}>
           <Layout><GestionJustificativos /></Layout>
         </ProtectedRoute>
       } />
       
       <Route path="/reportes" element={
-        <ProtectedRoute roles={['profesor', 'coordinador']}>
+        <ProtectedRoute roles={['profesor', 'coordinador', 'auditor']}>
           <Layout><ReporteAsistencia /></Layout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/control-coordinadores" element={
+        <ProtectedRoute roles={['auditor']}>
+          <Layout><GestionJustificativos /></Layout> 
         </ProtectedRoute>
       } />
     </Routes>

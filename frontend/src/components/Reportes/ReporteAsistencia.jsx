@@ -19,7 +19,7 @@ const ReporteAsistencia = () => {
     setCargando(true);
     try {
       const [asisRes, inasRes] = await Promise.all([
-        api.get('/asistencias'),
+        api.get('/asistencias/todas'),
         api.get('/asistencias/faltas')
       ]);
       setAsistencias(asisRes.data);
@@ -58,21 +58,36 @@ const ReporteAsistencia = () => {
     let yOffset = 50;
     
     if (tipo === 'completo' || tipo === 'asistencias') {
-      const asisFiltradas = filtrarPorFecha(asistencias);
+      let asisFiltradas = filtrarPorFecha(asistencias);
+      
+      if (asisFiltradas.length > 1000) {
+        alert('⚠️ El reporte es muy extenso (' + asisFiltradas.length + ' registros). Se limitará el PDF a los primeros 1000 registros para evitar errores del navegador. Por favor, usa los filtros de fecha.');
+        asisFiltradas = asisFiltradas.slice(0, 1000);
+      }
       doc.setFontSize(14);
       doc.text('ASISTENCIAS', 14, yOffset);
       yOffset += 7;
       
-      const tableAsistencias = asisFiltradas.map(a => [
-        a.nombre || 'N/A',
-        new Date(a.fecha_entrada).toLocaleDateString(),
-        new Date(a.fecha_entrada).toLocaleTimeString(),
-        a.fecha_salida ? new Date(a.fecha_salida).toLocaleTimeString() : '--',
-        a.ubicacion || 'N/A'
-      ]);
+      const tableAsistencias = asisFiltradas.map(a => {
+        const entrada = new Date(a.fecha_entrada);
+        const salida = a.fecha_salida ? new Date(a.fecha_salida) : null;
+        const totalMinutes = salida ? (salida - entrada) / (1000 * 60) : 0;
+        const horasReloj = salida ? (totalMinutes / 60).toFixed(1) : '--';
+        const horasAcademicas = salida ? (totalMinutes / 45).toFixed(1) : '--';
+
+        return [
+          (a.nombre || '') + ' ' + (a.apellido || ''),
+          entrada.toLocaleDateString(),
+          entrada.toLocaleTimeString(),
+          salida ? salida.toLocaleTimeString() : '--',
+          a.horas_reloj ? Number(a.horas_reloj).toFixed(1) : '--',
+          a.horas_academicas ? Number(a.horas_academicas).toFixed(1) : '--',
+          a.ubicacion || 'N/A'
+        ];
+      });
       
       doc.autoTable({
-        head: [['Profesor', 'Fecha', 'Entrada', 'Salida', 'Ubicación']],
+        head: [['Personal', 'Fecha', 'Entrada', 'Salida', 'Hrs Reloj', 'Hrs Acad.', 'Ubicación']],
         body: tableAsistencias,
         startY: yOffset,
         theme: 'striped',
@@ -82,17 +97,22 @@ const ReporteAsistencia = () => {
     }
     
     if (tipo === 'completo' || tipo === 'inasistencias') {
-      const inasFiltradas = filtrarPorFecha(inasistencias);
+      let inasFiltradas = filtrarPorFecha(inasistencias);
+
+      if (inasFiltradas.length > 1000) {
+        if (tipo === 'inasistencias') alert('⚠️ El reporte es muy extenso. Se limitará a 1000 registros.');
+        inasFiltradas = inasFiltradas.slice(0, 1000);
+      }
       doc.setFontSize(14);
       doc.text('INASISTENCIAS', 14, yOffset);
       yOffset += 7;
       
       const tableInasistencias = inasFiltradas.map(i => [
-        i.profesor_nombre || 'N/A',
-        new Date(i.fecha_clase).toLocaleDateString(),
-        i.asignatura || 'N/A',
-        i.tipo_falta || 'Injustificada',
-        i.justificado ? 'Sí' : 'No'
+        (i.nombre || '') + ' ' + (i.apellido || ''),
+        new Date(i.fecha_entrada).toLocaleDateString(),
+        i.nombre_carrera || 'N/A',
+        'Inasistencia',
+        'No'
       ]);
       
       doc.autoTable({
@@ -148,25 +168,25 @@ const ReporteAsistencia = () => {
           <div className="table-container">
             <table className="table">
               <thead>
-                <tr><th>Profesor</th><th>Fecha</th><th>Entrada</th><th>Salida</th><th>Horas</th><th>Ubicación</th></tr>
+                <tr><th>Personal</th><th>Fecha</th><th>Entrada</th><th>Salida</th><th>Hrs Reloj</th><th>Hrs Acad.</th><th>Ubicación</th></tr>
               </thead>
               <tbody>
                 {asistenciasFiltradas.map(asis => {
                   const entrada = new Date(asis.fecha_entrada);
                   const salida = asis.fecha_salida ? new Date(asis.fecha_salida) : null;
-                  const horas = salida ? ((salida - entrada) / (1000 * 60 * 60)).toFixed(1) : '-';
                   return (
                     <tr key={asis.id_asistencia}>
                       <td>{asis.nombre} {asis.apellido}</td>
                       <td>{entrada.toLocaleDateString()}</td>
                       <td>{entrada.toLocaleTimeString()}</td>
                       <td>{salida ? salida.toLocaleTimeString() : '--'}</td>
-                      <td>{horas}</td>
+                      <td>{asis.horas_reloj ? Number(asis.horas_reloj).toFixed(1) : '-'}</td>
+                      <td>{asis.horas_academicas ? Number(asis.horas_academicas).toFixed(1) : '-'}</td>
                       <td>{asis.ubicacion || '-'}</td>
                     </tr>
                   );
                 })}
-                {asistenciasFiltradas.length === 0 && <tr><td colSpan="6">No hay asistencias</td></tr>}
+                {asistenciasFiltradas.length === 0 && <tr><td colSpan="7">No hay asistencias</td></tr>}
               </tbody>
             </table>
           </div>
@@ -183,12 +203,12 @@ const ReporteAsistencia = () => {
               </thead>
               <tbody>
                 {inasistenciasFiltradas.map(inas => (
-                  <tr key={inas.id_falta}>
-                    <td>{inas.profesor_nombre}</td>
-                    <td>{new Date(inas.fecha_clase).toLocaleDateString()}</td>
-                    <td>{inas.asignatura}</td>
-                    <td><span className="status-badge status-danger">{inas.tipo_falta || 'Injustificada'}</span></td>
-                    <td>{inas.justificado ? '✅ Sí' : '❌ No'}</td>
+                  <tr key={inas.id_asistencia}>
+                    <td>{inas.nombre} {inas.apellido}</td>
+                    <td>{new Date(inas.fecha_entrada).toLocaleDateString()}</td>
+                    <td>{inas.nombre_carrera}</td>
+                    <td><span className="status-badge status-danger">Inasistencia</span></td>
+                    <td>❌ No</td>
                   </tr>
                 ))}
                 {inasistenciasFiltradas.length === 0 && <tr><td colSpan="5">No hay inasistencias</td></tr>}

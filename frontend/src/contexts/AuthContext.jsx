@@ -1,37 +1,90 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useRef, useCallback } from 'react';
 import api from '../services/api';
+import InactivityModal from '../components/Layout/InactivityModal';
 
 const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
 
+// Helpers para manejar el storage según "Recuérdame"
+const getToken = () => {
+  return localStorage.getItem('token') || sessionStorage.getItem('token');
+};
+
+const getUserData = () => {
+  return localStorage.getItem('user') || sessionStorage.getItem('user');
+};
+
+const clearAllStorage = () => {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  localStorage.removeItem('rememberMe');
+  sessionStorage.removeItem('token');
+  sessionStorage.removeItem('user');
+};
+
+const INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutos
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showInactivityModal, setShowInactivityModal] = useState(false);
+  const timerRef = useRef(null);
+
+  // --- Inactividad ---
+  const resetTimer = useCallback(() => {
+    if (!user) return;
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setShowInactivityModal(false);
+    timerRef.current = setTimeout(() => {
+      setShowInactivityModal(true);
+    }, INACTIVITY_TIMEOUT);
+  }, [user]);
 
   useEffect(() => {
+    if (!user) {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      return;
+    }
+
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart', 'mousemove'];
+    const handler = () => resetTimer();
+
+    events.forEach(e => window.addEventListener(e, handler));
+    resetTimer(); // iniciar timer
+
+    return () => {
+      events.forEach(e => window.removeEventListener(e, handler));
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [user, resetTimer]);
+
+  const handleStay = () => {
+    setShowInactivityModal(false);
+    resetTimer();
+  };
+
+  const handleInactivityLogout = () => {
+    setShowInactivityModal(false);
+    logout();
+    window.location.href = '/login';
+  };
+
+  // --- Verificar sesión al cargar ---
+  useEffect(() => {
     const verificarSesion = async () => {
-      const token = localStorage.getItem('token');
-      const userData = localStorage.getItem('user');
-      
-      console.log('🔍 Verificando sesión...');
-      console.log('Token existe:', !!token);
-      console.log('UserData existe:', !!userData);
-      
+      const token = getToken();
+      const userData = getUserData();
+
       if (token && userData) {
         try {
-          // El interceptor de api.js ya agrega el token automáticamente
-          const response = await api.get('/auth/verify');
-          console.log('✅ Token válido:', response.data);
+          await api.get('/auth/verify');
           setUser(JSON.parse(userData));
-        } catch (error) {
-          console.error('❌ Token inválido:', error.response?.status);
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
+        } catch {
+          clearAllStorage();
           setUser(null);
         }
       } else {
-        console.log('⚠️ No hay token o userData');
         setUser(null);
       }
       setLoading(false);
@@ -40,24 +93,38 @@ export const AuthProvider = ({ children }) => {
     verificarSesion();
   }, []);
 
-  const login = async (correo, password) => {
-    const response = await api.post('/auth/login', { correo, password });
+  // --- Login ---
+  const login = async (correo, password, rememberMe = false) => {
+    const response = await api.post('/auth/login', { correo, password, platform: 'web' });
     const { token, usuario } = response.data;
-    localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(usuario));
+
+    clearAllStorage();
+
+    if (rememberMe) {
+      localStorage.setItem('rememberMe', 'true');
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(usuario));
+    } else {
+      sessionStorage.setItem('token', token);
+      sessionStorage.setItem('user', JSON.stringify(usuario));
+    }
+
     setUser(usuario);
     return usuario;
   };
 
+  // --- Logout ---
   const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    clearAllStorage();
     setUser(null);
   };
 
   return (
     <AuthContext.Provider value={{ user, loading, login, logout }}>
       {children}
+      {showInactivityModal && (
+        <InactivityModal onStay={handleStay} onLogout={handleInactivityLogout} />
+      )}
     </AuthContext.Provider>
   );
 };

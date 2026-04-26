@@ -17,8 +17,8 @@ router.get('/', async (req, res) => {
 
 // Crear nueva carrera (solo coordinador)
 router.post('/', auth, async (req, res) => {
-  if (!req.user.esCoordinador) {
-    return res.status(403).json({ error: 'Acceso denegado' });
+  if (req.user.rol !== 'auditor') {
+    return res.status(403).json({ error: 'Solo el auditor puede crear carreras' });
   }
   
   const { nombre_carrera } = req.body;
@@ -37,8 +37,8 @@ router.post('/', auth, async (req, res) => {
 
 // Editar carrera (solo coordinador)
 router.put('/:id', auth, async (req, res) => {
-  if (!req.user.esCoordinador) {
-    return res.status(403).json({ error: 'Acceso denegado' });
+  if (req.user.rol !== 'auditor') {
+    return res.status(403).json({ error: 'Solo el auditor puede editar carreras' });
   }
 
   const { id } = req.params;
@@ -62,8 +62,8 @@ router.put('/:id', auth, async (req, res) => {
 
 // Eliminar carrera (solo coordinador)
 router.delete('/:id', auth, async (req, res) => {
-  if (!req.user.esCoordinador) {
-    return res.status(403).json({ error: 'Acceso denegado' });
+  if (req.user.rol !== 'auditor') {
+    return res.status(403).json({ error: 'Solo el auditor puede eliminar carreras' });
   }
 
   const { id } = req.params;
