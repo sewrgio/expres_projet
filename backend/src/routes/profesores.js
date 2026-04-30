@@ -65,6 +65,53 @@ router.get('/todos', auth, async (req, res) => {
   }
 });
 
+// ✅ NUEVO: Buscar profesores por término (nombre, apellido, cédula)
+router.get('/buscar', auth, async (req, res) => {
+  if (!req.user.esCoordinador && !req.user.roles.includes('auditor')) {
+    return res.status(403).json({ error: 'Acceso denegado' });
+  }
+
+  const { q } = req.query;
+
+  if (!q || q.trim().length < 2) {
+    return res.status(400).json({ error: 'Ingrese al menos 2 caracteres para buscar' });
+  }
+
+  try {
+    let query = `
+      SELECT p.id_profesor, u.nombre, u.apellido, u.correo, u.cedula,
+             c.id_carrera, c.nombre_carrera
+      FROM profesor p
+      JOIN usuario_rol ur ON p.id_usuario_rol = ur.id_usuario_rol
+      JOIN usuario u ON ur.id_usuario = u.id_usuario
+      LEFT JOIN profesor_carrera pc ON p.id_profesor = pc.id_profesor AND pc.activo = true
+      LEFT JOIN carrera c ON pc.id_carrera = c.id_carrera
+      WHERE u.activo = true
+      AND (
+        u.nombre ILIKE $1 OR
+        u.apellido ILIKE $1 OR
+        u.cedula ILIKE $1 OR
+        u.correo ILIKE $1
+      )
+    `;
+    const params = [`%${q}%`];
+
+    // Si es coordinador (y no auditor), filtrar por su carrera
+    if (req.user.esCoordinador && !req.user.roles.includes('auditor') && req.user.ids_carreras && req.user.ids_carreras.length > 0) {
+      query += ` AND c.id_carrera = ANY($2::int[])`;
+      params.push(req.user.ids_carreras);
+    }
+
+    query += ` ORDER BY u.nombre, u.apellido LIMIT 10`;
+
+    const result = await pool.query(query, params);
+    res.json(result.rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
 router.get('/:id', auth, async (req, res) => {
   try {
     const profesor = await Profesor.findById(req.params.id);

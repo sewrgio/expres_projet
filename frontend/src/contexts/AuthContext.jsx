@@ -45,11 +45,13 @@ export const AuthProvider = ({ children }) => {
   const resetTimer = useCallback(() => {
     if (!user) return;
     if (timerRef.current) clearTimeout(timerRef.current);
-    setShowInactivityModal(false);
-    timerRef.current = setTimeout(() => {
-      setShowInactivityModal(true);
-    }, INACTIVITY_TIMEOUT);
-  }, [user]);
+    // No cerrar el modal si ya está visible
+    if (!showInactivityModal) {
+      timerRef.current = setTimeout(() => {
+        setShowInactivityModal(true);
+      }, INACTIVITY_TIMEOUT);
+    }
+  }, [user, showInactivityModal]);
 
   useEffect(() => {
     if (!user) {

@@ -24,32 +24,22 @@ const DashboardCoordinador = () => {
   const [distancia, setDistancia] = useState(null);
   const [enArea, setEnArea] = useState(false);
 
-  const IUJO_COORDS = { lat: 10.510717, lon: -66.936949 };
-
-  const calcularDistancia = (lat1, lon1, lat2, lon2) => {
-    const R = 6371;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-      Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
-  };
-
-  const monitorearUbicacion = useCallback(() => {
-    if (!navigator.geolocation) return;
-    const watchId = navigator.geolocation.watchPosition(
-      (pos) => {
-        const d = calcularDistancia(pos.coords.latitude, pos.coords.longitude, IUJO_COORDS.lat, IUJO_COORDS.lon);
-        setDistancia(d);
-        setEnArea(d <= 1.0);
-      },
-      (err) => console.error(err),
-      { enableHighAccuracy: true }
-    );
-    return () => navigator.geolocation.clearWatch(watchId);
+  // ✅ NUEVO: Obtener ubicación desde APK (endpoint backend)
+  const obtenerUbicacionDesdeAPK = useCallback(async () => {
+    try {
+      const response = await api.get('/geofencing/ubicacion');
+      if (response.data.success && response.data.ubicacion) {
+        setDistancia(response.data.distancia);
+        setEnArea(response.data.enArea);
+      } else {
+        setDistancia(null);
+        setEnArea(false);
+      }
+    } catch (error) {
+      console.error('Error obteniendo ubicación desde APK:', error);
+      setDistancia(null);
+      setEnArea(false);
+    }
   }, []);
 
   const calcularHoras = useCallback((asistencias) => {
@@ -80,9 +70,23 @@ const DashboardCoordinador = () => {
 
   useEffect(() => {
     cargarEstado();
-    const cleanGeo = monitorearUbicacion();
-    return () => cleanGeo && cleanGeo();
-  }, [cargarEstado, monitorearUbicacion]);
+    obtenerUbicacionDesdeAPK();
+    
+    // Actualizar ubicación cada 30 segundos desde APK
+    const ubicacionInterval = setInterval(() => {
+      obtenerUbicacionDesdeAPK();
+    }, 30000);
+    
+    // Actualizar estadísticas cada 60 segundos
+    const estadoInterval = setInterval(() => {
+      cargarEstado();
+    }, 60000);
+    
+    return () => {
+      clearInterval(ubicacionInterval);
+      clearInterval(estadoInterval);
+    };
+  }, [cargarEstado, obtenerUbicacionDesdeAPK]);
 
   const tabs = [
     { id: 'dashboard', nombre: 'Panel Principal', icon: <IconDashboard />, roles: ['auditor', 'coordinador'] },
@@ -92,7 +96,7 @@ const DashboardCoordinador = () => {
     { id: 'carreras', nombre: 'Carreras', icon: <IconGraduation />, roles: ['auditor'] },
     { id: 'asignaturas', nombre: 'Asignaturas', icon: <IconBookOpen />, roles: ['coordinador'] },
     { id: 'horarios', nombre: 'Horarios', icon: <IconClock />, roles: ['coordinador'] },
-    { id: 'justificativos', nombre: 'Justificativos', icon: <IconClipboard />, roles: ['coordinador', 'auditor'] },
+    { id: 'justificativos', nombre: 'Justificativos', icon: <IconClipboard />, roles: ['coordinador'] },
     { id: 'control-coordinadores', nombre: 'Control Coordinadores', icon: <IconUsers />, roles: ['auditor'] },
     { id: 'reportes', nombre: 'Reportes', icon: <IconChart />, roles: ['auditor', 'coordinador'] },
   ];
@@ -118,7 +122,7 @@ const DashboardCoordinador = () => {
              tab.id === 'asignaturas' ? 'Gestionar asignaturas' :
              tab.id === 'horarios' ? 'Gestionar horarios' :
              tab.id === 'justificativos' ? 'Revisar justificativos' :
-             tab.id === 'control-coordinadores' ? 'Control y justificativos de coordinadores' :
+             tab.id === 'control-coordinadores' ? 'Gestionar coordinadores de carreras' :
              tab.id === 'reportes' ? 'Ver reportes de asistencia' : ''}
           </p>
         </div>
@@ -128,65 +132,57 @@ const DashboardCoordinador = () => {
 
   return (
     <div>
-      <div className="top-header">
-        <h2>Panel de Coordinación</h2>
-        <div className="user-info">
-          <div className="user-avatar">
-            {user?.nombre?.charAt(0)}{user?.apellido?.charAt(0)}
+      {user?.roles?.includes('auditor') ? null : (
+        <LocationAlert enArea={enArea} distancia={distancia} />
+      )}
+      {/* Estadísticas ocultas para auditor */}
+      {!user?.roles?.includes('auditor') && (
+        <div className="row">
+          <div className="card">
+            <div style={{ fontSize: '48px', fontWeight: 'bold', color: 'var(--primary-blue)', textAlign: 'center' }}>
+              {stats.totalHoy}
+            </div>
+            <div style={{ textAlign: 'center' }}>Asistencias hoy</div>
           </div>
-          <span>{user?.nombre} {user?.apellido}</span>
-        </div>
-      </div>
-
-      <LocationAlert enArea={enArea} distancia={distancia} />
-      <div className="row" style={{ marginBottom: '20px' }}>
-        <div className="card">
-          <div style={{ fontSize: '48px', fontWeight: 'bold', color: 'var(--iujo-blue)', textAlign: 'center' }}>
-            {stats.totalHoy}
+          <div className="card">
+            <div style={{ fontSize: '48px', fontWeight: 'bold', color: 'var(--primary-blue)', textAlign: 'center' }}>
+              {stats.horasHoy}
+            </div>
+            <div style={{ textAlign: 'center' }}>Horas trabajadas hoy</div>
           </div>
-          <div style={{ textAlign: 'center' }}>Asistencias hoy</div>
-        </div>
-        <div className="card">
-          <div style={{ fontSize: '48px', fontWeight: 'bold', color: 'var(--iujo-blue)', textAlign: 'center' }}>
-            {stats.horasHoy}
+          <div className="card">
+            <div style={{ fontSize: '48px', fontWeight: 'bold', color: 'var(--gold)', textAlign: 'center' }}>
+              {(parseFloat(stats.horasHoy) * 1.5).toFixed(1)}
+            </div>
+            <div style={{ textAlign: 'center' }}>Horas académicas hoy</div>
           </div>
-          <div style={{ textAlign: 'center' }}>Horas trabajadas hoy</div>
         </div>
-      </div>
-
-      <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
-        <div style={{ display: 'flex', borderBottom: '1px solid var(--iujo-dark-gray)', flexWrap: 'wrap' }}>
-          {filteredTabs.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              style={{
-                padding: '12px 24px',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                fontWeight: activeTab === tab.id ? 'bold' : 'normal',
-                borderBottom: activeTab === tab.id ? '3px solid var(--iujo-gold)' : 'none',
-                color: activeTab === tab.id ? 'var(--iujo-blue)' : '#666'
-              }}
-            >
-              {tab.icon} {tab.nombre}
-            </button>
-          ))}
+      )}
+      <div className="card">
+        <h3 className="card-title">Datos del Usuario</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+          <div>
+            <strong>Nombre:</strong> {user?.nombre}
+          </div>
+          <div>
+            <strong>Apellido:</strong> {user?.apellido}
+          </div>
+          <div>
+            <strong>Cédula:</strong> {user?.cedula || 'No disponible'}
+          </div>
+          <div>
+            <strong>Correo:</strong> {user?.correo}
+          </div>
+          <div>
+            <strong>Teléfono:</strong> {user?.telefono || 'No disponible'}
+          </div>
+          <div>
+            <strong>Carrera:</strong> {user?.nombre_carrera || 'No disponible'}
+          </div>
+          <div>
+            <strong>Rol:</strong> {user?.roles?.join(', ') || user?.rol || 'No disponible'}
+          </div>
         </div>
-      </div>
-
-      <div style={{ marginTop: '20px' }}>
-        {activeTab === 'dashboard' && renderDashboard()}
-        {activeTab === 'qr' && <GenerarQR />}
-        {activeTab === 'profesores' && <ListaProfesores />}
-        {activeTab === 'coordinadores' && <AgregarCoordinador />}
-        {activeTab === 'carreras' && <GestionCarreras />}
-        {activeTab === 'asignaturas' && <GestionAsignaturas />}
-        {activeTab === 'horarios' && <GestionHorarios />}
-        {activeTab === 'justificativos' && <GestionJustificativos />}
-        {activeTab === 'control-coordinadores' && <GestionJustificativos />}
-        {activeTab === 'reportes' && <ReporteAsistencia />}
       </div>
     </div>
   );

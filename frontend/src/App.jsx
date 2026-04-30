@@ -10,10 +10,10 @@ import EscanearQR from './components/Asistencias/EscanearQR';
 import GenerarQR from './components/QR/GenerarQR';
 import ListaProfesores from './components/Profesores/ListaProfesores';
 import GestionCarreras from './components/Carreras/GestionCarreras';
-import GestionAsignaturas from './components/Asignaturas/GestionAsignaturas';
-import GestionHorarios from './components/Horarios/GestionHorarios';
+import GestionAsignaturasHorarios from './components/Asignaturas/GestionAsignaturasHorarios';
 import GestionJustificativos from './components/Justificativos/GestionJustificativos';
 import AgregarCoordinador from './components/Coordinadores/AgregarCoordinador';
+import ControlCoordinadores from './components/Coordinadores/ControlCoordinadores';
 import ReporteAsistencia from './components/Reportes/ReporteAsistencia';
 import VerifyEmail from './components/Auth/VerifyEmail';
 import ForgotPassword from './components/Auth/ForgotPassword';
@@ -106,18 +106,24 @@ function AppRoutes() {
       
       <Route path="/asignaturas" element={
         <ProtectedRoute roles={['coordinador']}>
-          <Layout><GestionAsignaturas /></Layout>
+          <Layout><GestionAsignaturasHorarios /></Layout>
         </ProtectedRoute>
       } />
       
       <Route path="/horarios" element={
         <ProtectedRoute roles={['coordinador']}>
-          <Layout><GestionHorarios /></Layout>
+          <Layout><GestionAsignaturasHorarios /></Layout>
         </ProtectedRoute>
       } />
       
       <Route path="/justificativos" element={
-        <ProtectedRoute roles={['profesor', 'coordinador', 'auditor']}>
+        <ProtectedRoute roles={['coordinador']}>
+          <Layout><GestionJustificativos /></Layout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/justificativos-profesores" element={
+        <ProtectedRoute roles={['coordinador']}>
           <Layout><GestionJustificativos /></Layout>
         </ProtectedRoute>
       } />
@@ -130,7 +136,7 @@ function AppRoutes() {
 
       <Route path="/control-coordinadores" element={
         <ProtectedRoute roles={['auditor']}>
-          <Layout><GestionJustificativos /></Layout> 
+          <Layout><ControlCoordinadores /></Layout>
         </ProtectedRoute>
       } />
     </Routes>

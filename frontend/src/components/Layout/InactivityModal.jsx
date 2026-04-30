@@ -1,31 +1,42 @@
 import React from 'react';
 
 const InactivityModal = ({ onStay, onLogout }) => {
+  const handleBackdropClick = (e) => {
+    // No permitir cerrar el modal haciendo clic fuera
+    e.stopPropagation();
+  };
+
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.6)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 10000,
-      backdropFilter: 'blur(4px)',
-      animation: 'fadeIn 0.3s ease'
-    }}>
-      <div style={{
-        background: 'white',
-        borderRadius: '16px',
-        padding: '35px 40px',
-        maxWidth: '420px',
-        width: '90%',
-        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
-        textAlign: 'center',
-        animation: 'slideUp 0.3s ease'
-      }}>
+    <div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 10000,
+        backdropFilter: 'blur(4px)',
+        animation: 'fadeIn 0.3s ease'
+      }}
+      onClick={handleBackdropClick}
+    >
+      <div
+        style={{
+          background: 'white',
+          borderRadius: '16px',
+          padding: '35px 40px',
+          maxWidth: '420px',
+          width: '90%',
+          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+          textAlign: 'center',
+          animation: 'slideUp 0.3s ease'
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div style={{ fontSize: '48px', marginBottom: '15px' }}>⏰</div>
         <h2 style={{ color: '#1e3c72', margin: '0 0 10px', fontSize: '20px' }}>
           Sesión Inactiva

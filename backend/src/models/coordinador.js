@@ -1,17 +1,16 @@
 import pool from '../config/db.js';
 
 const Coordinador = {
-  // Obtener todos los coordinadores
+  // Obtener todos los coordinadores (activos e inactivos)
   async findAll() {
     const result = await pool.query(`
-      SELECT c.*, u.nombre, u.apellido, u.correo, u.cedula, u.telefono,
-             car.nombre_carrera
+      SELECT c.*, u.id_usuario, u.nombre, u.apellido, u.correo, u.cedula, u.telefono,
+             u.activo as usuario_activo, car.nombre_carrera
       FROM coordinador c
       JOIN usuario_rol ur ON c.id_usuario_rol = ur.id_usuario_rol
       JOIN usuario u ON ur.id_usuario = u.id_usuario
       JOIN carrera car ON c.id_carrera = car.id_carrera
-      WHERE u.activo = true
-      ORDER BY car.nombre_carrera
+      ORDER BY u.activo DESC, car.nombre_carrera
     `);
     return result.rows;
   },
@@ -20,12 +19,12 @@ const Coordinador = {
   async findById(id) {
     const result = await pool.query(`
       SELECT c.*, u.nombre, u.apellido, u.correo, u.cedula, u.telefono,
-             car.nombre_carrera
+             u.activo as usuario_activo, car.nombre_carrera
       FROM coordinador c
       JOIN usuario_rol ur ON c.id_usuario_rol = ur.id_usuario_rol
       JOIN usuario u ON ur.id_usuario = u.id_usuario
       JOIN carrera car ON c.id_carrera = car.id_carrera
-      WHERE c.id_coordinador = $1 AND u.activo = true
+      WHERE c.id_coordinador = $1
     `, [id]);
     return result.rows[0];
   },
@@ -66,6 +65,26 @@ const Coordinador = {
     const result = await pool.query(`
       UPDATE usuario u
       SET activo = false
+      FROM usuario_rol ur
+      JOIN coordinador c ON ur.id_usuario_rol = c.id_usuario_rol
+      WHERE c.id_coordinador = $1 
+        AND ur.id_usuario_rol = c.id_usuario_rol
+        AND u.id_usuario = ur.id_usuario
+      RETURNING u.*
+    `, [id]);
+    return result.rows[0];
+  },
+
+  // Desactivar coordinador (mismo comportamiento que delete pero con nombre más descriptivo)
+  async deactivate(id) {
+    return this.delete(id);
+  },
+
+  // Activar coordinador (marcar usuario como activo)
+  async activate(id) {
+    const result = await pool.query(`
+      UPDATE usuario u
+      SET activo = true
       FROM usuario_rol ur
       JOIN coordinador c ON ur.id_usuario_rol = c.id_usuario_rol
       WHERE c.id_coordinador = $1 

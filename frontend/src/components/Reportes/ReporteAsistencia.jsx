@@ -1,7 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+
+// Función helper para cargar imagen como base64
+const loadImageAsBase64 = (url) => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const dataUrl = canvas.toDataURL('image/jpeg');
+      resolve(dataUrl);
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+};
 
 const ReporteAsistencia = () => {
   const [activeTab, setActiveTab] = useState('asistencias');
@@ -43,19 +62,48 @@ const ReporteAsistencia = () => {
     });
   };
 
-  const generarPDFCompleto = (tipo) => {
-    const doc = new jsPDF();
-    const fechaActual = new Date().toLocaleDateString();
-    const titulo = tipo === 'completo' ? 'REPORTE COMPLETO DE ASISTENCIAS E INASISTENCIAS' :
-                    tipo === 'asistencias' ? 'REPORTE DE ASISTENCIAS' : 'REPORTE DE INASISTENCIAS';
-    
-    doc.setFontSize(18);
-    doc.text(titulo, 14, 20);
-    doc.setFontSize(10);
-    doc.text(`Fecha de generación: ${fechaActual}`, 14, 30);
-    doc.text(`Período: ${fechaInicio || 'Inicio'} - ${fechaFin || 'Fin'}`, 14, 37);
-    
-    let yOffset = 50;
+  const generarPDFCompleto = async (tipo) => {
+    try {
+      const doc = new jsPDF();
+      const fechaActual = new Date().toLocaleDateString();
+      const titulo = tipo === 'completo' ? 'REPORTE COMPLETO DE ASISTENCIAS E INASISTENCIAS' :
+                      tipo === 'asistencias' ? 'REPORTE DE ASISTENCIAS' : 'REPORTE DE INASISTENCIAS';
+      
+      // ✅ Cargar logo como base64
+      const logoUrl = '/6933620737_368c2eb1b7.jpg';
+      const logoBase64 = await loadImageAsBase64(logoUrl);
+      
+      // ✅ Logo centrado en la parte superior
+      doc.addImage(logoBase64, 'JPEG', 85, 5, 40, 20);
+      
+      // ✅ Nombre de la institución MÁS GRANDE
+      doc.setFontSize(16);
+      doc.setTextColor(0, 51, 102);
+      doc.setFont('helvetica', 'bold');
+      doc.text('INSTITUTO UNIVERSITARIO', 105, 32, { align: 'center' });
+      doc.text('JESÚS OBRERO', 105, 40, { align: 'center' });
+      doc.setFont('helvetica', 'normal');
+      
+      // ✅ Marca de agua centrada en la página
+      doc.saveGraphicsState();
+      doc.setGState(new doc.GState({ opacity: 0.06 }));
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const watermarkSize = 150;
+      const centerX = (pageWidth - watermarkSize) / 2;
+      const centerY = (pageHeight - watermarkSize) / 2;
+      doc.addImage(logoBase64, 'JPEG', centerX, centerY, watermarkSize, watermarkSize, { angle: -35 });
+      doc.restoreGraphicsState();
+      
+      // Título más pequeño
+      doc.setFontSize(14);
+      doc.setTextColor(80, 80, 80);
+      doc.text(titulo, 105, 55, { align: 'center' });
+      doc.setFontSize(10);
+      doc.text(`Fecha de generación: ${fechaActual}`, 14, 65);
+      doc.text(`Período: ${fechaInicio || 'Inicio'} - ${fechaFin || 'Fin'}`, 14, 72);
+      
+      let yOffset = 80;
     
     if (tipo === 'completo' || tipo === 'asistencias') {
       let asisFiltradas = filtrarPorFecha(asistencias);
@@ -86,7 +134,7 @@ const ReporteAsistencia = () => {
         ];
       });
       
-      doc.autoTable({
+      autoTable(doc, {
         head: [['Personal', 'Fecha', 'Entrada', 'Salida', 'Hrs Reloj', 'Hrs Acad.', 'Ubicación']],
         body: tableAsistencias,
         startY: yOffset,
@@ -115,7 +163,7 @@ const ReporteAsistencia = () => {
         'No'
       ]);
       
-      doc.autoTable({
+      autoTable(doc, {
         head: [['Profesor', 'Fecha', 'Asignatura', 'Tipo', 'Justificado']],
         body: tableInasistencias,
         startY: yOffset,
@@ -125,6 +173,10 @@ const ReporteAsistencia = () => {
     }
     
     doc.save(`reporte_${tipo}_${Date.now()}.pdf`);
+    } catch (error) {
+      console.error('Error generando PDF:', error);
+      alert('Error generando PDF: ' + error.message);
+    }
   };
 
   const asistenciasFiltradas = filtrarPorFecha(asistencias);

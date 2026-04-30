@@ -47,6 +47,51 @@ const Horario = {
     return result.rows[0];
   },
 
+  // Verificar si hay conflicto de horario
+  async verificarConflicto(id_asignatura_profesor, dia_semana, hora_inicio, hora_fin, excluirId = null) {
+    const apResult = await pool.query(
+      'SELECT id_profesor FROM asignatura_profesor WHERE id_asignatura_profesor = $1',
+      [id_asignatura_profesor]
+    );
+    
+    if (apResult.rows.length === 0) return { tieneConflicto: false };
+    
+    const id_profesor = apResult.rows[0].id_profesor;
+    
+    let query = `
+      SELECT h.*, a.nombre_asignatura
+      FROM horario h
+      JOIN asignatura_profesor ap ON h.id_asignatura_profesor = ap.id_asignatura_profesor
+      JOIN asignatura a ON ap.id_asignatura = a.id_asignatura
+      WHERE ap.id_profesor = $1
+        AND h.dia_semana = $2
+        AND (
+          (h.hora_inicio <= $3 AND h.hora_fin > $3) OR
+          (h.hora_inicio < $4 AND h.hora_fin >= $4) OR
+          (h.hora_inicio >= $3 AND h.hora_fin <= $4)
+        )
+    `;
+    const params = [id_profesor, dia_semana, hora_inicio, hora_fin];
+    
+    if (excluirId) {
+      query += ' AND h.id_horario != $5';
+      params.push(excluirId);
+    }
+    
+    const result = await pool.query(query, params);
+    
+    if (result.rows.length > 0) {
+      const conflicto = result.rows[0];
+      return {
+        tieneConflicto: true,
+        mensaje: `El profesor ya tiene asignada la materia "${conflicto.nombre_asignatura}" el ${dia_semana} de ${conflicto.hora_inicio.substring(0,5)} a ${conflicto.hora_fin.substring(0,5)}`,
+        horarioConflicto: conflicto
+      };
+    }
+    
+    return { tieneConflicto: false };
+  },
+
   // Obtener asignaturas con profesores
   async getAsignaturasConProfesores() {
     const result = await pool.query(`

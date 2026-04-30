@@ -7,7 +7,13 @@ const router = express.Router();
 // Obtener todos los horarios
 router.get('/', auth, async (req, res) => {
   try {
-    const horarios = await Horario.findAll();
+    let horarios = await Horario.findAll();
+    
+    // Si es coordinador (y no auditor), filtrar por su carrera
+    if (req.user.esCoordinador && !req.user.roles.includes('auditor') && req.user.ids_carreras && req.user.ids_carreras.length > 0) {
+      horarios = horarios.filter(h => req.user.ids_carreras.includes(h.id_carrera));
+    }
+    
     res.json(horarios);
   } catch (error) {
     console.error(error);
@@ -35,7 +41,13 @@ router.get('/asignaturas-profesores', auth, async (req, res) => {
     return res.status(403).json({ error: 'Acceso denegado' });
   }
   try {
-    const data = await Horario.getAsignaturasConProfesores();
+    let data = await Horario.getAsignaturasConProfesores();
+    
+    // Si es coordinador (y no auditor), filtrar por su carrera
+    if (req.user.esCoordinador && !req.user.roles.includes('auditor') && req.user.ids_carreras && req.user.ids_carreras.length > 0) {
+      data = data.filter(ap => req.user.ids_carreras.includes(ap.id_carrera));
+    }
+    
     res.json(data);
   } catch (error) {
     console.error(error);
@@ -50,6 +62,22 @@ router.post('/', auth, async (req, res) => {
   }
 
   const { id_asignatura_profesor, dia_semana, hora_inicio, hora_fin, aula } = req.body;
+  
+  // Validar que no haya conflicto de horario
+  const conflicto = await Horario.verificarConflicto(
+    id_asignatura_profesor, 
+    dia_semana, 
+    hora_inicio, 
+    hora_fin
+  );
+  
+  if (conflicto.tieneConflicto) {
+    return res.status(409).json({ 
+      error: 'Conflicto de horario',
+      mensaje: conflicto.mensaje,
+      conflicto: true
+    });
+  }
   
   try {
     const horario = await Horario.create(id_asignatura_profesor, dia_semana, hora_inicio, hora_fin, aula);

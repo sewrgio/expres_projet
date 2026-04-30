@@ -5,8 +5,8 @@ import pool from '../config/db.js';
 
 const router = express.Router();
 
-// ✅ Obtener todas las asignaturas (PÚBLICO - con profesor asignado)
-router.get('/', async (req, res) => {
+// ✅ Obtener todas las asignaturas (con profesor asignado)
+router.get('/', auth, async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT a.*, c.nombre_carrera,
@@ -20,7 +20,15 @@ router.get('/', async (req, res) => {
        WHERE a.activo = true
        ORDER BY a.nombre_asignatura`
     );
-    res.json(result.rows);
+    
+    let asignaturas = result.rows;
+    
+    // Si es coordinador (y no auditor), filtrar por su carrera
+    if (req.user.esCoordinador && !req.user.roles.includes('auditor') && req.user.ids_carreras && req.user.ids_carreras.length > 0) {
+      asignaturas = asignaturas.filter(a => req.user.ids_carreras.includes(a.id_carrera));
+    }
+    
+    res.json(asignaturas);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Error interno' });

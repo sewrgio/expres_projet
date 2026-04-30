@@ -176,6 +176,11 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'No existe una cuenta con este correo electrónico' });
     }
 
+    // Verificar que el usuario esté activo
+    if (!usuario.activo) {
+      return res.status(403).json({ error: 'Tu cuenta ha sido desactivada. Contacta al administrador para más información.' });
+    }
+
     if (!usuario.email_verificado) {
       return res.status(403).json({ error: 'Por favor, verifica tu correo electrónico antes de iniciar sesión' });
     }
@@ -258,6 +263,10 @@ router.post('/login', async (req, res) => {
     }
     const idsCarreras = [...new Set(todasCarreras.map(c => c.id))];
 
+    // Extraer IDs individuales para compatibilidad
+    const idCarreraCoordinador = carreraCoordinador?.id;
+    const idCarreraProfesor = carrerasProfesor[0]?.id;
+
     console.log('Generando token JWT...');
     const token = jwt.sign(
       {
@@ -289,13 +298,17 @@ router.post('/login', async (req, res) => {
         id: usuario.id_usuario,
         nombre: usuario.nombre,
         apellido: usuario.apellido,
+        cedula: usuario.cedula,
         correo: usuario.correo,
+        telefono: usuario.telefono,
         roles: rolesEncontrados,
         esProfesor: rolesEncontrados.includes('profesor'),
         esCoordinador: rolesEncontrados.includes('coordinador'),
         esAuditor: rolesEncontrados.includes('auditor'),
         id_profesor: idProfesor,
         id_coordinador: idCoordinador,
+        id_carrera: idCarreraCoordinador || idCarreraProfesor,
+        nombre_carrera: carreraCoordinador?.nombre || carrerasProfesor[0]?.nombre || 'No disponible',
         carreras: todasCarreras,
         ids_carreras: idsCarreras
       }
@@ -389,12 +402,17 @@ router.get('/verify', async (req, res) => {
 
     const column = platform === 'app' ? 'session_token_app' : 'session_token';
     const userQuery = await pool.query(
-      `SELECT id_usuario, nombre, apellido, correo, ${column} as active_token FROM usuario WHERE id_usuario = $1 AND activo = true`,
+      `SELECT id_usuario, nombre, apellido, correo, activo, ${column} as active_token FROM usuario WHERE id_usuario = $1`,
       [decoded.id]
     );
 
     if (userQuery.rows.length === 0) {
       return res.status(401).json({ error: 'Usuario no encontrado' });
+    }
+
+    // Verificar que el usuario esté activo
+    if (!userQuery.rows[0].activo) {
+      return res.status(403).json({ error: 'Tu cuenta ha sido desactivada. Contacta al administrador para más información.' });
     }
 
     const usuario = userQuery.rows[0];

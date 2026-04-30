@@ -1,8 +1,101 @@
 import express from 'express';
 import auth from '../middleware/auth.js';
 import Geofence from '../models/geofence.js';
+import pool from '../config/db.js';
 
 const router = express.Router();
+
+// ✅ NUEVO: APK móvil envía ubicación del usuario
+router.post('/ubicacion', auth, async (req, res) => {
+  const { latitud, longitud, precision } = req.body;
+
+  if (!latitud || !longitud) {
+    return res.status(400).json({ error: 'Latitud y longitud son requeridos' });
+  }
+
+  try {
+    // Guardar o actualizar la ubicación más reciente del usuario
+    const query = `
+      INSERT INTO ubicacion_usuario (id_usuario, latitud, longitud, precision, fecha_actualizacion)
+      VALUES ($1, $2, $3, $4, NOW())
+      ON CONFLICT (id_usuario) 
+      DO UPDATE SET 
+        latitud = EXCLUDED.latitud,
+        longitud = EXCLUDED.longitud,
+        precision = EXCLUDED.precision,
+        fecha_actualizacion = NOW()
+    `;
+    await pool.query(query, [req.user.id, latitud, longitud, precision || null]);
+
+    // Calcular distancia a IUJO
+    const IUJO_COORDS = { lat: 10.510717, lon: -66.936949 };
+    const distancia = calcularDistancia(latitud, longitud, IUJO_COORDS.lat, IUJO_COORDS.lon);
+    const enArea = distancia <= 1.0; // 1 km de radio
+
+    res.json({
+      success: true,
+      distancia: distancia,
+      enArea: enArea,
+      mensaje: enArea ? 'Dentro del campus' : 'Fuera del campus'
+    });
+  } catch (error) {
+    console.error('Error guardando ubicación:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// ✅ NUEVO: Frontend web consulta ubicación del usuario (desde APK)
+router.get('/ubicacion', auth, async (req, res) => {
+  try {
+    const query = `
+      SELECT latitud, longitud, precision, fecha_actualizacion
+      FROM ubicacion_usuario
+      WHERE id_usuario = $1
+    `;
+    const result = await pool.query(query, [req.user.id]);
+
+    if (result.rows.length === 0) {
+      return res.json({
+        success: true,
+        ubicacion: null,
+        mensaje: 'No hay ubicación registrada'
+      });
+    }
+
+    const ubicacion = result.rows[0];
+    const IUJO_COORDS = { lat: 10.510717, lon: -66.936949 };
+    const distancia = calcularDistancia(ubicacion.latitud, ubicacion.longitud, IUJO_COORDS.lat, IUJO_COORDS.lon);
+    const enArea = distancia <= 1.0;
+
+    res.json({
+      success: true,
+      ubicacion: {
+        latitud: ubicacion.latitud,
+        longitud: ubicacion.longitud,
+        precision: ubicacion.precision,
+        fecha_actualizacion: ubicacion.fecha_actualizacion
+      },
+      distancia: distancia,
+      enArea: enArea
+    });
+  } catch (error) {
+    console.error('Error obteniendo ubicación:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// Función auxiliar para calcular distancia
+function calcularDistancia(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Radio de la Tierra en km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
 
 // Validar posición contra geofences (público para app móvil)
 router.post('/validar', async (req, res) => {
@@ -76,10 +169,10 @@ router.get('/geofences/:id', auth, async (req, res) => {
   }
 });
 
-// Crear nuevo geofence (solo auditor)
+// Crear nueva geocerca - disponible para todos excepto auditor
 router.post('/geofences', auth, async (req, res) => {
-  if (!req.user.roles.includes('auditor')) {
-    return res.status(403).json({ error: 'Solo el auditor puede crear geofences' });
+  if (req.user.roles.includes('auditor')) {
+    return res.status(403).json({ error: 'El auditor no puede crear geocercas' });
   }
 
   const { nombre, latitud, longitud, radio_metros } = req.body;
@@ -100,10 +193,10 @@ router.post('/geofences', auth, async (req, res) => {
   }
 });
 
-// Actualizar geofence (solo auditor)
+// Actualizar geocerca - disponible para todos excepto auditor
 router.put('/geofences/:id', auth, async (req, res) => {
-  if (!req.user.roles.includes('auditor')) {
-    return res.status(403).json({ error: 'Solo el auditor puede editar geofences' });
+  if (req.user.roles.includes('auditor')) {
+    return res.status(403).json({ error: 'El auditor no puede actualizar geocercas' });
   }
 
   const { nombre, latitud, longitud, radio_metros, activo } = req.body;
@@ -123,10 +216,10 @@ router.put('/geofences/:id', auth, async (req, res) => {
   }
 });
 
-// Eliminar geofence (solo auditor)
+// Eliminar geocerca - disponible para todos excepto auditor
 router.delete('/geofences/:id', auth, async (req, res) => {
-  if (!req.user.roles.includes('auditor')) {
-    return res.status(403).json({ error: 'Solo el auditor puede eliminar geofences' });
+  if (req.user.roles.includes('auditor')) {
+    return res.status(403).json({ error: 'El auditor no puede eliminar geocercas' });
   }
 
   try {
@@ -159,10 +252,10 @@ router.get('/historial', auth, async (req, res) => {
   }
 });
 
-// Obtener eventos recientes de todos los usuarios (solo auditor)
+// Obtener eventos recientes de todos los usuarios - disponible para todos excepto auditor
 router.get('/eventos-recientes', auth, async (req, res) => {
-  if (!req.user.roles.includes('auditor')) {
-    return res.status(403).json({ error: 'Solo el auditor puede ver eventos de todos los usuarios' });
+  if (req.user.roles.includes('auditor')) {
+    return res.status(403).json({ error: 'El auditor no puede ver eventos recientes' });
   }
 
   try {

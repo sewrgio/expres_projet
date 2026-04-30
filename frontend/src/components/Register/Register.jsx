@@ -159,12 +159,11 @@ const Register = () => {
               required 
               className={formData.carrera_id ? 'select-active' : 'select-placeholder'}
             >
-              <option value="" disabled>Seleccione su Carrera</option>
+              <option value="">Seleccione su Carrera</option>
               {carreras.map((c) => (
                 <option key={c.id_carrera} value={c.id_carrera}>{c.nombre_carrera}</option>
               ))}
             </select>
-            <span className="select-arrow">⬇️</span>
           </div>
 
           <div className="input-group">

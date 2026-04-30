@@ -10,7 +10,10 @@ const AgregarCoordinador = () => {
     correo: '',
     telefono: '',
     password: '',
-    id_carrera: ''
+    id_carrera: '',
+    esCoordinador: false,
+    esProfesor: false,
+    esAdjuntoCoordinacion: false
   });
   const [cargando, setCargando] = useState(false);
   const [mensaje, setMensaje] = useState({ texto: '', tipo: '' });
@@ -28,8 +31,56 @@ const AgregarCoordinador = () => {
     }
   };
 
+  // Handlers para checkboxes con lógica de exclusión mutua
+  const handleCoordinadorChange = (e) => {
+    const isChecked = e.target.checked;
+    setFormData({
+      ...formData,
+      esCoordinador: isChecked,
+      // Si marco Coordinador y soy Profesor, desmarco Adjunto
+      esAdjuntoCoordinacion: isChecked && formData.esProfesor ? false : formData.esAdjuntoCoordinacion
+    });
+  };
+
+  const handleProfesorChange = (e) => {
+    const isChecked = e.target.checked;
+    setFormData({
+      ...formData,
+      esProfesor: isChecked
+    });
+  };
+
+  const handleAdjuntoChange = (e) => {
+    const isChecked = e.target.checked;
+    setFormData({
+      ...formData,
+      esAdjuntoCoordinacion: isChecked,
+      // Si marco Adjunto y soy Profesor, desmarco Coordinador
+      esCoordinador: isChecked && formData.esProfesor ? false : formData.esCoordinador
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validar que al menos un rol esté seleccionado
+    if (!formData.esCoordinador && !formData.esProfesor && !formData.esAdjuntoCoordinacion) {
+      setMensaje({ texto: '❌ Debe seleccionar al menos un rol (Coordinador, Profesor o Adjunto)', tipo: 'error' });
+      return;
+    }
+    
+    // Validar reglas de exclusión
+    if (formData.esCoordinador && formData.esAdjuntoCoordinacion) {
+      setMensaje({ texto: '❌ No puede ser Coordinador y Adjunto a la Coordinación al mismo tiempo', tipo: 'error' });
+      return;
+    }
+    
+    // Validar que si es coordinador, debe seleccionar una carrera
+    if (formData.esCoordinador && !formData.id_carrera) {
+      setMensaje({ texto: '❌ Debe seleccionar una carrera para el coordinador', tipo: 'error' });
+      return;
+    }
+    
     setCargando(true);
     setMensaje({ texto: '', tipo: '' });
 
@@ -41,7 +92,10 @@ const AgregarCoordinador = () => {
         correo: formData.correo,
         telefono: formData.telefono,
         password: formData.password,
-        id_carrera: formData.id_carrera
+        id_carrera: formData.id_carrera,
+        esCoordinador: formData.esCoordinador,
+        esProfesor: formData.esProfesor,
+        esAdjuntoCoordinacion: formData.esAdjuntoCoordinacion
       });
       setMensaje({ texto: '✅ Coordinador agregado exitosamente', tipo: 'success' });
       setFormData({
@@ -51,7 +105,10 @@ const AgregarCoordinador = () => {
         correo: '',
         telefono: '',
         password: '',
-        id_carrera: ''
+        id_carrera: '',
+        esCoordinador: false,
+        esProfesor: false,
+        esAdjuntoCoordinacion: false
       });
     } catch (error) {
       setMensaje({ texto: '❌ Error al agregar coordinador', tipo: 'error' });
@@ -132,14 +189,78 @@ const AgregarCoordinador = () => {
           />
         </div>
         <div className="form-group">
-          <label className="form-label">Carrera</label>
+          <label className="form-label">Tipo de Rol</label>
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: '10px', 
+            padding: '15px',
+            border: '1px solid #ddd',
+            borderRadius: '8px',
+            backgroundColor: '#f9f9f9'
+          }}>
+            <label style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '10px', 
+              cursor: formData.esProfesor && formData.esAdjuntoCoordinacion ? 'not-allowed' : 'pointer',
+              opacity: formData.esProfesor && formData.esAdjuntoCoordinacion ? 0.5 : 1
+            }}>
+              <input 
+                type="checkbox" 
+                checked={formData.esCoordinador}
+                onChange={handleCoordinadorChange}
+                disabled={formData.esProfesor && formData.esAdjuntoCoordinacion}
+                style={{ width: '18px', height: '18px', cursor: formData.esProfesor && formData.esAdjuntoCoordinacion ? 'not-allowed' : 'pointer' }}
+              />
+              <span style={{ fontSize: '14px', color: '#333' }}>Coordinador</span>
+              {formData.esProfesor && formData.esAdjuntoCoordinacion && (
+                <span style={{ fontSize: '11px', color: '#dc3545', marginLeft: '5px' }}>(No disponible si es Profesor y Adjunto)</span>
+              )}
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+              <input 
+                type="checkbox" 
+                checked={formData.esProfesor}
+                onChange={handleProfesorChange}
+                style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+              />
+              <span style={{ fontSize: '14px', color: '#333' }}>Profesor</span>
+            </label>
+            <label style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '10px', 
+              cursor: formData.esCoordinador && formData.esProfesor ? 'not-allowed' : 'pointer',
+              opacity: formData.esCoordinador && formData.esProfesor ? 0.5 : 1
+            }}>
+              <input 
+                type="checkbox" 
+                checked={formData.esAdjuntoCoordinacion}
+                onChange={handleAdjuntoChange}
+                disabled={formData.esCoordinador && formData.esProfesor}
+                style={{ width: '18px', height: '18px', cursor: formData.esCoordinador && formData.esProfesor ? 'not-allowed' : 'pointer' }}
+              />
+              <span style={{ fontSize: '14px', color: '#333' }}>Adjunto a la Coordinación</span>
+              {formData.esCoordinador && formData.esProfesor && (
+                <span style={{ fontSize: '11px', color: '#dc3545', marginLeft: '5px' }}>(No disponible si es Coordinador y Profesor)</span>
+              )}
+            </label>
+          </div>
+          <p style={{ fontSize: '12px', color: '#666', marginTop: '8px', fontStyle: 'italic' }}>
+            * Nota: No puede ser Coordinador y Adjunto simultáneamente. Si es Profesor y Adjunto, no puede ser Coordinador.
+          </p>
+        </div>
+        <div className="form-group">
+          <label className="form-label">Carrera {formData.esCoordinador && <span style={{color: '#dc3545'}}>*</span>}</label>
           <select 
             className="form-control" 
             value={formData.id_carrera} 
             onChange={(e) => setFormData({...formData, id_carrera: e.target.value})} 
-            required
+            required={formData.esCoordinador}
+            disabled={!formData.esCoordinador}
           >
-            <option value="">Seleccionar carrera</option>
+            <option value="">{formData.esCoordinador ? 'Seleccionar carrera' : 'Solo aplica para Coordinador'}</option>
             {carreras.map(c => (
               <option key={c.id_carrera} value={c.id_carrera}>{c.nombre_carrera}</option>
             ))}

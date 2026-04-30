@@ -4,9 +4,20 @@ import { IconCheck, IconX, IconScanQR } from '../Icons/SystemIcons';
 const LocationAlert = ({ enArea, distancia }) => {
   const [showAlert, setShowAlert] = useState(false);
   const [lastStatus, setLastStatus] = useState(null);
+  const [hasShownInitialAlert, setHasShownInitialAlert] = useState(false);
 
   useEffect(() => {
-    // Solo mostrar alerta cuando cambia el estado (de fuera a adentro o viceversa)
+    // Mostrar alerta al cargar si está fuera del área (solo una vez)
+    if (!hasShownInitialAlert && !enArea) {
+      setShowAlert(true);
+      setHasShownInitialAlert(true);
+      const timer = setTimeout(() => {
+        setShowAlert(false);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+
+    // Mostrar alerta cuando cambia el estado (de fuera a adentro o viceversa)
     if (lastStatus !== null && lastStatus !== enArea) {
       setShowAlert(true);
       // Ocultar después de 5 segundos
@@ -16,7 +27,7 @@ const LocationAlert = ({ enArea, distancia }) => {
       return () => clearTimeout(timer);
     }
     setLastStatus(enArea);
-  }, [enArea, lastStatus]);
+  }, [enArea, lastStatus, hasShownInitialAlert]);
 
   if (!showAlert) return null;
 
@@ -78,7 +89,11 @@ const LocationAlert = ({ enArea, distancia }) => {
           }}>
             Ubicación: {isInside ? 'Dentro del campus' : 'Fuera del campus'}
             <br />
-            Distancia: {distancia < 1 ? `${(distancia * 1000).toFixed(0)} metros` : `${distancia.toFixed(2)} km`}
+            Distancia: {distancia === null || distancia === undefined || distancia === 0 
+              ? 'Calculando...' 
+              : distancia < 1 
+                ? `${(distancia * 1000).toFixed(0)} metros` 
+                : `${distancia.toFixed(2)} km`}
           </div>
           <div style={{
             marginTop: '12px',
@@ -98,6 +113,24 @@ const LocationAlert = ({ enArea, distancia }) => {
             {isInside ? '¡Puede escanear QR!' : 'No puede escanear QR hasta estar en el campus'}
           </div>
         </div>
+        <button
+          onClick={() => setShowAlert(false)}
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            fontSize: '20px',
+            color: isInside ? '#2e7d32' : '#c62828',
+            opacity: 0.6,
+            padding: '4px',
+            lineHeight: 1,
+            transition: 'opacity 0.2s'
+          }}
+          onMouseEnter={(e) => e.target.style.opacity = '1'}
+          onMouseLeave={(e) => e.target.style.opacity = '0.6'}
+        >
+          ×
+        </button>
       </div>
 
       <style>{`

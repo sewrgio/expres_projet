@@ -1,10 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import { useLocation } from 'react-router-dom';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+
+// Función helper para cargar imagen como base64
+const loadImageAsBase64 = (url) => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const dataUrl = canvas.toDataURL('image/jpeg');
+      resolve(dataUrl);
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+};
 
 const GestionJustificativos = () => {
+  const location = useLocation();
   const [justificativos, setJustificativos] = useState([]);
   const [asistencias, setAsistencias] = useState([]);
   const [mostrarForm, setMostrarForm] = useState(false);
@@ -22,7 +43,11 @@ const GestionJustificativos = () => {
   const [busquedaAsistencia, setBusquedaAsistencia] = useState('');
   const [mostrarListaAsistencias, setMostrarListaAsistencias] = useState(false);
   const [archivo, setArchivo] = useState(null);
+  const [resultadosBusqueda, setResultadosBusqueda] = useState([]);
+  const [buscando, setBuscando] = useState(false);
   const { user } = useAuth();
+
+  const esVistaProfesores = location.pathname === '/justificativos-profesores';
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { cargarDatos(); }, []);
@@ -35,7 +60,11 @@ const GestionJustificativos = () => {
       const profesoresFiltrados = todosLosProfesores.filter(p => p.id_carrera === miCarreraId);
       setProfesores(profesoresFiltrados);
 
-      if (user?.roles?.includes('auditor')) {
+      if (esVistaProfesores) {
+        // Vista de justificativos de profesores (solo coordinadores)
+        const justRes = await api.get('/justificativos/pendientes');
+        setJustificativos(justRes.data);
+      } else if (user?.roles?.includes('auditor')) {
         const justRes = await api.get('/justificativos');
         setJustificativos(justRes.data);
       } else if (user?.roles?.includes('coordinador')) {
@@ -43,7 +72,7 @@ const GestionJustificativos = () => {
         setJustificativos(justRes.data);
       } else if (user?.roles?.includes('profesor')) {
         const [justRes, asisRes, asigRes] = await Promise.all([
-          api.get('/justificativos/mis-justificativos'), 
+          api.get('/justificativos/mis-justificativos'),
           api.get('/asistencias'),
           api.get('/asignaturas/mis-asignaturas')
         ]);
@@ -64,16 +93,63 @@ const GestionJustificativos = () => {
     } catch (error) { console.error(error); }
   };
 
-  const generarPDF = () => {
-    const doc = new jsPDF();
-    const title = tipoReporte === 'semanal' ? 'REPORTE SEMANAL DE JUSTIFICATIVOS' : 'REPORTE MENSUAL DE JUSTIFICATIVOS';
-    doc.setFontSize(18);
-    doc.text(title, 14, 20);
-    doc.setFontSize(12);
-    doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 35);
-    doc.text(`Período: ${fechaInicio || 'Inicio'} - ${fechaFin || 'Fin'}`, 14, 45);
-    const tableColumn = ["Profesor", "Cédula", "Carrera", "Fecha", "Asignatura", "Estado"];
-    let dataParaPdf = justificativos;
+  const buscarProfesorBD = async (termino) => {
+    if (!termino || termino.length < 2) {
+      setResultadosBusqueda([]);
+      return;
+    }
+    setBuscando(true);
+    try {
+      const res = await api.get(`/profesores/buscar?q=${encodeURIComponent(termino)}`);
+      setResultadosBusqueda(res.data);
+    } catch (error) {
+      console.error('Error buscando profesor:', error);
+      setResultadosBusqueda([]);
+    } finally {
+      setBuscando(false);
+    }
+  };
+
+  const generarPDF = async () => {
+    try {
+      const doc = new jsPDF();
+      const title = tipoReporte === 'semanal' ? 'REPORTE SEMANAL DE JUSTIFICATIVOS' : 'REPORTE MENSUAL DE JUSTIFICATIVOS';
+      
+      // ✅ Cargar logo como base64
+      const logoUrl = '/6933620737_368c2eb1b7.jpg';
+      const logoBase64 = await loadImageAsBase64(logoUrl);
+      
+      // ✅ Logo centrado en la parte superior
+      doc.addImage(logoBase64, 'JPEG', 85, 5, 40, 20);
+      
+      // ✅ Nombre de la institución MÁS GRANDE
+      doc.setFontSize(16);
+      doc.setTextColor(0, 51, 102);
+      doc.setFont('helvetica', 'bold');
+      doc.text('INSTITUTO UNIVERSITARIO', 105, 32, { align: 'center' });
+      doc.text('JESÚS OBRERO', 105, 40, { align: 'center' });
+      doc.setFont('helvetica', 'normal');
+      
+      // ✅ Marca de agua centrada en la página
+      doc.saveGraphicsState();
+      doc.setGState(new doc.GState({ opacity: 0.06 }));
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const watermarkSize = 150;
+      const centerX = (pageWidth - watermarkSize) / 2;
+      const centerY = (pageHeight - watermarkSize) / 2;
+      doc.addImage(logoBase64, 'JPEG', centerX, centerY, watermarkSize, watermarkSize, { angle: -35 });
+      doc.restoreGraphicsState();
+      
+      // Título más pequeño
+      doc.setFontSize(14);
+      doc.setTextColor(80, 80, 80);
+      doc.text(title, 105, 55, { align: 'center' });
+      doc.setFontSize(12);
+      doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 65);
+      doc.text(`Período: ${fechaInicio || 'Inicio'} - ${fechaFin || 'Fin'}`, 14, 72);
+      const tableColumn = ["Profesor", "Cédula", "Carrera", "Fecha", "Asignatura", "Estado"];
+      let dataParaPdf = justificativos;
     const tableRows = dataParaPdf.map(j => [
       `${j.nombre || 'N/A'} ${j.apellido || ''}`,
       j.cedula || 'N/A',
@@ -82,8 +158,12 @@ const GestionJustificativos = () => {
       j.nombre_asignatura || 'N/A',
       j.estado
     ]);
-    doc.autoTable({ head: [tableColumn], body: tableRows, startY: 55, theme: 'striped', headStyles: { fillColor: [0, 51, 102], textColor: 255 } });
+    autoTable(doc, { head: [tableColumn], body: tableRows, startY: 80, theme: 'striped', headStyles: { fillColor: [0, 51, 102], textColor: 255 } });
     doc.save(`justificativos_${tipoReporte}_${Date.now()}.pdf`);
+    } catch (error) {
+      console.error('Error generando PDF:', error);
+      alert('Error generando PDF: ' + error.message);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -111,7 +191,7 @@ const GestionJustificativos = () => {
 
   return (
     <>
-      {(user?.roles?.includes('profesor') || user?.roles?.includes('coordinador')) && !user?.roles?.includes('auditor') && (
+      {!esVistaProfesores && (user?.roles?.includes('profesor') || user?.roles?.includes('coordinador')) && !user?.roles?.includes('auditor') && (
         <div className="card">
           <h3 className="card-title">Solicitar Justificativo</h3>
           {!mostrarForm ? (
@@ -125,107 +205,9 @@ const GestionJustificativos = () => {
           ) : (
             <form onSubmit={handleSubmit}>
               <div className="form-group" style={{ position: 'relative' }}>
-                {(!user?.roles?.includes('profesor') || user?.roles?.includes('coordinador')) ? (
-                  <>
-                    <label style={{ fontSize: '13px', fontWeight: '600', color: '#555', marginBottom: '8px', display: 'block' }}>1. Buscar Profesor por Nombre:</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="🔍 Escribe nombre y apellido del profesor..."
-                      value={busquedaProfesor}
-                      onFocus={() => setMostrarListaProfesores(true)}
-                      onChange={(e) => {
-                        setBusquedaProfesor(e.target.value);
-                        setMostrarListaProfesores(true);
-                        if (profesorSeleccionado) {
-                          setProfesorSeleccionado(null);
-                          setAsistencias([]);
-                          setFormData({ ...formData, id_asistencia: '' });
-                          setBusquedaAsistencia('');
-                        }
-                      }}
-                    />
-                  </>
-                ) : (
-                  <div style={{ padding: '10px', backgroundColor: '#f0f7ff', borderRadius: '4px', marginBottom: '15px' }}>
-                    <span style={{ fontSize: '13px', color: '#2980b9' }}>📋 Creando solicitud para: <strong>{user.nombre} {user.apellido}</strong></span>
-                  </div>
-                )}
-                
-                {mostrarListaProfesores && (
-                  <div className="search-results" style={{ position: 'absolute', width: '100%', zIndex: 100, backgroundColor: 'white', maxHeight: '200px', overflowY: 'auto', border: '1px solid #ddd', borderRadius: '4px', marginTop: '2px', boxShadow: '0 8px 16px rgba(0,0,0,0.15)' }}>
-                    <div style={{ padding: '8px', borderBottom: '1px solid #eee', textAlign: 'right' }}>
-                      <button type="button" onClick={() => setMostrarListaProfesores(false)} style={{ background: 'none', border: 'none', color: '#3498db', cursor: 'pointer', fontSize: '12px' }}>Cerrar lista ✕</button>
-                    </div>
-                    {profesores
-                      .filter(p => `${p.nombre} ${p.apellido} ${p.correo}`.toLowerCase().includes(busquedaProfesor.toLowerCase()))
-                      .map(p => (
-                        <div
-                          key={p.id_profesor}
-                          className="search-item"
-                          style={{ padding: '12px', cursor: 'pointer', borderBottom: '1px solid #eee' }}
-                          onClick={() => {
-                            buscarAsistenciasProfesor(p);
-                            setMostrarListaProfesores(false);
-                          }}
-                        >
-                          <div style={{ fontWeight: '600', color: '#2c3e50' }}>{p.nombre} {p.apellido}</div>
-                          <div style={{ fontSize: '11px', color: '#7f8c8d' }}>{p.correo}</div>
-                        </div>
-                      ))}
-                    {profesores.length === 0 && <div style={{ padding: '15px', color: '#999', textAlign: 'center' }}>No se encontraron profesores en tu carrera</div>}
-                  </div>
-                )}
-                {profesorSeleccionado && (
-                  <div style={{ marginTop: '10px' }}>
-                    {(!user?.roles?.includes('profesor') || user?.roles?.includes('coordinador')) && (
-                      <div style={{ fontSize: '13px', color: '#2ecc71', fontWeight: '500', marginBottom: '15px' }}>
-                        ✅ Profesor seleccionado: <strong>{profesorSeleccionado.nombre} {profesorSeleccionado.apellido}</strong>
-                      </div>
-                    )}
-                    
-                    <label style={{ fontSize: '13px', fontWeight: '600', color: '#555', marginBottom: '8px', display: 'block' }}>
-                      {(!user?.roles?.includes('profesor') || user?.roles?.includes('coordinador')) ? '2.' : '1.'} Seleccionar Asistencia/Falta:
-                    </label>
-                    <div style={{ position: 'relative' }}>
-                      <input
-                        type="text"
-                        className="form-control"
-                        placeholder="📅 Buscar por fecha o asignatura..."
-                        value={busquedaAsistencia}
-                        onFocus={() => setMostrarListaAsistencias(true)}
-                        onChange={(e) => {
-                          setBusquedaAsistencia(e.target.value);
-                          setMostrarListaAsistencias(true);
-                        }}
-                      />
-                      {mostrarListaAsistencias && (
-                        <div className="search-results" style={{ position: 'absolute', width: '100%', zIndex: 90, backgroundColor: 'white', maxHeight: '200px', overflowY: 'auto', border: '1px solid #ddd', borderRadius: '4px', marginTop: '2px', boxShadow: '0 8px 16px rgba(0,0,0,0.15)' }}>
-                          {asistencias
-                            .filter(a => 
-                              new Date(a.fecha_entrada).toLocaleDateString().includes(busquedaAsistencia) || 
-                              a.nombre_asignatura.toLowerCase().includes(busquedaAsistencia.toLowerCase())
-                            )
-                            .map(a => (
-                              <div
-                                key={a.id_asistencia}
-                                className="search-item"
-                                style={{ padding: '12px', cursor: 'pointer', borderBottom: '1px solid #eee' }}
-                                onClick={() => {
-                                  setFormData({ ...formData, id_asistencia: a.id_asistencia });
-                                  setBusquedaAsistencia(`${new Date(a.fecha_entrada).toLocaleDateString()} - ${a.nombre_asignatura}`);
-                                  setMostrarListaAsistencias(false);
-                                }}
-                              >
-                                <strong>{new Date(a.fecha_entrada).toLocaleDateString()}</strong> - {a.nombre_asignatura}
-                              </div>
-                            ))}
-                          {asistencias.length === 0 && <div style={{ padding: '15px', textAlign: 'center', color: '#999' }}>No hay registros de asistencia</div>}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
+                <div style={{ padding: '10px', backgroundColor: '#f0f7ff', borderRadius: '4px', marginBottom: '15px' }}>
+                  <span style={{ fontSize: '13px', color: '#2980b9' }}>📋 Creando solicitud para: <strong>{user.nombre} {user.apellido}</strong></span>
+                </div>
               </div>
               <div className="form-group">
                 <div className="file-upload-wrapper" style={{ border: '2px dashed #ddd', borderRadius: '8px', padding: '20px', textAlign: 'center', backgroundColor: '#f9f9f9', transition: 'all 0.3s' }}>
@@ -245,7 +227,36 @@ const GestionJustificativos = () => {
         </div>
       )}
 
-      {(user?.roles?.includes('coordinador') || user?.roles?.includes('auditor')) && (
+      {!esVistaProfesores && (
+        <div className="card">
+          <h3 className="card-title">Datos del Usuario</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+            <div>
+              <strong>Nombre:</strong> {user?.nombre}
+            </div>
+            <div>
+              <strong>Apellido:</strong> {user?.apellido}
+            </div>
+            <div>
+              <strong>Cédula:</strong> {user?.cedula || 'No disponible'}
+            </div>
+            <div>
+              <strong>Correo:</strong> {user?.correo}
+            </div>
+            <div>
+              <strong>Teléfono:</strong> {user?.telefono || 'No disponible'}
+            </div>
+            <div>
+              <strong>Carrera:</strong> {user?.nombre_carrera || 'No disponible'}
+            </div>
+            <div>
+              <strong>Rol:</strong> {user?.roles?.join(', ') || user?.rol || 'No disponible'}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {esVistaProfesores && (user?.roles?.includes('coordinador') || user?.roles?.includes('auditor')) && (
         <div className="card">
           <h3 className="card-title">Reportes de Justificativos</h3>
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
@@ -259,56 +270,117 @@ const GestionJustificativos = () => {
         </div>
       )}
 
-      <div className="card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-          <h3 className="card-title" style={{ margin: 0 }}>
-            {(user?.roles?.includes('coordinador') || user?.roles?.includes('auditor')) ? 'Solicitudes de Justificativos' : 'Mis Justificativos'}
-          </h3>
-          {(user?.roles?.includes('coordinador') || user?.roles?.includes('auditor')) && (
+      {esVistaProfesores && (
+        <div className="card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+            <h3 className="card-title" style={{ margin: 0 }}>
+              Justificativos de Profesores
+            </h3>
             <div style={{ position: 'relative', width: '300px' }}>
               <input
                 type="text"
                 className="form-control"
                 placeholder="🔍 Buscar profesor por nombre..."
                 value={terminoBusquedaTabla}
-                onChange={(e) => setTerminoBusquedaTabla(e.target.value)}
+                onChange={(e) => {
+                  setTerminoBusquedaTabla(e.target.value);
+                  buscarProfesorBD(e.target.value);
+                }}
                 style={{ paddingLeft: '35px' }}
               />
+              {resultadosBusqueda.length > 0 && (
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  backgroundColor: 'white',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  marginTop: '5px',
+                  maxHeight: '200px',
+                  overflowY: 'auto',
+                  zIndex: 1000,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                }}>
+                  {resultadosBusqueda.map(prof => (
+                    <div
+                      key={prof.id_profesor}
+                      onClick={() => {
+                        setTerminoBusquedaTabla(`${prof.nombre} ${prof.apellido}`);
+                        setResultadosBusqueda([]);
+                        buscarAsistenciasProfesor(prof);
+                      }}
+                      style={{
+                        padding: '10px',
+                        cursor: 'pointer',
+                        borderBottom: '1px solid #eee',
+                        transition: 'background 0.2s'
+                      }}
+                      onMouseEnter={(e) => e.target.style.backgroundColor = '#f0f7ff'}
+                      onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
+                    >
+                      <strong>{prof.nombre} {prof.apellido}</strong>
+                      <div style={{ fontSize: '12px', color: '#666' }}>
+                        {prof.cedula} - {prof.nombre_carrera}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {buscando && (
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  backgroundColor: 'white',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  marginTop: '5px',
+                  padding: '10px',
+                  textAlign: 'center',
+                  color: '#666',
+                  zIndex: 1000
+                }}>
+                  Buscando...
+                </div>
+              )}
             </div>
-          )}
+          </div>
+          <div className="table-container">
+            <table className="table">
+              <thead><tr><th>Fecha</th><th>Profesor</th><th>Cédula</th><th>Carrera</th><th>Asignatura</th><th>Estado</th><th>Respuesta</th><th>Acciones</th></tr></thead>
+              <tbody>
+                {justificativos
+                  .filter(j => {
+                    const termino = terminoBusquedaTabla.toLowerCase();
+                    return (
+                      (j.nombre && j.nombre.toLowerCase().includes(termino)) ||
+                      (j.apellido && j.apellido.toLowerCase().includes(termino)) ||
+                      (j.nombre_asignatura && j.nombre_asignatura.toLowerCase().includes(termino)) ||
+                      (j.cedula && j.cedula.toLowerCase().includes(termino)) ||
+                      (j.nombre_carrera && j.nombre_carrera.toLowerCase().includes(termino))
+                    );
+                  })
+                  .map(j => (
+                    <tr key={j.id_justificativo}>
+                      <td>{new Date(j.fecha_solicitud).toLocaleDateString()}</td>
+                      <td><strong>{j.nombre} {j.apellido}</strong></td>
+                      <td>{j.cedula || '-'}</td>
+                      <td>{j.nombre_carrera || '-'}</td>
+                      <td>{j.nombre_asignatura}</td>
+                      <td><span className={`status-badge ${j.estado === 'aprobado' ? 'status-success' : j.estado === 'rechazado' ? 'status-danger' : 'status-warning'}`}>{j.estado}</span></td>
+                      <td>{j.observaciones_coordinador || '-'}</td>
+                      {j.estado === 'pendiente' && (<td><button className="btn btn-success" style={{ marginRight: '5px' }} onClick={() => handleAprobar(j.id_justificativo)}>✅</button><button className="btn btn-danger" onClick={() => handleRechazar(j.id_justificativo)}>❌</button></td>)}
+                    </tr>
+                  ))}
+                {justificativos.length === 0 && <tr><td colSpan="8">No hay solicitudes</td></tr>}
+              </tbody>
+            </table>
+          </div>
         </div>
-        <div className="table-container">
-          <table className="table">
-            <thead><tr><th>Fecha</th><th>Profesor</th><th>Cédula</th><th>Carrera</th><th>Asignatura</th><th>Estado</th><th>Respuesta</th>{(user?.roles?.includes('coordinador') || user?.roles?.includes('auditor')) && <th>Acciones</th>}</tr></thead>
-            <tbody>
-              {justificativos
-                .filter(j => {
-                  const termino = terminoBusquedaTabla.toLowerCase();
-                  return (
-                    (j.nombre && j.nombre.toLowerCase().includes(termino)) ||
-                    (j.apellido && j.apellido.toLowerCase().includes(termino)) ||
-                    (j.nombre_asignatura && j.nombre_asignatura.toLowerCase().includes(termino)) ||
-                    (j.cedula && j.cedula.toLowerCase().includes(termino)) ||
-                    (j.nombre_carrera && j.nombre_carrera.toLowerCase().includes(termino))
-                  );
-                })
-                .map(j => (
-                  <tr key={j.id_justificativo}>
-                    <td>{new Date(j.fecha_solicitud).toLocaleDateString()}</td>
-                    <td><strong>{j.nombre} {j.apellido}</strong></td>
-                    <td>{j.cedula || '-'}</td>
-                    <td>{j.nombre_carrera || '-'}</td>
-                    <td>{j.nombre_asignatura}</td>
-                    <td><span className={`status-badge ${j.estado === 'aprobado' ? 'status-success' : j.estado === 'rechazado' ? 'status-danger' : 'status-warning'}`}>{j.estado}</span></td>
-                    <td>{j.observaciones_coordinador || '-'}</td>
-                    {(user?.roles?.includes('coordinador') || user?.roles?.includes('auditor')) && j.estado === 'pendiente' && (<td><button className="btn btn-success" style={{ marginRight: '5px' }} onClick={() => handleAprobar(j.id_justificativo)}>✅</button><button className="btn btn-danger" onClick={() => handleRechazar(j.id_justificativo)}>❌</button></td>)}
-                  </tr>
-                ))}
-              {justificativos.length === 0 && <tr><td colSpan="7">No hay solicitudes</td></tr>}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      )}
     </>
   );
 };

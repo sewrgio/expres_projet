@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -7,11 +7,53 @@ const EscanearQR = () => {
   const [qrData, setQrData] = useState(null); // { codigo, imagen }
   const [cargandoQR, setCargandoQR] = useState(false);
   const [error, setError] = useState('');
+  const [enArea, setEnArea] = useState(false);
+  const [distancia, setDistancia] = useState(null);
+
+  const IUJO_COORDS = { lat: 10.510717, lon: -66.936949 };
+
+  const calcularDistancia = (lat1, lon1, lat2, lon2) => {
+    const R = 6371; // Radio de la Tierra en km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a =
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
+  const monitorearUbicacion = useCallback(() => {
+    if (!navigator.geolocation) {
+      console.error('Geolocalización no soportada');
+      return;
+    }
+
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        const d = calcularDistancia(
+          pos.coords.latitude,
+          pos.coords.longitude,
+          IUJO_COORDS.lat,
+          IUJO_COORDS.lon
+        );
+        setDistancia(d);
+        setEnArea(d <= 1.0); // 1km flexible
+      },
+      (err) => console.error('Error de geolocalización:', err),
+      { enableHighAccuracy: true }
+    );
+
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, []);
 
   useEffect(() => {
     cargarMiQR();
+    const cleanGeolocation = monitorearUbicacion();
+    return () => cleanGeolocation && cleanGeolocation();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [monitorearUbicacion]);
 
   const cargarMiQR = async () => {
     if (!user?.id) return;
@@ -70,7 +112,10 @@ const EscanearQR = () => {
               borderRadius: '16px',
               display: 'inline-block',
               margin: '20px auto',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+              opacity: enArea ? 1 : 0.2,
+              filter: enArea ? 'none' : 'grayscale(100%)',
+              transition: 'all 0.3s ease'
             }}>
               <img
                 src={qrData.imagen}
@@ -78,6 +123,21 @@ const EscanearQR = () => {
                 style={{ width: '250px', height: '250px', display: 'block' }}
               />
             </div>
+
+            {!enArea && (
+              <div style={{
+                marginTop: '20px',
+                padding: '15px',
+                background: '#fff3cd',
+                border: '1px solid #ffc107',
+                borderRadius: '8px',
+                color: '#856404',
+                maxWidth: '400px',
+                margin: '20px auto'
+              }}>
+                ⚠️ No estás dentro del área del IUJO. El QR no se puede escanear.
+              </div>
+            )}
 
             <div style={{
               marginTop: '30px',
