@@ -7,7 +7,6 @@ import {
   IconUsers, IconChart, IconScanQR
 } from '../Icons/SystemIcons';
 import LocationAlert from '../LocationAlert/LocationAlert';
-import GenerarQR from '../QR/GenerarQR';
 import ListaProfesores from '../Profesores/ListaProfesores';
 import AgregarCoordinador from '../Coordinadores/AgregarCoordinador';
 import GestionCarreras from '../Carreras/GestionCarreras';
@@ -89,16 +88,16 @@ const DashboardCoordinador = () => {
   }, [cargarEstado, obtenerUbicacionDesdeAPK]);
 
   const tabs = [
-    { id: 'dashboard', nombre: 'Panel Principal', icon: <IconDashboard />, roles: ['auditor', 'coordinador'] },
-    { id: 'qr', nombre: 'Generar QR', icon: <IconKey />, roles: ['coordinador'] },
-    { id: 'profesores', nombre: 'Profesores', icon: <IconTeachers />, roles: ['coordinador'] },
+    { id: 'dashboard', nombre: 'Panel Principal', icon: <IconDashboard />, roles: ['auditor', 'coordinador', 'adjunto coordinacion'] },
+    { id: 'administrar-qr', nombre: 'Administrar QR', icon: <IconScanQR />, roles: ['coordinador', 'adjunto coordinacion'] },
+    { id: 'profesores', nombre: 'Profesores', icon: <IconTeachers />, roles: ['coordinador', 'adjunto coordinacion'] },
     { id: 'coordinadores', nombre: 'Agregar Coordinador', icon: <IconAddAdmin />, roles: ['auditor'] },
     { id: 'carreras', nombre: 'Carreras', icon: <IconGraduation />, roles: ['auditor'] },
-    { id: 'asignaturas', nombre: 'Asignaturas', icon: <IconBookOpen />, roles: ['coordinador'] },
-    { id: 'horarios', nombre: 'Horarios', icon: <IconClock />, roles: ['coordinador'] },
-    { id: 'justificativos', nombre: 'Justificativos', icon: <IconClipboard />, roles: ['coordinador'] },
+    { id: 'asignaturas', nombre: 'Asignaturas', icon: <IconBookOpen />, roles: ['coordinador', 'adjunto coordinacion'] },
+    { id: 'horarios', nombre: 'Horarios', icon: <IconClock />, roles: ['coordinador', 'adjunto coordinacion'] },
+    { id: 'justificativos', nombre: 'Justificativos', icon: <IconClipboard />, roles: ['coordinador', 'adjunto coordinacion'] },
     { id: 'control-coordinadores', nombre: 'Control Coordinadores', icon: <IconUsers />, roles: ['auditor'] },
-    { id: 'reportes', nombre: 'Reportes', icon: <IconChart />, roles: ['auditor', 'coordinador'] },
+    { id: 'reportes', nombre: 'Reportes', icon: <IconChart />, roles: ['auditor', 'coordinador', 'adjunto coordinacion'] },
   ];
 
   const filteredTabs = tabs.filter(tab => tab.roles.some(r => user?.roles?.includes(r)));
@@ -115,7 +114,7 @@ const DashboardCoordinador = () => {
           <div style={{ fontSize: '40px', textAlign: 'center' }}>{tab.icon}</div>
           <h3 style={{ textAlign: 'center', margin: '10px 0', color: '#003366' }}>{tab.nombre}</h3>
           <p style={{ textAlign: 'center', color: '#666', fontSize: '14px' }}>
-            {tab.id === 'qr' ? 'Crea códigos QR para las coordinaciones' :
+            {tab.id === 'administrar-qr' ? 'Crea y administra códigos QR para las coordinaciones' :
              tab.id === 'profesores' ? 'Gestionar profesores y horarios' :
              tab.id === 'coordinadores' ? 'Registrar nuevos coordinadores' :
              tab.id === 'carreras' ? 'Administrar carreras' :

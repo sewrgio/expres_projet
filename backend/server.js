@@ -15,6 +15,7 @@ import coordinadorRoutes from './src/routes/coordinadores.js';
 import ubicacionRoutes from './src/routes/ubicacion.js';
 import geofencingRoutes from './src/routes/geofencing.js';
 import usuarioRoutes from './src/routes/usuarios.js';
+import categoriasRoutes from './src/routes/categorias.js';
 import { sendRecoveryCode } from './src/services/emailService.js';
 
 const app = express();
@@ -58,6 +59,7 @@ app.use('/api/coordinadores', coordinadorRoutes);
 app.use('/api/ubicacion', ubicacionRoutes);
 app.use('/api/geofencing', geofencingRoutes);
 app.use('/api/usuarios', usuarioRoutes);
+app.use('/api/categorias', categoriasRoutes);
 
 // Manejo de rutas no encontradas (404)
 app.use((req, res) => {

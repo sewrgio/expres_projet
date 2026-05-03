@@ -10,50 +10,32 @@ const EscanearQR = () => {
   const [enArea, setEnArea] = useState(false);
   const [distancia, setDistancia] = useState(null);
 
-  const IUJO_COORDS = { lat: 10.510717, lon: -66.936949 };
-
-  const calcularDistancia = (lat1, lon1, lat2, lon2) => {
-    const R = 6371; // Radio de la Tierra en km
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a =
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-      Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
-  };
-
-  const monitorearUbicacion = useCallback(() => {
-    if (!navigator.geolocation) {
-      console.error('Geolocalización no soportada');
-      return;
+  // Obtener ubicación desde el APK (almacenada en el backend)
+  const obtenerUbicacionDesdeAPK = useCallback(async () => {
+    try {
+      const response = await api.get('/geofencing/ubicacion');
+      if (response.data.success && response.data.ubicacion) {
+        setDistancia(response.data.distancia);
+        setEnArea(response.data.enArea);
+        console.log('Ubicación APK:', response.data.distancia?.toFixed(3), 'km - En área:', response.data.enArea);
+      } else {
+        setDistancia(null);
+        setEnArea(false);
+      }
+    } catch (error) {
+      console.error('Error obteniendo ubicación desde APK:', error);
+      setDistancia(null);
+      setEnArea(false);
     }
-
-    const watchId = navigator.geolocation.watchPosition(
-      (pos) => {
-        const d = calcularDistancia(
-          pos.coords.latitude,
-          pos.coords.longitude,
-          IUJO_COORDS.lat,
-          IUJO_COORDS.lon
-        );
-        setDistancia(d);
-        setEnArea(d <= 1.0); // 1km flexible
-      },
-      (err) => console.error('Error de geolocalización:', err),
-      { enableHighAccuracy: true }
-    );
-
-    return () => navigator.geolocation.clearWatch(watchId);
   }, []);
 
   useEffect(() => {
     cargarMiQR();
-    const cleanGeolocation = monitorearUbicacion();
-    return () => cleanGeolocation && cleanGeolocation();
+    obtenerUbicacionDesdeAPK();
+    const interval = setInterval(obtenerUbicacionDesdeAPK, 5000); // Polling cada 5 segundos
+    return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [monitorearUbicacion]);
+  }, [obtenerUbicacionDesdeAPK]);
 
   const cargarMiQR = async () => {
     if (!user?.id) return;

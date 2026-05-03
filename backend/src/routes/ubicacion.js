@@ -25,7 +25,10 @@ const calcularDistancia = (lat1, lon1, lat2, lon2) => {
   return R * c;
 };
 
-// Validar ubicación (público - no requiere autenticación para la app móvil)
+import jwt from 'jsonwebtoken';
+import pool from '../config/db.js';
+
+// Validar ubicación (público - no requiere autenticación obligatoria para la app móvil)
 router.post('/validar', async (req, res) => {
   const { latitud, longitud } = req.body;
 
@@ -42,6 +45,28 @@ router.post('/validar', async (req, res) => {
     );
 
     const dentroRango = distancia <= RADIO_PERMITIDO_KM;
+
+    // Intentar actualizar la ubicación en DB si se proporciona token
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'iujo_secret_key_2024');
+        if (decoded && decoded.id) {
+          const query = `
+            INSERT INTO ubicacion_usuario (id_usuario, latitud, longitud, fecha_actualizacion)
+            VALUES ($1, $2, $3, NOW())
+            ON CONFLICT (id_usuario)
+            DO UPDATE SET
+              latitud = EXCLUDED.latitud,
+              longitud = EXCLUDED.longitud,
+              fecha_actualizacion = NOW()
+          `;
+          await pool.query(query, [decoded.id, latitud, longitud]);
+        }
+      } catch (err) {
+        console.error('Error al actualizar ubicación con token en /validar:', err.message);
+      }
+    }
 
     res.json({
       success: true,

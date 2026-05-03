@@ -68,6 +68,13 @@ router.post('/', auth, async (req, res) => {
 
   const { nombre, apellido, cedula, correo, telefono, password, id_carrera, usuarioExistenteId, esCoordinador, esProfesor, esAdjuntoCoordinacion } = req.body;
 
+  // ✅ Validar que no sea Coordinador y Adjunto simultáneamente
+  if (esCoordinador && esAdjuntoCoordinacion) {
+    return res.status(400).json({ 
+      error: 'No puede ser Coordinador y Adjunto a la Coordinación simultáneamente' 
+    });
+  }
+
   try {
     // Validar que solo existe un coordinador por carrera
     if (esCoordinador && id_carrera) {
@@ -93,10 +100,10 @@ router.post('/', auth, async (req, res) => {
         `SELECT u.nombre, u.apellido 
          FROM usuario u
          JOIN usuario_rol ur ON u.id_usuario = ur.id_usuario
-         JOIN rol r ON ur.id_rol = r.id_rol
-         JOIN coordinador c ON ur.id_usuario_rol = c.id_usuario_rol
-         WHERE r.nombre_rol = 'adjunto_coordinacion' 
-           AND c.id_carrera = $1 
+         JOIN categoria c ON ur.id_categoria = c.id_categoria
+         JOIN coordinador coord ON ur.id_usuario_rol = coord.id_usuario_rol
+         WHERE c.nombre = 'Adjunto coordinacion' AND c.tip_id = 1
+           AND coord.id_carrera = $1 
            AND u.activo = true`,
         [id_carrera]
       );
@@ -118,7 +125,7 @@ router.post('/', auth, async (req, res) => {
       // Crear nuevo usuario
       const hashedPassword = await bcrypt.hash(password, 10);
       const userResult = await pool.query(
-        `INSERT INTO usuario (nombre, apellido, cedula, correo, telefono, password, activo)
+        `INSERT INTO usuario (nombre, apellido, cedula, correo, telefono, contrasena, activo)
          VALUES ($1, $2, $3, $4, $5, $6, true) RETURNING id_usuario`,
         [nombre, apellido, cedula, correo, telefono, hashedPassword]
       );
@@ -128,8 +135,8 @@ router.post('/', auth, async (req, res) => {
     // Asignar rol de coordinador si está seleccionado
     if (esCoordinador) {
       const rolResult = await pool.query(
-        `INSERT INTO usuario_rol (id_usuario, id_rol, activo)
-         VALUES ($1, (SELECT id_rol FROM rol WHERE nombre_rol = 'coordinador'), true)
+        `INSERT INTO usuario_rol (id_usuario, id_categoria, fecha_desde, activo)
+         VALUES ($1, (SELECT id_categoria FROM categoria WHERE nombre = 'Coordinador' AND tip_id = 1), CURRENT_DATE, true)
          RETURNING id_usuario_rol`,
         [id_usuario]
       );
@@ -142,20 +149,37 @@ router.post('/', auth, async (req, res) => {
     // Asignar rol de profesor si está seleccionado
     if (esProfesor) {
       await pool.query(
-        `INSERT INTO usuario_rol (id_usuario, id_rol, activo)
-         VALUES ($1, (SELECT id_rol FROM rol WHERE nombre_rol = 'profesor'), true)`,
+        `INSERT INTO usuario_rol (id_usuario, id_categoria, fecha_desde, activo)
+         VALUES ($1, (SELECT id_categoria FROM categoria WHERE nombre = 'Profesor' AND tip_id = 1), CURRENT_DATE, true)`,
         [id_usuario]
       );
     }
 
     // Asignar rol de adjunto a coordinación si está seleccionado
     if (esAdjuntoCoordinacion) {
-      await pool.query(
-        `INSERT INTO usuario_rol (id_usuario, id_rol, activo)
-         VALUES ($1, (SELECT id_rol FROM rol WHERE nombre_rol = 'adjunto_coordinacion'), true)`,
+      const rolResult = await pool.query(
+        `INSERT INTO usuario_rol (id_usuario, id_categoria, fecha_desde, activo)
+         VALUES ($1, (SELECT id_categoria FROM categoria WHERE nombre = 'Adjunto coordinacion' AND tip_id = 1), CURRENT_DATE, true)
+         RETURNING id_usuario_rol`,
         [id_usuario]
       );
+      id_usuario_rol = rolResult.rows[0].id_usuario_rol;
+      
+      // Crear registro en tabla coordinador para el adjunto (el adjunto necesita id_carrera también)
+      await Coordinador.create(id_usuario_rol, id_carrera);
     }
+
+    // Sincronizar la columna JSONB rol en la tabla usuario
+    await pool.query(`
+      UPDATE usuario 
+      SET rol = (
+        SELECT COALESCE(jsonb_agg(LOWER(c.nombre)), '[]'::jsonb)
+        FROM usuario_rol ur
+        JOIN categoria c ON ur.id_categoria = c.id_categoria
+        WHERE ur.id_usuario = $1 AND ur.activo = true AND c.tip_id = 1
+      )
+      WHERE id_usuario = $1
+    `, [id_usuario]);
 
     res.status(201).json({ 
       success: true, 

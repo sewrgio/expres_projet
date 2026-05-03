@@ -270,6 +270,28 @@ const GestionJustificativos = () => {
         </div>
       )}
 
+      {/* Tabla para profesor viendo sus propios justificativos */}
+      {!esVistaProfesores && user?.roles?.includes('profesor') && !user?.roles?.includes('coordinador') && !user?.roles?.includes('auditor') && (
+        <div className="card">
+          <h3 className="card-title">Mis Justificativos</h3>
+          <div className="table-container">
+            <table className="table">
+              <thead><tr><th>Fecha</th><th>Asignatura</th><th>Estado</th></tr></thead>
+              <tbody>
+                {justificativos.map(j => (
+                  <tr key={j.id_justificativo}>
+                    <td>{new Date(j.fecha_solicitud).toLocaleDateString()}</td>
+                    <td>{j.nombre_asignatura || '-'}</td>
+                    <td><span className={`status-badge ${j.estado === 'aprobado' ? 'status-success' : j.estado === 'rechazado' ? 'status-danger' : 'status-warning'}`}>{j.estado}</span></td>
+                  </tr>
+                ))}
+                {justificativos.length === 0 && <tr><td colSpan="3">No tienes justificativos registrados</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {esVistaProfesores && (
         <div className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>

@@ -50,8 +50,8 @@ router.post('/register', async (req, res) => {
       const auditorExistente = await client.query(
         `SELECT COUNT(*) as count
          FROM usuario_rol ur
-         JOIN rol r ON ur.id_rol = r.id_rol
-         WHERE r.nombre_rol = 'auditor' AND ur.activo = true`
+         JOIN categoria c ON ur.id_categoria = c.id_categoria
+         WHERE LOWER(c.nombre) = 'auditor' AND c.tip_id = 1 AND ur.activo = true`
       );
       if (parseInt(auditorExistente.rows[0].count) > 0) {
         await client.query('ROLLBACK');
@@ -63,8 +63,8 @@ router.post('/register', async (req, res) => {
 
     for (const rolNombre of rolesAsignar) {
       const rolRes = await client.query(
-        `INSERT INTO usuario_rol (id_usuario, id_rol, fecha_desde, activo)
-         VALUES ($1, (SELECT id_rol FROM rol WHERE nombre_rol = $2), CURRENT_DATE, true)
+        `INSERT INTO usuario_rol (id_usuario, id_categoria, fecha_desde, activo)
+         VALUES ($1, (SELECT id_categoria FROM categoria WHERE LOWER(nombre) = LOWER($2) AND tip_id = 1 LIMIT 1), CURRENT_DATE, true)
          RETURNING id_usuario_rol`,
         [userId, rolNombre]
       );
@@ -105,6 +105,18 @@ router.post('/register', async (req, res) => {
         );
       }
     }
+
+    // Sincronizar la columna JSONB rol en la tabla usuario
+    await client.query(`
+      UPDATE usuario 
+      SET rol = (
+        SELECT COALESCE(jsonb_agg(LOWER(c.nombre)), '[]'::jsonb)
+        FROM usuario_rol ur
+        JOIN categoria c ON ur.id_categoria = c.id_categoria
+        WHERE ur.id_usuario = $1 AND ur.activo = true AND c.tip_id = 1
+      )
+      WHERE id_usuario = $1
+    `, [userId]);
 
     await client.query('COMMIT');
 
@@ -161,7 +173,17 @@ router.get('/verify-email', async (req, res) => {
 // --- LOGIN ---
 router.post('/login', async (req, res) => {
   const { correo, password, platform } = req.body;
-  const plataforma = platform || 'web';
+  
+  // Detectar plataforma si no viene explícita (para evitar que la app móvil sobreescriba la sesión web)
+  let plataforma = platform;
+  if (!plataforma) {
+    const userAgent = req.headers['user-agent']?.toLowerCase() || '';
+    if (userAgent.includes('dart') || userAgent.includes('flutter') || userAgent.includes('android') || userAgent.includes('ios') || userAgent.includes('okhttp')) {
+      plataforma = 'app';
+    } else {
+      plataforma = 'web';
+    }
+  }
 
   if (!correo || !password) {
     return res.status(400).json({ error: 'Correo y contraseña son requeridos' });
@@ -192,21 +214,9 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'La contraseña es incorrecta' });
     }
 
-    // Determinar los roles del usuario (soporte para múltiples roles)
-    console.log('Buscando roles para usuario ID:', usuario.id_usuario);
-    const rolQuery = await pool.query(
-      `SELECT r.nombre_rol
-       FROM usuario_rol ur
-       JOIN rol r ON ur.id_rol = r.id_rol
-       WHERE ur.id_usuario = $1 AND ur.activo = true`,
-      [usuario.id_usuario]
-    );
-    console.log('Roles encontrados:', rolQuery.rows);
-
-    let rolesEncontrados = [];
-    if (rolQuery.rows.length > 0) {
-      rolesEncontrados = rolQuery.rows.map(r => r.nombre_rol);
-    }
+    // Determinar los roles del usuario desde la columna JSONB (ya cargada en el modelo)
+    const rolesEncontrados = Array.isArray(usuario.rol) ? usuario.rol : [];
+    console.log('Roles encontrados:', rolesEncontrados);
 
     // Obtener id_profesor y carreras múltiples para profesores
     let idProfesor = null;
@@ -391,7 +401,6 @@ router.post('/reset-password', async (req, res) => {
 // --- VERIFICAR TOKEN ---
 router.get('/verify', async (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
-  const platform = req.headers['x-platform'] || 'web';
 
   if (!token) {
     return res.status(401).json({ error: 'No token provided' });
@@ -400,9 +409,8 @@ router.get('/verify', async (req, res) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'iujo_secret_key_2024');
 
-    const column = platform === 'app' ? 'session_token_app' : 'session_token';
     const userQuery = await pool.query(
-      `SELECT id_usuario, nombre, apellido, correo, activo, ${column} as active_token FROM usuario WHERE id_usuario = $1`,
+      `SELECT id_usuario, nombre, apellido, correo, activo, session_token, session_token_app FROM usuario WHERE id_usuario = $1`,
       [decoded.id]
     );
 
@@ -420,7 +428,7 @@ router.get('/verify', async (req, res) => {
     // Obtener id_carrera si es coordinador
     let idCarrera = null;
     const rolesQuery = await pool.query(
-      `SELECT r.nombre_rol FROM usuario_rol ur JOIN rol r ON ur.id_rol = r.id_rol WHERE ur.id_usuario = $1 AND ur.activo = true`,
+      `SELECT LOWER(c.nombre) as nombre_rol FROM usuario_rol ur JOIN categoria c ON ur.id_categoria = c.id_categoria WHERE ur.id_usuario = $1 AND ur.activo = true AND c.tip_id = 1`,
       [usuario.id_usuario]
     );
     const roles = rolesQuery.rows.map(r => r.nombre_rol);
@@ -437,7 +445,7 @@ router.get('/verify', async (req, res) => {
       }
     }
 
-    if (usuario.active_token !== token) {
+    if (usuario.session_token !== token && usuario.session_token_app !== token) {
       return res.status(401).json({ error: 'Sesión cerrada. Se inició sesión en otro dispositivo.' });
     }
 

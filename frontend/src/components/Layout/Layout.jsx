@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
   IconDashboard, IconScanQR, IconKey, IconTeachers,
   IconAddAdmin, IconUsers, IconGraduation, IconBookOpen,
-  IconClock, IconClipboard, IconChart, IconMenu
+  IconClock, IconClipboard, IconChart, IconMenu, IconSettings
 } from '../Icons/SystemIcons';
 
 const Layout = ({ children }) => {
@@ -42,21 +42,21 @@ const Layout = ({ children }) => {
   };
 
   const menuItems = [
-    { path: '/', icon: <IconDashboard />, label: 'Panel Principal', roles: ['auditor', 'coordinador', 'profesor'] },
+    { path: '/', icon: <IconDashboard />, label: 'Panel Principal', roles: ['auditor', 'coordinador', 'adjunto coordinacion', 'profesor'] },
     {
       label: 'Coordinador',
       icon: <IconBookOpen />,
-      roles: ['coordinador'],
+      roles: ['coordinador', 'adjunto coordinacion'],
       dropdown: [
-        { path: '/generar-qr', icon: <IconKey />, label: 'Generar QR', roles: ['coordinador'] },
-        { path: '/profesores', icon: <IconTeachers />, label: 'Profesores', roles: ['coordinador'] },
-        { path: '/asignaturas', icon: <IconBookOpen />, label: 'Asignaturas y Horarios', roles: ['coordinador'] },
-        { path: '/justificativos-profesores', icon: <IconClipboard />, label: 'Justificativos Profesores', roles: ['coordinador'] },
-        { path: '/reportes', icon: <IconChart />, label: 'Reportes', roles: ['coordinador'] },
+        { path: '/administrar-qr', icon: <IconScanQR />, label: 'Administrar QR', roles: ['coordinador', 'adjunto coordinacion'] },
+        { path: '/profesores', icon: <IconTeachers />, label: 'Profesores', roles: ['coordinador', 'adjunto coordinacion'] },
+        { path: '/asignaturas', icon: <IconBookOpen />, label: 'Asignaturas y Horarios', roles: ['coordinador', 'adjunto coordinacion'] },
+        { path: '/justificativos-profesores', icon: <IconClipboard />, label: 'Justificativos Profesores', roles: ['coordinador', 'adjunto coordinacion'] },
+        { path: '/reportes', icon: <IconChart />, label: 'Reportes', roles: ['coordinador', 'adjunto coordinacion'] },
       ]
     },
-    { path: '/escanear', icon: <IconScanQR />, label: 'Escanear QR', roles: ['coordinador', 'profesor'] },
-    { path: '/justificativos', icon: <IconClipboard />, label: 'Justificativos', roles: ['profesor', 'coordinador'] },
+    { path: '/escanear', icon: <IconScanQR />, label: 'Escanear QR', roles: ['coordinador', 'adjunto coordinacion', 'profesor'] },
+    { path: '/justificativos', icon: <IconClipboard />, label: 'Justificativos', roles: ['profesor', 'coordinador', 'adjunto coordinacion'] },
     {
       label: 'Auditor',
       icon: <IconAddAdmin />,
@@ -64,10 +64,13 @@ const Layout = ({ children }) => {
       dropdown: [
         { path: '/agregar-coordinador', icon: <IconAddAdmin />, label: 'Agregar Coordinador', roles: ['auditor'] },
         { path: '/control-coordinadores', icon: <IconUsers />, label: 'Control Coordinadores', roles: ['auditor'] },
+        { path: '/roles', icon: <IconKey />, label: 'Gestión de Roles', roles: ['auditor'] },
+        { path: '/control-qr-fijos', icon: <IconScanQR />, label: 'Control QR Fijos', roles: ['auditor'] },
         { path: '/carreras', icon: <IconGraduation />, label: 'Carreras', roles: ['auditor'] },
         { path: '/reportes', icon: <IconChart />, label: 'Reportes', roles: ['auditor'] },
       ]
     },
+    { path: '/configuracion', icon: <IconSettings />, label: 'Configuración', roles: ['auditor'] },
   ];
 
   const filteredMenu = menuItems.filter(item => 

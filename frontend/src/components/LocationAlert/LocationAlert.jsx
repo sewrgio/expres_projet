@@ -1,33 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { IconCheck, IconX, IconScanQR } from '../Icons/SystemIcons';
 
 const LocationAlert = ({ enArea, distancia }) => {
   const [showAlert, setShowAlert] = useState(false);
-  const [lastStatus, setLastStatus] = useState(null);
-  const [hasShownInitialAlert, setHasShownInitialAlert] = useState(false);
+  const prevEnArea = useRef(null);
+  const prevDistancia = useRef(undefined);
 
   useEffect(() => {
-    // Mostrar alerta al cargar si está fuera del área (solo una vez)
-    if (!hasShownInitialAlert && !enArea) {
-      setShowAlert(true);
-      setHasShownInitialAlert(true);
-      const timer = setTimeout(() => {
-        setShowAlert(false);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
+    const prev = prevEnArea.current;
+    const prevDist = prevDistancia.current;
+    
+    prevEnArea.current = enArea;
+    prevDistancia.current = distancia;
 
-    // Mostrar alerta cuando cambia el estado (de fuera a adentro o viceversa)
-    if (lastStatus !== null && lastStatus !== enArea) {
+    // Mostrar alerta inicialmente o cuando cambia el estado
+    if (prev === null || prev !== enArea || prevDist !== distancia) {
       setShowAlert(true);
-      // Ocultar después de 5 segundos
-      const timer = setTimeout(() => {
-        setShowAlert(false);
-      }, 5000);
-      return () => clearTimeout(timer);
+      
+      // Solo ocultar automáticamente si está dentro del área
+      if (enArea) {
+        const timer = setTimeout(() => {
+          setShowAlert(false);
+        }, 5000);
+        return () => clearTimeout(timer);
+      }
     }
-    setLastStatus(enArea);
-  }, [enArea, lastStatus, hasShownInitialAlert]);
+  }, [enArea, distancia]);
 
   if (!showAlert) return null;
 
@@ -87,13 +85,17 @@ const LocationAlert = ({ enArea, distancia }) => {
             color: isInside ? '#1b5e20' : '#7f0000',
             lineHeight: 1.5,
           }}>
-            Ubicación: {isInside ? 'Dentro del campus' : 'Fuera del campus'}
-            <br />
-            Distancia: {distancia === null || distancia === undefined || distancia === 0 
-              ? 'Calculando...' 
-              : distancia < 1 
-                ? `${(distancia * 1000).toFixed(0)} metros` 
-                : `${distancia.toFixed(2)} km`}
+            {distancia === null || distancia === undefined ? (
+              'Esperando datos de ubicación de la app móvil...'
+            ) : (
+              <>
+                Ubicación: {isInside ? 'Dentro del campus' : 'Fuera del campus'}
+                <br />
+                Distancia: {distancia < 1 
+                  ? `${(distancia * 1000).toFixed(0)} metros` 
+                  : `${distancia.toFixed(2)} km`}
+              </>
+            )}
           </div>
           <div style={{
             marginTop: '12px',

@@ -5,7 +5,7 @@ const Usuario = {
   async findByEmail(correo, includeInactive = true) {
     let query = `
       SELECT u.id_usuario, u.nombre, u.apellido, u.cedula, u.correo, u.telefono, u.contrasena, u.activo,
-        u.email_verificado, u.codigo_verificacion, u.codigo_recuperacion, u.session_token, u.session_token_app, u.fecha_codigo_verificacion,
+        u.email_verificado, u.codigo_verificacion, u.codigo_recuperacion, u.session_token, u.session_token_app, u.fecha_codigo_verificacion, u.rol,
         (CASE WHEN p.id_profesor IS NOT NULL THEN true ELSE false END) as es_profesor,
         (CASE WHEN c.id_coordinador IS NOT NULL THEN true ELSE false END) as es_coordinador
        FROM usuario u

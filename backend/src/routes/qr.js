@@ -67,6 +67,60 @@ router.put('/desactivar/:id', auth, async (req, res) => {
   }
 });
 
+// ✅ NUEVO: Editar información del QR (solo coordinador)
+router.put('/:id', auth, async (req, res) => {
+  if (!req.user.esCoordinador) {
+    return res.status(403).json({ error: 'Solo coordinadores pueden editar sus QR' });
+  }
+
+  const { descripcion, ubicacion } = req.body;
+  const qrId = req.params.id;
+  const coordinadorId = req.user.id_coordinador;
+
+  try {
+    // Verificar que el QR pertenece al coordinador
+    const qrExistente = await pool.query(
+      'SELECT * FROM codigo_qr WHERE id_qr = $1 AND id_coordinador = $2',
+      [qrId, coordinadorId]
+    );
+
+    if (qrExistente.rows.length === 0) {
+      return res.status(403).json({ error: 'No tienes permiso para editar este QR' });
+    }
+
+    // Actualizar el QR
+    const result = await pool.query(
+      `UPDATE codigo_qr 
+       SET descripcion = $1, ubicacion = $2 
+       WHERE id_qr = $3 AND id_coordinador = $4 
+       RETURNING *`,
+      [descripcion || '', ubicacion || '', qrId, coordinadorId]
+    );
+
+    const qrActualizado = result.rows[0];
+    
+    // Generar nueva imagen
+    const qrImage = await QRCode.toDataURL(qrActualizado.codigo_qr);
+
+    res.json({
+      success: true,
+      message: 'QR actualizado correctamente',
+      qr: {
+        id: qrActualizado.id_qr,
+        codigo: qrActualizado.codigo_qr,
+        imagen: qrImage,
+        fecha_creacion: qrActualizado.fecha_creacion,
+        descripcion: qrActualizado.descripcion,
+        ubicacion: qrActualizado.ubicacion,
+        activo: qrActualizado.activo
+      }
+    });
+  } catch (error) {
+    console.error('Error editando QR:', error);
+    res.status(500).json({ error: 'Error al editar el QR' });
+  }
+});
+
 // ✅ ENDPOINT CORREGIDO: Obtener QR del usuario para mostrar
 router.get('/mi-qr', auth, async (req, res) => {
   try {
@@ -126,6 +180,73 @@ router.get('/estaticos', auth, async (req, res) => {
   } catch (error) {
     console.error('Error obteniendo QRs estáticos:', error);
     res.status(500).json({ error: 'Error al obtener QRs estáticos' });
+  }
+});
+
+// ✅ NUEVO: Crear QR fijo (solo auditor)
+router.post('/fijos', auth, async (req, res) => {
+  if (!req.user.roles.includes('auditor')) {
+    return res.status(403).json({ error: 'Solo el auditor puede crear QRs fijos' });
+  }
+
+  const { nombre, codigo } = req.body;
+
+  if (!nombre || !codigo) {
+    return res.status(400).json({ error: 'Nombre y código son requeridos' });
+  }
+
+  try {
+    const qr = await QR.crearQRFijo(nombre, codigo);
+    res.json({
+      success: true,
+      message: 'QR fijo creado exitosamente',
+      qr
+    });
+  } catch (error) {
+    console.error('Error creando QR fijo:', error);
+    if (error.code === '23505') {
+      res.status(400).json({ error: 'Ya existe un QR con ese código' });
+    } else {
+      res.status(500).json({ error: 'Error al crear QR fijo' });
+    }
+  }
+});
+
+// ✅ NUEVO: Activar QR fijo (solo auditor)
+router.put('/fijos/:id/activar', auth, async (req, res) => {
+  if (!req.user.roles.includes('auditor')) {
+    return res.status(403).json({ error: 'Solo el auditor puede activar QRs fijos' });
+  }
+
+  try {
+    const qr = await QR.activarQRFijo(req.params.id);
+    res.json({
+      success: true,
+      message: 'QR fijo activado',
+      qr
+    });
+  } catch (error) {
+    console.error('Error activando QR fijo:', error);
+    res.status(500).json({ error: 'Error al activar QR fijo' });
+  }
+});
+
+// ✅ NUEVO: Desactivar QR fijo (solo auditor)
+router.put('/fijos/:id/desactivar', auth, async (req, res) => {
+  if (!req.user.roles.includes('auditor')) {
+    return res.status(403).json({ error: 'Solo el auditor puede desactivar QRs fijos' });
+  }
+
+  try {
+    const qr = await QR.desactivarQRFijo(req.params.id);
+    res.json({
+      success: true,
+      message: 'QR fijo desactivado',
+      qr
+    });
+  } catch (error) {
+    console.error('Error desactivando QR fijo:', error);
+    res.status(500).json({ error: 'Error al desactivar QR fijo' });
   }
 });
 

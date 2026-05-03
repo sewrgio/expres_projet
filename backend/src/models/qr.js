@@ -38,16 +38,36 @@ const QR = {
     return result.rows[0];
   },
 
+  // ✅ NUEVO: Métodos para QR fijos desde base de datos
   async obtenerQRsEstaticos() {
-    const qrEstaticos = [
-      { nombre: 'Informática', codigo: 'COORD_INFORMATICA' },
-      { nombre: 'Educación', codigo: 'COORD_EDUCACION' },
-      { nombre: 'Electrónica', codigo: 'COORD_ELECTRONICA' },
-      { nombre: 'Contaduría', codigo: 'COORD_CONTADURIA' },
-      { nombre: 'Dirección', codigo: 'COORD_DIRECCION' },
-      { nombre: 'Administración de Empresas', codigo: 'COORD_ADMIN_EMPRESAS' }
-    ];
-    return qrEstaticos;
+    const result = await pool.query(
+      `SELECT * FROM qr_fijos ORDER BY id_qr_fijo`
+    );
+    return result.rows;
+  },
+
+  async crearQRFijo(nombre, codigo) {
+    const result = await pool.query(
+      `INSERT INTO qr_fijos (nombre, codigo, activo) VALUES ($1, $2, true) RETURNING *`,
+      [nombre, codigo]
+    );
+    return result.rows[0];
+  },
+
+  async activarQRFijo(id_qr_fijo) {
+    const result = await pool.query(
+      `UPDATE qr_fijos SET activo = true WHERE id_qr_fijo = $1 RETURNING *`,
+      [id_qr_fijo]
+    );
+    return result.rows[0];
+  },
+
+  async desactivarQRFijo(id_qr_fijo) {
+    const result = await pool.query(
+      `UPDATE qr_fijos SET activo = false WHERE id_qr_fijo = $1 RETURNING *`,
+      [id_qr_fijo]
+    );
+    return result.rows[0];
   }
 };
 

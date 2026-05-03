@@ -16,13 +16,13 @@ router.post('/ubicacion', auth, async (req, res) => {
   try {
     // Guardar o actualizar la ubicación más reciente del usuario
     const query = `
-      INSERT INTO ubicacion_usuario (id_usuario, latitud, longitud, precision, fecha_actualizacion)
+      INSERT INTO ubicacion_usuario (id_usuario, latitud, longitud, "precision", fecha_actualizacion)
       VALUES ($1, $2, $3, $4, NOW())
-      ON CONFLICT (id_usuario) 
-      DO UPDATE SET 
+      ON CONFLICT (id_usuario)
+      DO UPDATE SET
         latitud = EXCLUDED.latitud,
         longitud = EXCLUDED.longitud,
-        precision = EXCLUDED.precision,
+        "precision" = EXCLUDED."precision",
         fecha_actualizacion = NOW()
     `;
     await pool.query(query, [req.user.id, latitud, longitud, precision || null]);
@@ -48,7 +48,7 @@ router.post('/ubicacion', auth, async (req, res) => {
 router.get('/ubicacion', auth, async (req, res) => {
   try {
     const query = `
-      SELECT latitud, longitud, precision, fecha_actualizacion
+      SELECT latitud, longitud, "precision", fecha_actualizacion
       FROM ubicacion_usuario
       WHERE id_usuario = $1
     `;
@@ -72,7 +72,7 @@ router.get('/ubicacion', auth, async (req, res) => {
       ubicacion: {
         latitud: ubicacion.latitud,
         longitud: ubicacion.longitud,
-        precision: ubicacion.precision,
+        precision: ubicacion["precision"],
         fecha_actualizacion: ubicacion.fecha_actualizacion
       },
       distancia: distancia,
