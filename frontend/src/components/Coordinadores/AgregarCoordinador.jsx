@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
+import CustomSelect from '../UI/CustomSelect';
 
 const AgregarCoordinador = () => {
   const [carreras, setCarreras] = useState([]);
@@ -253,18 +254,18 @@ const AgregarCoordinador = () => {
         </div>
         <div className="form-group">
           <label className="form-label">Carrera {(formData.esCoordinador || formData.esAdjuntoCoordinacion) && <span style={{color: '#dc3545'}}>*</span>}</label>
-          <select 
-            className="form-control" 
+          <CustomSelect 
+            name="id_carrera" 
             value={formData.id_carrera} 
             onChange={(e) => setFormData({...formData, id_carrera: e.target.value})} 
             required={formData.esCoordinador || formData.esAdjuntoCoordinacion}
             disabled={!(formData.esCoordinador || formData.esAdjuntoCoordinacion)}
-          >
-            <option value="">{(formData.esCoordinador || formData.esAdjuntoCoordinacion) ? 'Seleccionar carrera' : 'Solo aplica para Coordinador o Adjunto'}</option>
-            {carreras.map(c => (
-              <option key={c.id_carrera} value={c.id_carrera}>{c.nombre_carrera}</option>
-            ))}
-          </select>
+            placeholder={(formData.esCoordinador || formData.esAdjuntoCoordinacion) ? 'Seleccionar carrera' : 'Solo aplica para Coordinador o Adjunto'}
+            options={carreras.map(c => ({
+              value: c.id_carrera,
+              label: c.nombre_carrera
+            }))}
+          />
         </div>
         <button type="submit" className="btn btn-primary" disabled={cargando}>
           {cargando ? 'Guardando...' : 'Agregar Coordinador'}

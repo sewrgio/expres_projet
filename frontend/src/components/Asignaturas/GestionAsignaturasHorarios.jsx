@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
+import CustomSelect from '../UI/CustomSelect';
 
 const diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
@@ -401,12 +402,12 @@ const GestionAsignaturasHorarios = () => {
                                 });
                               }}>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px' }}>
-                                  <select name="dia_semana" className="form-control" required>
-                                    <option value="">Día</option>
-                                    {diasSemana.map(dia => (
-                                      <option key={dia} value={dia}>{dia}</option>
-                                    ))}
-                                  </select>
+                                  <CustomSelect 
+                                    name="dia_semana" 
+                                    required 
+                                    placeholder="Día"
+                                    options={diasSemana.map(dia => ({ value: dia, label: dia }))}
+                                  />
                                   <input type="time" name="hora_inicio" className="form-control" required />
                                   <input type="time" name="hora_fin" className="form-control" required />
                                   <input type="text" name="aula" className="form-control" placeholder="Aula" />

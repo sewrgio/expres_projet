@@ -29,6 +29,8 @@ const ReporteAsistencia = () => {
   const [cargando, setCargando] = useState(true);
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFin, setFechaFin] = useState('');
+  const [filtroDocente, setFiltroDocente] = useState('');
+  const [filtroCarrera, setFiltroCarrera] = useState('');
 
   useEffect(() => {
     cargarDatos();
@@ -50,14 +52,20 @@ const ReporteAsistencia = () => {
     }
   };
 
-  const filtrarPorFecha = (lista) => {
-    if (!fechaInicio && !fechaFin) return lista;
+  const filtrarDatos = (lista) => {
     return lista.filter(item => {
       const fecha = new Date(item.fecha_entrada || item.fecha_clase);
       const inicio = fechaInicio ? new Date(fechaInicio) : null;
       const fin = fechaFin ? new Date(fechaFin) : null;
       if (inicio && fecha < inicio) return false;
       if (fin && fecha > fin) return false;
+      
+      const nombreCompleto = `${item.nombre || ''} ${item.apellido || ''}`.toLowerCase();
+      if (filtroDocente && !nombreCompleto.includes(filtroDocente.toLowerCase())) return false;
+      
+      const carrera = (item.nombre_carrera || '').toLowerCase();
+      if (filtroCarrera && !carrera.includes(filtroCarrera.toLowerCase())) return false;
+      
       return true;
     });
   };
@@ -106,7 +114,7 @@ const ReporteAsistencia = () => {
       let yOffset = 80;
     
     if (tipo === 'completo' || tipo === 'asistencias') {
-      let asisFiltradas = filtrarPorFecha(asistencias);
+      let asisFiltradas = filtrarDatos(asistencias);
       
       if (asisFiltradas.length > 1000) {
         alert('⚠️ El reporte es muy extenso (' + asisFiltradas.length + ' registros). Se limitará el PDF a los primeros 1000 registros para evitar errores del navegador. Por favor, usa los filtros de fecha.');
@@ -145,7 +153,7 @@ const ReporteAsistencia = () => {
     }
     
     if (tipo === 'completo' || tipo === 'inasistencias') {
-      let inasFiltradas = filtrarPorFecha(inasistencias);
+      let inasFiltradas = filtrarDatos(inasistencias);
 
       if (inasFiltradas.length > 1000) {
         if (tipo === 'inasistencias') alert('⚠️ El reporte es muy extenso. Se limitará a 1000 registros.');
@@ -179,8 +187,8 @@ const ReporteAsistencia = () => {
     }
   };
 
-  const asistenciasFiltradas = filtrarPorFecha(asistencias);
-  const inasistenciasFiltradas = filtrarPorFecha(inasistencias);
+  const asistenciasFiltradas = filtrarDatos(asistencias);
+  const inasistenciasFiltradas = filtrarDatos(inasistencias);
 
   if (cargando) return <div className="card">Cargando...</div>;
 
@@ -190,10 +198,12 @@ const ReporteAsistencia = () => {
         <h3 className="card-title">Reportes de Asistencia</h3>
         
         <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
-          <input type="date" className="form-control" style={{ width: 'auto' }} value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} />
-          <input type="date" className="form-control" style={{ width: 'auto' }} value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} />
+          <input type="date" className="form-control border rounded p-2" style={{ width: 'auto' }} value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} />
+          <input type="date" className="form-control border rounded p-2" style={{ width: 'auto' }} value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} />
+          <input type="text" className="form-control border rounded p-2" placeholder="Filtrar por docente..." value={filtroDocente} onChange={(e) => setFiltroDocente(e.target.value)} />
+          <input type="text" className="form-control border rounded p-2" placeholder="Filtrar por carrera..." value={filtroCarrera} onChange={(e) => setFiltroCarrera(e.target.value)} />
           <button className="btn btn-secondary" onClick={cargarDatos}>Actualizar</button>
-          <button className="btn btn-warning" onClick={() => { setFechaInicio(''); setFechaFin(''); cargarDatos(); }}>Limpiar</button>
+          <button className="btn btn-warning" onClick={() => { setFechaInicio(''); setFechaFin(''); setFiltroDocente(''); setFiltroCarrera(''); cargarDatos(); }}>Limpiar</button>
         </div>
         
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '20px' }}>
@@ -220,7 +230,15 @@ const ReporteAsistencia = () => {
           <div className="table-container">
             <table className="table">
               <thead>
-                <tr><th>Personal</th><th>Fecha</th><th>Entrada</th><th>Salida</th><th>Hrs Reloj</th><th>Hrs Acad.</th><th>Ubicación</th></tr>
+                <tr>
+                  <th className="p-4">Personal</th>
+                  <th className="p-4">Fecha</th>
+                  <th className="p-4">Entrada</th>
+                  <th className="hidden md:table-cell p-4">Salida</th>
+                  <th className="hidden lg:table-cell p-4">Hrs Reloj</th>
+                  <th className="hidden lg:table-cell p-4">Hrs Acad.</th>
+                  <th className="hidden sm:table-cell p-4">Ubicación</th>
+                </tr>
               </thead>
               <tbody>
                 {asistenciasFiltradas.map(asis => {
@@ -228,13 +246,13 @@ const ReporteAsistencia = () => {
                   const salida = asis.fecha_salida ? new Date(asis.fecha_salida) : null;
                   return (
                     <tr key={asis.id_asistencia}>
-                      <td>{asis.nombre} {asis.apellido}</td>
-                      <td>{entrada.toLocaleDateString()}</td>
-                      <td>{entrada.toLocaleTimeString()}</td>
-                      <td>{salida ? salida.toLocaleTimeString() : '--'}</td>
-                      <td>{asis.horas_reloj ? Number(asis.horas_reloj).toFixed(1) : '-'}</td>
-                      <td>{asis.horas_academicas ? Number(asis.horas_academicas).toFixed(1) : '-'}</td>
-                      <td>{asis.ubicacion || '-'}</td>
+                      <td className="p-4">{asis.nombre} {asis.apellido}</td>
+                      <td className="p-4">{entrada.toLocaleDateString()}</td>
+                      <td className="p-4">{entrada.toLocaleTimeString()}</td>
+                      <td className="hidden md:table-cell p-4">{salida ? salida.toLocaleTimeString() : '--'}</td>
+                      <td className="hidden lg:table-cell p-4">{asis.horas_reloj ? Number(asis.horas_reloj).toFixed(1) : '-'}</td>
+                      <td className="hidden lg:table-cell p-4">{asis.horas_academicas ? Number(asis.horas_academicas).toFixed(1) : '-'}</td>
+                      <td className="hidden sm:table-cell p-4">{asis.ubicacion || '-'}</td>
                     </tr>
                   );
                 })}
@@ -251,16 +269,22 @@ const ReporteAsistencia = () => {
           <div className="table-container">
             <table className="table">
               <thead>
-                <tr><th>Profesor</th><th>Fecha</th><th>Asignatura</th><th>Tipo</th><th>Justificado</th></tr>
+                <tr>
+                  <th className="p-4">Profesor</th>
+                  <th className="p-4">Fecha</th>
+                  <th className="hidden sm:table-cell p-4">Asignatura</th>
+                  <th className="p-4">Tipo</th>
+                  <th className="hidden sm:table-cell p-4">Justificado</th>
+                </tr>
               </thead>
               <tbody>
                 {inasistenciasFiltradas.map(inas => (
                   <tr key={inas.id_asistencia}>
-                    <td>{inas.nombre} {inas.apellido}</td>
-                    <td>{new Date(inas.fecha_entrada).toLocaleDateString()}</td>
-                    <td>{inas.nombre_carrera}</td>
-                    <td><span className="status-badge status-danger">Inasistencia</span></td>
-                    <td>❌ No</td>
+                    <td className="p-4">{inas.nombre} {inas.apellido}</td>
+                    <td className="p-4">{new Date(inas.fecha_entrada).toLocaleDateString()}</td>
+                    <td className="hidden sm:table-cell p-4">{inas.nombre_carrera}</td>
+                    <td className="p-4"><span className="status-badge status-danger">Inasistencia</span></td>
+                    <td className="hidden sm:table-cell p-4">❌ No</td>
                   </tr>
                 ))}
                 {inasistenciasFiltradas.length === 0 && <tr><td colSpan="5">No hay inasistencias</td></tr>}

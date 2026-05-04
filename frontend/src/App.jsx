@@ -23,6 +23,7 @@ import RecoveryCode from './components/Auth/RecoveryCode';
 import ResetPassword from './components/Auth/ResetPassword';
 import ConfiguracionGeneral from './components/Configuracion/ConfiguracionGeneral';
 import DetalleCategoria from './components/Configuracion/DetalleCategoria';
+import Bitacora from './components/Reportes/Bitacora';
 import './styles/global.css';
 
 const ProtectedRoute = ({ children, roles }) => {
@@ -135,6 +136,12 @@ function AppRoutes() {
       <Route path="/reportes" element={
         <ProtectedRoute roles={['profesor', 'coordinador', 'adjunto coordinacion', 'auditor']}>
           <Layout><ReporteAsistencia /></Layout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/bitacora" element={
+        <ProtectedRoute roles={['auditor']}>
+          <Layout><Bitacora /></Layout>
         </ProtectedRoute>
       } />
 

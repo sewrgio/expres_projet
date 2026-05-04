@@ -4,6 +4,7 @@ import {
   IconUsers, IconEdit, IconGraduation, IconSave, IconCancel,
   IconEmail, IconPhone, IconIdCard, IconAlert, IconX, IconCheck, IconPower
 } from '../Icons/SystemIcons';
+import CustomSelect from '../UI/CustomSelect';
 
 const ControlCoordinadores = () => {
   const [coordinadores, setCoordinadores] = useState([]);
@@ -321,18 +322,16 @@ const ControlCoordinadores = () => {
                   <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', color: '#666' }}>
                     Carrera
                   </label>
-                  <select
-                    className="form-control"
+                  <CustomSelect
+                    name="id_carrera"
                     value={formData.id_carrera}
                     onChange={(e) => setFormData({...formData, id_carrera: e.target.value})}
-                    style={{ width: '100%' }}
-                  >
-                    {carreras.map(c => (
-                      <option key={c.id_carrera} value={c.id_carrera}>
-                        {c.nombre_carrera}
-                      </option>
-                    ))}
-                  </select>
+                    placeholder="Seleccionar carrera"
+                    options={carreras.map(c => ({
+                      value: c.id_carrera,
+                      label: c.nombre_carrera
+                    }))}
+                  />
                 </div>
 
                 <div style={{ display: 'flex', gap: '10px' }}>

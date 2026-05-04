@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLocation } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import CustomSelect from '../UI/CustomSelect';
 
 // Función helper para cargar imagen como base64
 const loadImageAsBase64 = (url) => {
@@ -260,9 +261,17 @@ const GestionJustificativos = () => {
         <div className="card">
           <h3 className="card-title">Reportes de Justificativos</h3>
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-            <select className="form-control" style={{ width: 'auto' }} value={tipoReporte} onChange={(e) => setTipoReporte(e.target.value)}>
-              <option value="semanal">Reporte Semanal</option><option value="mensual">Reporte Mensual</option>
-            </select>
+            <div style={{ width: '200px' }}>
+              <CustomSelect 
+                name="tipoReporte"
+                value={tipoReporte} 
+                onChange={(e) => setTipoReporte(e.target.value)}
+                options={[
+                  { value: 'semanal', label: 'Reporte Semanal' },
+                  { value: 'mensual', label: 'Reporte Mensual' }
+                ]}
+              />
+            </div>
             <input type="date" className="form-control" style={{ width: 'auto' }} value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} />
             <input type="date" className="form-control" style={{ width: 'auto' }} value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} />
             <button className="btn btn-primary" onClick={generarPDF}>📄 Generar PDF</button>

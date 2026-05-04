@@ -1,38 +1,93 @@
-/* ============================================
-   ESTILOS GLOBALES - IUJO Asistencia
-   Basado en el diseño elegante del Login
-   ============================================ */
+@import "tailwindcss";
 
-/* Variables de color (Estética Premium Moderna) */
-:root {
-  --primary-blue: #3f51b5;
-  --primary-blue-dark: #303f9f;
-  --primary-blue-light: #c5cae9;
-  --sidebar-bg: linear-gradient(180deg, #1a237e 0%, #283593 100%);
-  --gold: #f59e0b;
-  --white: #ffffff;
-  --gray-bg: #f5f7fa;
-  --gray-text: #64748b;
-  --gray-border: #e0e0e0;
-  --text-dark: #1a237e;
-  --error-red: #d32f2f;
-  --success-green: #43a047;
-  --danger-red: #d32f2f;
-  --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  --card-radius: 16px;
+@theme {
+  --color-primary: #3f51b5;
+  --color-primary-dark: #303f9f;
+  --color-gold: #f59e0b;
+  
+  --animate-fade-in-up: fade-in-up 0.5s ease-out;
+  --animate-zoom-in: zoom-in 0.3s ease-out;
+  --animate-shake: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes zoom-in {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  
+  @keyframes shake {
+    10%, 90% { transform: translate3d(-1px, 0, 0); }
+    20%, 80% { transform: translate3d(2px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+    40%, 60% { transform: translate3d(4px, 0, 0); }
+  }
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-800 antialiased font-sans;
+  }
 }
 
-body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background-color: var(--gray-bg);
-  color: var(--text-dark);
-  -webkit-font-smoothing: antialiased;
+@layer components {
+  .card {
+    @apply bg-white rounded-xl sm:rounded-2xl shadow-lg border border-slate-100 p-4 sm:p-8 2xl:p-12 mb-4 sm:mb-6 transition-shadow hover:shadow-xl w-full overflow-x-hidden;
+  }
+  .card-title {
+    @apply text-lg sm:text-2xl 2xl:text-3xl font-bold text-slate-800 mb-4 sm:mb-6;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center px-4 py-2 sm:px-6 sm:py-3 2xl:px-8 2xl:py-4 rounded-xl font-bold text-sm sm:text-base 2xl:text-lg transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed shadow-md hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 active:shadow-sm;
+  }
+  .btn-primary {
+    @apply bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-indigo-500/30;
+  }
+  .btn-secondary {
+    @apply bg-slate-200 text-slate-700 hover:bg-slate-300;
+  }
+  .btn-success {
+    @apply bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-green-500/30;
+  }
+  .btn-danger {
+    @apply bg-gradient-to-r from-red-500 to-rose-500 text-white shadow-red-500/30;
+  }
+  .btn-warning {
+    @apply bg-gradient-to-r from-amber-500 to-yellow-500 text-white shadow-amber-500/30;
+  }
+  .form-control {
+    @apply w-full px-4 py-3 sm:py-3.5 2xl:py-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-700 text-sm sm:text-base 2xl:text-lg;
+  }
+  .table-container {
+    @apply overflow-x-auto bg-white rounded-xl shadow-inner border border-slate-200 w-full;
+  }
+  .table {
+    @apply w-full text-left border-collapse min-w-full divide-y divide-slate-200;
+  }
+  .table th {
+    @apply px-4 py-4 sm:px-6 sm:py-5 2xl:px-8 2xl:py-6 bg-slate-50 text-slate-700 font-semibold text-xs sm:text-sm 2xl:text-base uppercase tracking-wider;
+  }
+  .table td {
+    @apply px-4 py-4 sm:px-6 sm:py-5 2xl:px-8 2xl:py-6 text-sm sm:text-base 2xl:text-lg text-slate-600 whitespace-nowrap;
+  }
+  .table tbody tr {
+    @apply hover:bg-slate-50 transition-colors duration-150;
+  }
 }
 
 /* ============================================
@@ -498,87 +553,28 @@ body {
   box-shadow: 0 4px 12px rgba(63, 81, 181, 0.3);
 }
 
-/* Modales globales */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  backdrop-filter: blur(4px);
-  animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
+@layer components {
+  .modal-overlay {
+    @apply fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex justify-center items-center p-4 sm:p-6 transition-opacity animate-fade-in-up;
   }
-  to {
-    opacity: 1;
+  .modal-content {
+    @apply bg-white p-6 sm:p-8 2xl:p-10 rounded-2xl w-full max-w-lg 2xl:max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl animate-zoom-in;
   }
-}
-
-.modal-content {
-  background: white;
-  padding: 30px;
-  border-radius: 16px;
-  min-width: 500px;
-  max-width: 600px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  animation: slideUp 0.3s ease;
-}
-
-@keyframes slideUp {
-  from {
-    transform: translateY(20px);
-    opacity: 0;
+  .modal-header {
+    @apply flex items-center mb-6 pb-4 border-b-2 border-slate-200;
   }
-  to {
-    transform: translateY(0);
-    opacity: 1;
+  .modal-header h3 {
+    @apply m-0 text-xl sm:text-2xl 2xl:text-3xl font-bold text-slate-800;
   }
-}
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 15px;
-  border-bottom: 2px solid #e0e0e0;
-}
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 600;
-  color: #333;
-}
-
-.modal-header p {
-  margin: 0;
-  font-size: 14px;
-  color: #666;
-}
-
-.modal-icon {
-  font-size: 32px;
-  margin-right: 12px;
-}
-
-.modal-buttons {
-  display: flex;
-  gap: 12px;
-  margin-top: 25px;
-  justify-content: flex-end;
-  padding-top: 20px;
-  border-top: 1px solid #e0e0e0;
+  .modal-header p {
+    @apply m-0 mt-1 text-sm sm:text-base 2xl:text-lg text-slate-500;
+  }
+  .modal-icon {
+    @apply text-3xl sm:text-4xl 2xl:text-5xl mr-4;
+  }
+  .modal-buttons {
+    @apply flex flex-col sm:flex-row gap-3 sm:gap-4 mt-8 pt-4 border-t border-slate-100 justify-end;
+  }
 }
 
 .modal-buttons .btn {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
+import CustomSelect from '../UI/CustomSelect';
 
 const ListaProfesores = () => {
   const { user } = useAuth();
@@ -317,18 +318,16 @@ const ListaProfesores = () => {
 
             <div className="form-group">
               <label>Carrera</label>
-              <select
-                className="form-control"
+              <CustomSelect
+                name="id_carrera"
                 value={formData.id_carrera}
                 onChange={(e) => setFormData({ ...formData, id_carrera: e.target.value })}
-              >
-                <option value="">Seleccionar carrera</option>
-                {carreras.map(carr => (
-                  <option key={carr.id_carrera} value={carr.id_carrera}>
-                    {carr.nombre_carrera}
-                  </option>
-                ))}
-              </select>
+                placeholder="Seleccionar carrera"
+                options={carreras.map(carr => ({
+                  value: carr.id_carrera,
+                  label: carr.nombre_carrera
+                }))}
+              />
             </div>
 
             <div className="modal-buttons">

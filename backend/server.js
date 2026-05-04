@@ -16,9 +16,22 @@ import ubicacionRoutes from './src/routes/ubicacion.js';
 import geofencingRoutes from './src/routes/geofencing.js';
 import usuarioRoutes from './src/routes/usuarios.js';
 import categoriasRoutes from './src/routes/categorias.js';
+import bitacoraRoutes from './src/routes/bitacora.js';
 import { sendRecoveryCode } from './src/services/emailService.js';
+import pool from './src/config/db.js';
 
 const app = express();
+
+// Inicializar tabla de bitácora
+pool.query(`
+  CREATE TABLE IF NOT EXISTS bitacora_logs (
+    id SERIAL PRIMARY KEY,
+    id_usuario INTEGER REFERENCES usuario(id_usuario),
+    accion VARCHAR(255) NOT NULL,
+    detalles TEXT,
+    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+`).catch(err => console.error("Error creando tabla bitacora_logs:", err));
 
 // Middlewares base (se recomienda que vayan primero)
 app.use(cors());
@@ -26,7 +39,7 @@ app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
 // Middleware de logging (ahora puede acceder al req.body si lo necesitaras en un futuro)
-app.use((req, res, next) => {
+app.use(async (req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
   next();
 });
@@ -60,6 +73,7 @@ app.use('/api/ubicacion', ubicacionRoutes);
 app.use('/api/geofencing', geofencingRoutes);
 app.use('/api/usuarios', usuarioRoutes);
 app.use('/api/categorias', categoriasRoutes);
+app.use('/api/bitacora', bitacoraRoutes);
 
 // Manejo de rutas no encontradas (404)
 app.use((req, res) => {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
+import CustomSelect from '../UI/CustomSelect';
 
 const GestionAsignaturas = () => {
   const [asignaturas, setAsignaturas] = useState([]);
@@ -119,19 +120,14 @@ const GestionAsignaturas = () => {
             />
           </div>
           <div className="form-group">
-            <select
-              className="form-control"
+            <CustomSelect
+              name="id_carrera"
               value={idCarrera}
               onChange={(e) => setIdCarrera(e.target.value)}
               required
-            >
-              <option value="">Seleccionar carrera</option>
-              {carreras.map(carr => (
-                <option key={carr.id_carrera} value={carr.id_carrera}>
-                  {carr.nombre_carrera}
-                </option>
-              ))}
-            </select>
+              placeholder="Seleccionar carrera"
+              options={carreras.map(carr => ({ value: carr.id_carrera, label: carr.nombre_carrera }))}
+            />
           </div>
           <button type="submit" className="btn btn-primary">
             {editando ? 'Actualizar' : 'Guardar'}
@@ -203,18 +199,16 @@ const GestionAsignaturas = () => {
             
             <div className="form-group">
               <label>Profesor</label>
-              <select 
-                className="form-control"
+              <CustomSelect 
+                name="id_profesor"
                 value={profesorSeleccionado}
                 onChange={(e) => setProfesorSeleccionado(e.target.value)}
-              >
-                <option value="">Seleccionar profesor</option>
-                {profesores.map(prof => (
-                  <option key={prof.id_profesor} value={prof.id_profesor}>
-                    {prof.nombre} {prof.apellido} - {prof.correo}
-                  </option>
-                ))}
-              </select>
+                placeholder="Seleccionar profesor"
+                options={profesores.map(prof => ({
+                  value: prof.id_profesor,
+                  label: `${prof.nombre} ${prof.apellido} - ${prof.correo}`
+                }))}
+              />
             </div>
             
             <div className="form-group">

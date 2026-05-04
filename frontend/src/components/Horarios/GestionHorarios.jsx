@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
+import CustomSelect from '../UI/CustomSelect';
 
 const diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
@@ -89,32 +90,27 @@ const GestionHorarios = () => {
         <h3 className="card-title">Asignar Horario</h3>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <select
-              className="form-control"
+            <CustomSelect
+              name="id_asignatura_profesor"
               value={formData.id_asignatura_profesor}
               onChange={(e) => setFormData({ ...formData, id_asignatura_profesor: e.target.value })}
               required
-            >
-              <option value="">Seleccionar Asignatura - Profesor</option>
-              {asignaturasProfesores.map(ap => (
-                <option key={ap.id_asignatura_profesor} value={ap.id_asignatura_profesor}>
-                  {ap.nombre_asignatura} - {ap.nombre} {ap.apellido} ({ap.nombre_carrera})
-                </option>
-              ))}
-            </select>
+              placeholder="Seleccionar Asignatura - Profesor"
+              options={asignaturasProfesores.map(ap => ({
+                value: ap.id_asignatura_profesor,
+                label: `${ap.nombre_asignatura} - ${ap.nombre} ${ap.apellido} (${ap.nombre_carrera})`
+              }))}
+            />
           </div>
           <div className="form-group">
-            <select
-              className="form-control"
+            <CustomSelect
+              name="dia_semana"
               value={formData.dia_semana}
               onChange={(e) => setFormData({ ...formData, dia_semana: e.target.value })}
               required
-            >
-              <option value="">Seleccionar día</option>
-              {diasSemana.map(dia => (
-                <option key={dia} value={dia}>{dia}</option>
-              ))}
-            </select>
+              placeholder="Seleccionar día"
+              options={diasSemana.map(dia => ({ value: dia, label: dia }))}
+            />
           </div>
           <div className="row">
             <div className="form-group">
