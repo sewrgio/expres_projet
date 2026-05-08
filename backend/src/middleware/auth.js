@@ -55,11 +55,16 @@ const auth = async (req, res, next) => {
       id_profesor: profesorQuery.rows[0]?.id_profesor,
       esCoordinador: coordinadorQuery.rows.length > 0,
       id_coordinador: coordinadorQuery.rows[0]?.id_coordinador,
-      carreras: coordinadorQuery.rows.map(c => ({ id: c.id_carrera }))
+      carreras: coordinadorQuery.rows.map(c => ({ id: c.id_carrera })),
+      ids_carreras: coordinadorQuery.rows.map(c => c.id_carrera)
     };
     next();
   } catch (error) {
-    console.error('Error en middleware auth:', error.message);
+    if (error.name === 'TokenExpiredError') {
+      console.error(`❌ Token expirado en ${req.path}: expiró en ${error.expiredAt}. Hora servidor: ${new Date().toISOString()}`);
+    } else {
+      console.error('❌ Error en middleware auth:', error.message);
+    }
     res.status(401).json({ error: 'Token inválido o expirado' });
   }
 };

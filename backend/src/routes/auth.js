@@ -28,11 +28,15 @@ router.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const verificationToken = crypto.randomBytes(32).toString('hex');
 
+    // Obtener el siguiente ID manualmente
+    const maxUserRes = await client.query('SELECT COALESCE(MAX(id_usuario), 0) + 1 as next_id FROM usuario');
+    const nextUserId = maxUserRes.rows[0].next_id;
+
     const userRes = await client.query(
-      `INSERT INTO usuario (nombre, apellido, cedula, correo, telefono, contrasena, codigo_verificacion, fecha_codigo_verificacion, activo)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), true)
+      `INSERT INTO usuario (id_usuario, nombre, apellido, cedula, correo, telefono, contrasena, codigo_verificacion, fecha_codigo_verificacion, activo)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), true)
        RETURNING id_usuario`,
-      [nombre, apellido, cedula, correo, telefono, hashedPassword, verificationToken]
+      [nextUserId, nombre, apellido, cedula, correo, telefono, hashedPassword, verificationToken]
     );
     const userId = userRes.rows[0].id_usuario;
 
@@ -62,11 +66,15 @@ router.post('/register', async (req, res) => {
     const userRolIds = [];
 
     for (const rolNombre of rolesAsignar) {
+      // Obtener el siguiente ID manualmente
+      const maxIdRes = await client.query('SELECT COALESCE(MAX(id_usuario_rol), 0) + 1 as next_id FROM usuario_rol');
+      const nextId = maxIdRes.rows[0].next_id;
+
       const rolRes = await client.query(
-        `INSERT INTO usuario_rol (id_usuario, id_categoria, fecha_desde, activo)
-         VALUES ($1, (SELECT id_categoria FROM categoria WHERE LOWER(nombre) = LOWER($2) AND tip_id = 1 LIMIT 1), CURRENT_DATE, true)
+        `INSERT INTO usuario_rol (id_usuario_rol, id_usuario, id_categoria, fecha_desde, activo)
+         VALUES ($1, $2, (SELECT id_categoria FROM categoria WHERE LOWER(nombre) = LOWER($3) AND tip_id = 1 LIMIT 1), CURRENT_DATE, true)
          RETURNING id_usuario_rol`,
-        [userId, rolNombre]
+        [nextId, userId, rolNombre]
       );
       userRolIds.push(rolRes.rows[0].id_usuario_rol);
     }
@@ -83,10 +91,13 @@ router.post('/register', async (req, res) => {
       // 4. Asignar carreras múltiples si se proporcionan
       if (carreras && Array.isArray(carreras) && carreras.length > 0) {
         for (const carreraId of carreras) {
+          const maxIdRes = await client.query('SELECT COALESCE(MAX(id_profesor_carrera), 0) + 1 as next_id FROM profesor_carrera');
+          const nextId = maxIdRes.rows[0].next_id;
+
           await client.query(
-            `INSERT INTO profesor_carrera (id_profesor, id_carrera, dedicacion, fecha_desde, activo)
-             VALUES ($1, $2, 'TIEMPO_COMPLETO', CURRENT_DATE, true)`,
-            [userId, carreraId]
+            `INSERT INTO profesor_carrera (id_profesor_carrera, id_profesor, id_carrera, dedicacion, fecha_desde, activo)
+             VALUES ($1, $2, $3, 'TIEMPO_COMPLETO', CURRENT_DATE, true)`,
+            [nextId, userId, carreraId]
           );
         }
       }
@@ -99,7 +110,7 @@ router.post('/register', async (req, res) => {
       const carreraCoordinador = (carreras && Array.isArray(carreras) && carreras.length > 0) ? carreras[0] : null;
       if (carreraCoordinador) {
         await client.query(
-          `INSERT INTO coordinador (id_coordinador, id_usuario_rol, id_carrera, fecha_nombramiento, activo)
+          `INSERT INTO coordinador (id_coordinador, id_usuario_rol, id_carrera, fecha_desde, activo)
            VALUES ($1, $2, $3, CURRENT_DATE, true)`,
           [userId, coordinadorRolId, carreraCoordinador]
         );
@@ -292,7 +303,7 @@ router.post('/login', async (req, res) => {
         ids_carreras: idsCarreras
       },
       process.env.JWT_SECRET || 'iujo_secret_key_2024',
-      { expiresIn: '8h' }
+      { expiresIn: '30d' }
     );
     console.log('Token generado exitosamente');
 

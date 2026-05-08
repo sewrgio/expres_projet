@@ -78,11 +78,14 @@ const Geofence = {
 
   // Registrar evento de geofencing (entrada o salida)
   async registrarEvento(idUsuario, idGeofence, tipoEvento, latitud, longitud, distancia) {
+    const maxRes = await pool.query('SELECT COALESCE(MAX(id_evento), 0) + 1 as next_id FROM geofence_event');
+    const nextId = maxRes.rows[0].next_id;
+
     const result = await pool.query(
-      `INSERT INTO geofence_event (id_geofence, id_usuario, tipo_evento, latitud, longitud, distancia_metros)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO geofence_event (id_evento, id_geofence, id_usuario, tipo_evento, latitud, longitud, distancia_metros)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
-      [idGeofence, idUsuario, tipoEvento, latitud, longitud, distancia]
+      [nextId, idGeofence, idUsuario, tipoEvento, latitud, longitud, distancia]
     );
     return result.rows[0];
   },
@@ -165,11 +168,14 @@ const Geofence = {
 
   // Crear nuevo geofence
   async crear(nombre, latitud, longitud, radioMetros) {
+    const maxRes = await pool.query('SELECT COALESCE(MAX(id_geofence), 0) + 1 as next_id FROM geofence');
+    const nextId = maxRes.rows[0].next_id;
+
     const result = await pool.query(
-      `INSERT INTO geofence (nombre, latitud, longitud, radio_metros)
-       VALUES ($1, $2, $3, $4)
+      `INSERT INTO geofence (id_geofence, nombre, latitud, longitud, radio_metros)
+       VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
-      [nombre, latitud, longitud, radioMetros]
+      [nextId, nombre, latitud, longitud, radioMetros]
     );
     return result.rows[0];
   },

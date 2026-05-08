@@ -3,10 +3,13 @@ import pool from '../config/db.js';
 const Justificativo = {
   // Crear solicitud
   async create(id_asistencia, motivo, documento_url = null) {
+    const maxRes = await pool.query('SELECT COALESCE(MAX(id_justificativo), 0) + 1 as next_id FROM justificativo');
+    const nextId = maxRes.rows[0].next_id;
+
     const result = await pool.query(`
-      INSERT INTO justificativo (id_asistencia, motivo, documento_url, estado, fecha_solicitud)
-      VALUES ($1, $2, $3, 'pendiente', NOW()) RETURNING *
-    `, [id_asistencia, motivo, documento_url]);
+      INSERT INTO justificativo (id_justificativo, id_asistencia, motivo, documento_url, estado, fecha_solicitud)
+      VALUES ($1, $2, $3, $4, 'pendiente', NOW()) RETURNING *
+    `, [nextId, id_asistencia, motivo, documento_url]);
     return result.rows[0];
   },
 

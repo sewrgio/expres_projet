@@ -36,10 +36,13 @@ const Asignatura = {
 
   // Crear asignatura
   async create(nombre_asignatura, id_carrera) {
+    const maxRes = await pool.query('SELECT COALESCE(MAX(id_asignatura), 0) + 1 as next_id FROM asignatura');
+    const nextId = maxRes.rows[0].next_id;
+
     const result = await pool.query(`
-      INSERT INTO asignatura (nombre_asignatura, id_carrera, activo)
-      VALUES ($1, $2, true) RETURNING *
-    `, [nombre_asignatura, id_carrera]);
+      INSERT INTO asignatura (id_asignatura, nombre_asignatura, id_carrera, activo)
+      VALUES ($1, $2, $3, true) RETURNING *
+    `, [nextId, nombre_asignatura, id_carrera]);
     return result.rows[0];
   },
 
@@ -65,10 +68,13 @@ const Asignatura = {
 
   // Asignar profesor a asignatura
   async asignarProfesor(id_asignatura, id_profesor) {
+    const maxRes = await pool.query('SELECT COALESCE(MAX(id_asignatura_profesor), 0) + 1 as next_id FROM asignatura_profesor');
+    const nextId = maxRes.rows[0].next_id;
+
     const result = await pool.query(`
-      INSERT INTO asignatura_profesor (id_asignatura, id_profesor)
-      VALUES ($1, $2) RETURNING *
-    `, [id_asignatura, id_profesor]);
+      INSERT INTO asignatura_profesor (id_asignatura_profesor, id_asignatura, id_profesor)
+      VALUES ($1, $2, $3) RETURNING *
+    `, [nextId, id_asignatura, id_profesor]);
     return result.rows[0];
   },
 

@@ -77,10 +77,22 @@ const GestionRoles = () => {
   };
 
   const toggleRol = (rol) => {
-    setRolesEdit({
+    const nuevosRoles = {
       ...rolesEdit,
       [rol]: !rolesEdit[rol]
-    });
+    };
+
+    // Si se selecciona coordinador, quitar adjunto
+    if (rol === 'coordinador' && nuevosRoles.coordinador) {
+      nuevosRoles['adjunto coordinacion'] = false;
+    }
+    
+    // Si se selecciona adjunto, quitar coordinador
+    if (rol === 'adjunto coordinacion' && nuevosRoles['adjunto coordinacion']) {
+      nuevosRoles.coordinador = false;
+    }
+
+    setRolesEdit(nuevosRoles);
   };
 
   if (cargando) {

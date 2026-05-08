@@ -2,6 +2,8 @@
   "name": "expres_projet",
   "private": true,
   "scripts": {
+    "clean:ports": "fuser -k 5000/tcp || true",
+    "predev": "npm run clean:ports",
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",

@@ -124,21 +124,27 @@ router.post('/', auth, async (req, res) => {
     } else {
       // Crear nuevo usuario
       const hashedPassword = await bcrypt.hash(password, 10);
+      const maxRes = await pool.query('SELECT COALESCE(MAX(id_usuario), 0) + 1 as next_id FROM usuario');
+      const nextUserId = maxRes.rows[0].next_id;
+
       const userResult = await pool.query(
-        `INSERT INTO usuario (nombre, apellido, cedula, correo, telefono, contrasena, activo)
-         VALUES ($1, $2, $3, $4, $5, $6, true) RETURNING id_usuario`,
-        [nombre, apellido, cedula, correo, telefono, hashedPassword]
+        `INSERT INTO usuario (id_usuario, nombre, apellido, cedula, correo, telefono, contrasena, activo)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, true) RETURNING id_usuario`,
+        [nextUserId, nombre, apellido, cedula, correo, telefono, hashedPassword]
       );
       id_usuario = userResult.rows[0].id_usuario;
     }
 
     // Asignar rol de coordinador si está seleccionado
     if (esCoordinador) {
+      const maxIdRes = await pool.query('SELECT COALESCE(MAX(id_usuario_rol), 0) + 1 as next_id FROM usuario_rol');
+      const nextId = maxIdRes.rows[0].next_id;
+
       const rolResult = await pool.query(
-        `INSERT INTO usuario_rol (id_usuario, id_categoria, fecha_desde, activo)
-         VALUES ($1, (SELECT id_categoria FROM categoria WHERE nombre = 'Coordinador' AND tip_id = 1), CURRENT_DATE, true)
+        `INSERT INTO usuario_rol (id_usuario_rol, id_usuario, id_categoria, fecha_desde, activo)
+         VALUES ($1, $2, (SELECT id_categoria FROM categoria WHERE nombre = 'Coordinador' AND tip_id = 1), CURRENT_DATE, true)
          RETURNING id_usuario_rol`,
-        [id_usuario]
+        [nextId, id_usuario]
       );
       id_usuario_rol = rolResult.rows[0].id_usuario_rol;
       
@@ -148,20 +154,26 @@ router.post('/', auth, async (req, res) => {
 
     // Asignar rol de profesor si está seleccionado
     if (esProfesor) {
+      const maxIdRes = await pool.query('SELECT COALESCE(MAX(id_usuario_rol), 0) + 1 as next_id FROM usuario_rol');
+      const nextId = maxIdRes.rows[0].next_id;
+
       await pool.query(
-        `INSERT INTO usuario_rol (id_usuario, id_categoria, fecha_desde, activo)
-         VALUES ($1, (SELECT id_categoria FROM categoria WHERE nombre = 'Profesor' AND tip_id = 1), CURRENT_DATE, true)`,
-        [id_usuario]
+        `INSERT INTO usuario_rol (id_usuario_rol, id_usuario, id_categoria, fecha_desde, activo)
+         VALUES ($1, $2, (SELECT id_categoria FROM categoria WHERE nombre = 'Profesor' AND tip_id = 1), CURRENT_DATE, true)`,
+        [nextId, id_usuario]
       );
     }
 
     // Asignar rol de adjunto a coordinación si está seleccionado
     if (esAdjuntoCoordinacion) {
+      const maxIdRes = await pool.query('SELECT COALESCE(MAX(id_usuario_rol), 0) + 1 as next_id FROM usuario_rol');
+      const nextId = maxIdRes.rows[0].next_id;
+
       const rolResult = await pool.query(
-        `INSERT INTO usuario_rol (id_usuario, id_categoria, fecha_desde, activo)
-         VALUES ($1, (SELECT id_categoria FROM categoria WHERE nombre = 'Adjunto coordinacion' AND tip_id = 1), CURRENT_DATE, true)
+        `INSERT INTO usuario_rol (id_usuario_rol, id_usuario, id_categoria, fecha_desde, activo)
+         VALUES ($1, $2, (SELECT id_categoria FROM categoria WHERE nombre = 'Adjunto coordinacion' AND tip_id = 1), CURRENT_DATE, true)
          RETURNING id_usuario_rol`,
-        [id_usuario]
+        [nextId, id_usuario]
       );
       id_usuario_rol = rolResult.rows[0].id_usuario_rol;
       

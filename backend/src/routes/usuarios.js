@@ -61,6 +61,12 @@ router.put('/:id/roles', auth, async (req, res) => {
 
   const { id } = req.params;
   const { roles } = req.body; // array de strings, ej: ['profesor', 'coordinador']
+
+  // Validar que no tenga coordinador y adjunto al mismo tiempo
+  if (roles.includes('coordinador') && roles.includes('adjunto coordinacion')) {
+    return res.status(400).json({ error: 'Un usuario no puede ser Coordinador y Adjunto a la vez' });
+  }
+
   let client;
 
   try {
@@ -88,9 +94,15 @@ router.put('/:id/roles', auth, async (req, res) => {
         userRolId = userRolExists.rows[0].id_usuario_rol;
         await client.query(`UPDATE usuario_rol SET activo = true WHERE id_usuario_rol = $1`, [userRolId]);
       } else {
+        // Obtener el siguiente ID manualmente para evitar el error de restricción not-null
+        const maxIdRes = await client.query('SELECT COALESCE(MAX(id_usuario_rol), 0) + 1 as next_id FROM usuario_rol');
+        const nextId = maxIdRes.rows[0].next_id;
+
         const newUserRol = await client.query(
-          `INSERT INTO usuario_rol (id_usuario, id_categoria, fecha_desde, activo) VALUES ($1, $2, CURRENT_DATE, true) RETURNING id_usuario_rol`,
-          [id, idRol]
+          `INSERT INTO usuario_rol (id_usuario_rol, id_usuario, id_categoria, fecha_desde, activo) 
+           VALUES ($1, $2, $3, CURRENT_DATE, true) 
+           RETURNING id_usuario_rol`,
+          [nextId, id, idRol]
         );
         userRolId = newUserRol.rows[0].id_usuario_rol;
       }
@@ -99,9 +111,12 @@ router.put('/:id/roles', auth, async (req, res) => {
       if (rol === 'profesor') {
         const profExists = await client.query(`SELECT id_profesor FROM profesor WHERE id_usuario_rol = $1`, [userRolId]);
         if (profExists.rows.length === 0) {
+          const maxProfIdRes = await client.query('SELECT COALESCE(MAX(id_profesor), 0) + 1 as next_id FROM profesor');
+          const nextProfId = maxProfIdRes.rows[0].next_id;
+
           await client.query(
-            `INSERT INTO profesor (id_usuario_rol, fecha_ingreso, activo) VALUES ($1, CURRENT_DATE, true)`,
-            [userRolId]
+            `INSERT INTO profesor (id_profesor, id_usuario_rol, fecha_ingreso, activo) VALUES ($1, $2, CURRENT_DATE, true)`,
+            [nextProfId, userRolId]
           );
         } else {
           await client.query(`UPDATE profesor SET activo = true WHERE id_usuario_rol = $1`, [userRolId]);

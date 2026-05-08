@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
+import { 
+  IconQrcode, IconPlus, IconDownload, IconTrash, 
+  IconCancel, IconCheck, IconAlert, IconInfo, IconPower 
+} from '../Icons/SystemIcons';
 
 const ControlQRFijos = () => {
   const { user } = useAuth();
@@ -49,20 +53,6 @@ const ControlQRFijos = () => {
     document.body.removeChild(link);
   };
 
-  const activarQR = async (id) => {
-    try {
-      const response = await api.put(`/qr/fijos/${id}/activar`);
-      if (response.data.success) {
-        setMensaje('QR activado correctamente');
-        cargarQRsEstaticos();
-        setTimeout(() => setMensaje(''), 3000);
-      }
-    } catch (err) {
-      console.error('Error activando QR:', err);
-      setError('Error al activar el QR');
-    }
-  };
-
   const mostrarModalDesactivar = (qr) => {
     setModalDesactivar({
       mostrar: true,
@@ -83,7 +73,7 @@ const ControlQRFijos = () => {
     try {
       const response = await api.put(`/qr/fijos/${modalDesactivar.id_qr_fijo}/desactivar`);
       if (response.data.success) {
-        setMensaje('QR desactivado correctamente');
+        setMensaje('✅ QR desactivado correctamente');
         cargarQRsEstaticos();
         cerrarModalDesactivar();
         setTimeout(() => setMensaje(''), 3000);
@@ -115,7 +105,7 @@ const ControlQRFijos = () => {
     try {
       const response = await api.put(`/qr/fijos/${modalActivar.id_qr_fijo}/activar`);
       if (response.data.success) {
-        setMensaje('QR activado correctamente');
+        setMensaje('✅ QR activado correctamente');
         cargarQRsEstaticos();
         cerrarModalActivar();
         setTimeout(() => setMensaje(''), 3000);
@@ -136,7 +126,7 @@ const ControlQRFijos = () => {
     try {
       const response = await api.post('/qr/fijos', nuevoQR);
       if (response.data.success) {
-        setMensaje('QR creado correctamente');
+        setMensaje('✅ QR creado correctamente');
         setNuevoQR({ nombre: '', codigo: '' });
         setMostrarFormulario(false);
         cargarQRsEstaticos();
@@ -150,458 +140,208 @@ const ControlQRFijos = () => {
 
   if (cargando) {
     return (
-      <div style={{ padding: '40px', textAlign: 'center' }}>
-        <div style={{ fontSize: '18px', color: '#666' }}>Cargando códigos QR...</div>
+      <div className="flex flex-col items-center justify-center p-20 text-indigo-600">
+        <div className="animate-spin text-4xl mb-4">⏳</div>
+        <p className="font-medium animate-pulse">Cargando códigos QR fijos...</p>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '24px' }}>
-      <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <h1 style={{ fontSize: '28px', fontWeight: '600', color: '#1a237e', margin: '0 0 8px 0' }}>
-            Control de QR Fijos
-          </h1>
-          <p style={{ fontSize: '14px', color: '#666', margin: 0 }}>
-            Códigos QR estáticos para las coordinaciones del IUJO
-          </p>
+    <div className="animate-fade-in space-y-6 max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8">
+      {/* Header Premium */}
+      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+        <div className="flex items-center gap-5">
+          <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 shadow-sm border border-emerald-100">
+            <IconQrcode />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800">Control de QR Fijos</h1>
+            <p className="text-slate-500 font-medium tracking-tight">Códigos QR estáticos para coordinaciones IUJO</p>
+          </div>
         </div>
         <button
           onClick={() => setMostrarFormulario(!mostrarFormulario)}
-          style={{
-            backgroundColor: '#4caf50',
-            color: '#fff',
-            border: 'none',
-            padding: '12px 24px',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '500'
-          }}
+          className={`px-6 py-3 rounded-2xl font-bold transition-all flex items-center gap-2 shadow-lg ${
+            mostrarFormulario 
+            ? "bg-slate-100 text-slate-600 hover:bg-slate-200" 
+            : "bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow-emerald-200 active:scale-95"
+          }`}
         >
+          {mostrarFormulario ? <IconCancel /> : <IconPlus />}
           {mostrarFormulario ? 'Cancelar' : 'Agregar Nuevo QR'}
         </button>
       </div>
 
+      {/* Alertas */}
       {mensaje && (
-        <div style={{
-          padding: '12px 16px',
-          backgroundColor: '#e8f5e9',
-          color: '#2e7d32',
-          borderRadius: '6px',
-          marginBottom: '16px'
-        }}>
-          {mensaje}
+        <div className="bg-emerald-50 border border-emerald-100 text-emerald-700 px-6 py-4 rounded-2xl flex items-center gap-3 animate-slide-in shadow-sm">
+          <IconCheck /> <span className="font-bold">{mensaje}</span>
         </div>
       )}
-
       {error && (
-        <div style={{
-          padding: '12px 16px',
-          backgroundColor: '#ffebee',
-          color: '#c62828',
-          borderRadius: '6px',
-          marginBottom: '16px'
-        }}>
-          {error}
-          <button onClick={() => setError('')} style={{ marginLeft: '10px', cursor: 'pointer' }}>×</button>
+        <div className="bg-rose-50 border border-rose-100 text-rose-700 px-6 py-4 rounded-2xl flex items-center justify-between animate-shake shadow-sm">
+          <div className="flex items-center gap-3">
+             <IconAlert /> <span className="font-bold">{error}</span>
+          </div>
+          <button onClick={() => setError('')} className="text-rose-400 hover:text-rose-600 font-black px-2">×</button>
         </div>
       )}
 
+      {/* Formulario Nuevo QR */}
       {mostrarFormulario && (
-        <div style={{
-          backgroundColor: '#fff',
-          borderRadius: '12px',
-          padding: '24px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-          border: '1px solid #e0e0e0',
-          marginBottom: '24px'
-        }}>
-          <h3 style={{ margin: '0 0 16px 0', color: '#1a237e' }}>Agregar Nuevo QR Fijo</h3>
-          <form onSubmit={crearQR}>
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', color: '#333', fontWeight: '500' }}>
-                Nombre de la Coordinación:
-              </label>
+        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-emerald-100 animate-zoom-in relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-600 to-teal-600"></div>
+          <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+            <IconPlus className="text-emerald-600" /> Nuevo Registro de Coordinación
+          </h3>
+          <form onSubmit={crearQR} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-slate-700 ml-1">Nombre de la Coordinación</label>
               <input
                 type="text"
                 value={nuevoQR.nombre}
                 onChange={(e) => setNuevoQR({ ...nuevoQR, nombre: e.target.value })}
-                placeholder="Ej: Arquitectura"
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  borderRadius: '6px',
-                  border: '1px solid #ddd',
-                  fontSize: '14px'
-                }}
+                placeholder="Ej: Informática"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all"
               />
             </div>
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', color: '#333', fontWeight: '500' }}>
-                Código QR:
-              </label>
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-slate-700 ml-1">Código Identificador (Único)</label>
               <input
                 type="text"
                 value={nuevoQR.codigo}
                 onChange={(e) => setNuevoQR({ ...nuevoQR, codigo: e.target.value })}
-                placeholder="Ej: COORD_ARQUITECTURA"
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  borderRadius: '6px',
-                  border: '1px solid #ddd',
-                  fontSize: '14px'
-                }}
+                placeholder="Ej: COORD_INF"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-mono"
               />
             </div>
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button
-                type="submit"
-                style={{
-                  backgroundColor: '#4caf50',
-                  color: '#fff',
-                  border: 'none',
-                  padding: '10px 20px',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '500'
-                }}
-              >
-                Crear QR
-              </button>
-              <button
-                type="button"
-                onClick={() => setMostrarFormulario(false)}
-                style={{
-                  backgroundColor: '#757575',
-                  color: '#fff',
-                  border: 'none',
-                  padding: '10px 20px',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '14px'
-                }}
-              >
-                Cancelar
+            <div className="md:col-span-2 flex justify-end pt-2">
+              <button type="submit" className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-100 transition-all flex items-center gap-2">
+                <IconCheck /> Crear Código Estático
               </button>
             </div>
           </form>
         </div>
       )}
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-        gap: '24px'
-      }}>
+      {/* Grid de QRs */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
         {qrs.map((qr) => (
           <div
             key={qr.id_qr_fijo}
-            style={{
-              backgroundColor: '#fff',
-              borderRadius: '12px',
-              padding: '20px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-              border: qr.activo ? '2px solid #4caf50' : '2px solid #f44336',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              opacity: qr.activo ? 1 : 0.7
-            }}
+            className={`bg-white rounded-[32px] p-6 shadow-sm border-2 transition-all hover:shadow-xl hover:-translate-y-1 ${
+              qr.activo ? 'border-emerald-100' : 'border-rose-100 opacity-80'
+            }`}
           >
-            <div style={{
-              fontSize: '18px',
-              fontWeight: '600',
-              color: '#1a237e',
-              marginBottom: '8px',
-              textAlign: 'center'
-            }}>
-              {qr.nombre}
-            </div>
+            <div className="flex flex-col items-center">
+              <div className="w-full text-center mb-4">
+                <h3 className="text-lg font-black text-slate-800 truncate">{qr.nombre}</h3>
+                <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter mt-1 ${
+                  qr.activo ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
+                }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${qr.activo ? 'bg-emerald-600 animate-pulse' : 'bg-rose-600'}`}></span>
+                  {qr.activo ? 'Activo' : 'Inactivo'}
+                </div>
+              </div>
 
-            <div style={{
-              padding: '4px 12px',
-              borderRadius: '12px',
-              fontSize: '12px',
-              fontWeight: '500',
-              marginBottom: '12px',
-              backgroundColor: qr.activo ? '#e8f5e9' : '#ffebee',
-              color: qr.activo ? '#2e7d32' : '#c62828'
-            }}>
-              {qr.activo ? 'Activo' : 'Inactivo'}
-            </div>
+              <div className="relative group p-4 bg-slate-50 rounded-[24px] mb-4 border border-slate-100">
+                <img
+                  src={qr.imagen}
+                  alt={`QR ${qr.nombre}`}
+                  className={`w-40 h-40 object-contain transition-all duration-500 ${qr.activo ? 'group-hover:scale-105' : 'grayscale brightness-90'}`}
+                />
+                {!qr.activo && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-white/40 backdrop-blur-[1px] rounded-[24px]">
+                    <IconPower className="text-rose-500 w-10 h-10" />
+                  </div>
+                )}
+              </div>
 
-            <div style={{
-              backgroundColor: '#f5f5f5',
-              padding: '16px',
-              borderRadius: '8px',
-              marginBottom: '16px'
-            }}>
-              <img
-                src={qr.imagen}
-                alt={`QR ${qr.nombre}`}
-                style={{
-                  width: '180px',
-                  height: '180px',
-                  display: 'block',
-                  filter: qr.activo ? 'none' : 'grayscale(100%)'
-                }}
-              />
-            </div>
+              <div className="w-full space-y-4">
+                <div className="bg-slate-50 border border-slate-100 p-2.5 rounded-xl text-center">
+                  <code className="text-[10px] font-mono font-bold text-indigo-500 break-all">{qr.codigo}</code>
+                </div>
 
-            <div style={{
-              fontSize: '12px',
-              color: '#666',
-              fontFamily: 'monospace',
-              wordBreak: 'break-all',
-              textAlign: 'center',
-              marginBottom: '16px',
-              padding: '8px 12px',
-              backgroundColor: '#f5f5f5',
-              borderRadius: '4px',
-              width: '100%'
-            }}>
-              {qr.codigo}
-            </div>
-
-            <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
-              <button
-                onClick={() => descargarQR(qr)}
-                style={{
-                  flex: 1,
-                  backgroundColor: '#1976d2',
-                  color: '#fff',
-                  border: 'none',
-                  padding: '10px',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '13px',
-                  fontWeight: '500'
-                }}
-              >
-                Descargar
-              </button>
-              {qr.activo ? (
-                <button
-                  onClick={() => mostrarModalDesactivar(qr)}
-                  style={{
-                    flex: 1,
-                    backgroundColor: '#f44336',
-                    color: '#fff',
-                    border: 'none',
-                    padding: '10px',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                    fontWeight: '500'
-                  }}
-                >
-                  Desactivar
-                </button>
-              ) : (
-                <button
-                  onClick={() => mostrarModalActivar(qr)}
-                  style={{
-                    flex: 1,
-                    backgroundColor: '#4caf50',
-                    color: '#fff',
-                    border: 'none',
-                    padding: '10px',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                    fontWeight: '500'
-                  }}
-                >
-                  Activar
-                </button>
-              )}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => descargarQR(qr)}
+                    className="flex-1 h-11 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm active:scale-90 font-bold text-xs gap-1.5"
+                  >
+                    <IconDownload width={14} height={14} /> PNG
+                  </button>
+                  {qr.activo ? (
+                    <button
+                      onClick={() => mostrarModalDesactivar(qr)}
+                      className="flex-1 h-11 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center hover:bg-rose-600 hover:text-white transition-all shadow-sm active:scale-90 font-bold text-xs gap-1.5"
+                    >
+                      <IconPower width={14} height={14} /> Apagar
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => mostrarModalActivar(qr)}
+                      className="flex-1 h-11 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all shadow-sm active:scale-90 font-bold text-xs gap-1.5"
+                    >
+                      <IconCheck width={14} height={14} /> Activar
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         ))}
       </div>
 
-      <div style={{
-        marginTop: '32px',
-        padding: '16px 20px',
-        backgroundColor: '#e3f2fd',
-        borderRadius: '8px',
-        border: '1px solid #bbdefb'
-      }}>
-        <div style={{ fontSize: '14px', color: '#1565c0', fontWeight: '500', marginBottom: '8px' }}>
-          Información importante:
-        </div>
-        <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px', color: '#424242' }}>
-          <li>Los QR inactivos no podrán ser escaneados por los profesores</li>
-          <li>Cada QR tiene un código único que no se puede repetir</li>
-          <li>Los códigos QR inactivos aparecen en escala de grises</li>
-          <li>Puedes agregar nuevas coordinaciones según sea necesario</li>
-        </ul>
-      </div>
-
-      {/* Modal de confirmación para desactivar */}
-      {modalDesactivar.mostrar && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: '#fff',
-            borderRadius: '12px',
-            padding: '24px',
-            maxWidth: '400px',
-            width: '90%',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
-          }}>
-            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-              <div style={{
-                width: '60px',
-                height: '60px',
-                backgroundColor: '#ffebee',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 16px auto',
-                fontSize: '30px'
-              }}>
-                ⚠️
-              </div>
-              <h3 style={{ margin: '0 0 8px 0', color: '#1a237e' }}>
-                ¿Desactivar QR?
-              </h3>
-              <p style={{ color: '#666', margin: 0, fontSize: '14px' }}>
-                ¿Estás seguro que quieres desactivar el QR de <strong>{modalDesactivar.nombre}</strong>?
-                Los profesores no podrán escanear este código hasta que se reactive.
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button
-                onClick={cerrarModalDesactivar}
-                style={{
-                  flex: 1,
-                  padding: '12px',
-                  backgroundColor: '#f5f5f5',
-                  color: '#333',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '500'
-                }}
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleDesactivar}
-                style={{
-                  flex: 1,
-                  padding: '12px',
-                  backgroundColor: '#f44336',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '500'
-                }}
-              >
-                Sí, desactivar
-              </button>
-            </div>
+      {/* Info Card Premium */}
+      <div className="bg-gradient-to-br from-indigo-900 to-indigo-800 rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+        <div className="flex items-start gap-4 relative z-10">
+          <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-indigo-200">
+            <IconInfo />
+          </div>
+          <div>
+            <h4 className="text-lg font-bold mb-3 tracking-wide">Directrices de Gestión de QRs</h4>
+            <ul className="space-y-2.5 text-indigo-100 text-sm font-medium">
+              <li className="flex items-center gap-2 opacity-90"><div className="w-1 h-1 bg-indigo-300 rounded-full"></div> Los QR inactivos no podrán ser procesados por la App de escaneo.</li>
+              <li className="flex items-center gap-2 opacity-90"><div className="w-1 h-1 bg-indigo-300 rounded-full"></div> Los códigos identificadores deben ser únicos por coordinación.</li>
+              <li className="flex items-center gap-2 opacity-90"><div className="w-1 h-1 bg-indigo-300 rounded-full"></div> El modo escala de grises indica visualmente que el punto de control está cerrado.</li>
+            </ul>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* Modal de confirmación para activar */}
-      {modalActivar.mostrar && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: '#fff',
-            borderRadius: '12px',
-            padding: '24px',
-            maxWidth: '400px',
-            width: '90%',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
-          }}>
-            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-              <div style={{
-                width: '60px',
-                height: '60px',
-                backgroundColor: '#e8f5e9',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 16px auto',
-                fontSize: '30px'
-              }}>
-                ✓
-              </div>
-              <h3 style={{ margin: '0 0 8px 0', color: '#1a237e' }}>
-                ¿Activar QR?
-              </h3>
-              <p style={{ color: '#666', margin: 0, fontSize: '14px' }}>
-                ¿Estás seguro que quieres activar el QR de <strong>{modalActivar.nombre}</strong>?
-                Los profesores podrán escanear este código nuevamente.
-              </p>
+      {/* Modales Premium */}
+      {(modalDesactivar.mostrar || modalActivar.mostrar) && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-fade-in" onClick={modalDesactivar.mostrar ? cerrarModalDesactivar : cerrarModalActivar}></div>
+          <div className="bg-white rounded-[32px] w-full max-w-sm p-8 shadow-2xl relative z-10 animate-zoom-in text-center">
+            <div className={`w-20 h-20 mx-auto rounded-3xl flex items-center justify-center text-3xl mb-6 shadow-lg ${
+              modalDesactivar.mostrar ? 'bg-rose-50 text-rose-500 shadow-rose-100' : 'bg-emerald-50 text-emerald-500 shadow-emerald-100'
+            }`}>
+              {modalDesactivar.mostrar ? <IconAlert /> : <IconCheck />}
             </div>
+            
+            <h3 className="text-xl font-black text-slate-800 mb-2">
+              {modalDesactivar.mostrar ? '¿Desactivar QR?' : '¿Reactivar QR?'}
+            </h3>
+            <p className="text-slate-500 text-sm font-medium mb-8">
+              Estás a punto de {modalDesactivar.mostrar ? 'desactivar' : 'activar'} el punto de control de <strong className="text-slate-800">{modalDesactivar.nombre || modalActivar.nombre}</strong>.
+            </p>
 
-            <div style={{ display: 'flex', gap: '10px' }}>
+            <div className="flex gap-3">
               <button
-                onClick={cerrarModalActivar}
-                style={{
-                  flex: 1,
-                  padding: '12px',
-                  backgroundColor: '#f5f5f5',
-                  color: '#333',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '500'
-                }}
+                onClick={modalDesactivar.mostrar ? handleDesactivar : handleActivar}
+                className={`flex-1 py-4 rounded-2xl font-black text-white transition-all shadow-lg active:scale-95 ${
+                  modalDesactivar.mostrar ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-200' : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-200'
+                }`}
               >
-                Cancelar
+                Confirmar
               </button>
               <button
-                onClick={handleActivar}
-                style={{
-                  flex: 1,
-                  padding: '12px',
-                  backgroundColor: '#4caf50',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '500'
-                }}
+                onClick={modalDesactivar.mostrar ? cerrarModalDesactivar : cerrarModalActivar}
+                className="flex-1 py-4 rounded-2xl font-black bg-slate-100 text-slate-500 hover:bg-slate-200 transition-all active:scale-95"
               >
-                Sí, activar
+                Cancelar
               </button>
             </div>
           </div>

@@ -12,9 +12,12 @@ const Carrera = {
   },
 
   async create(nombre_carrera) {
+    const maxRes = await pool.query('SELECT COALESCE(MAX(id_carrera), 0) + 1 as next_id FROM carrera');
+    const nextId = maxRes.rows[0].next_id;
+
     const result = await pool.query(
-      'INSERT INTO carrera (nombre_carrera, activo) VALUES ($1, true) RETURNING *',
-      [nombre_carrera]
+      'INSERT INTO carrera (id_carrera, nombre_carrera, activo) VALUES ($1, $2, true) RETURNING *',
+      [nextId, nombre_carrera]
     );
     return result.rows[0];
   },

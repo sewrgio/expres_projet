@@ -39,3 +39,7 @@ export const IconChevronRight = () => <svg {...props}><polyline points="9 18 15 
 export const IconChevronLeft = () => <svg {...props}><polyline points="15 18 9 12 15 6"/></svg>;
 export const IconFolder = () => <svg {...props}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>;
 export const IconPlus = () => <svg {...props}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>;
+export const IconDownload = () => <svg {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>;
+export const IconQrcode = () => <svg {...props}><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><line x1="7" y1="7" x2="7" y2="7.01"/><line x1="17" y1="7" x2="17" y2="7.01"/><line x1="7" y1="17" x2="7" y2="17.01"/></svg>;
+export const IconInfo = () => <svg {...props}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>;
+export const IconSearch = () => <svg {...props}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>;

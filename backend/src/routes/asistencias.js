@@ -20,6 +20,7 @@ router.get('/', auth, async (req, res) => {
 });
 
 // Escanear QR (entrada o salida automático)
+// ✅ Soporta: QR de coordinación, QR fijo (dirección), y lógica TC
 router.post('/escanear', auth, async (req, res) => {
     // Permitir a profesores, coordinadores y auditores
     if (!req.user.esProfesor && !req.user.esCoordinador && !req.user.roles.includes('auditor')) {
@@ -44,9 +45,26 @@ router.post('/escanear', auth, async (req, res) => {
     const profesorId = req.user.id_profesor;
 
     try {
-        const qr = await QR.validar(codigo_qr);
-        if (!qr) {
+        // ✅ Validar QR (intenta dinámico primero, luego fijo)
+        const qrResult = await QR.validarCualquiera(codigo_qr);
+        if (!qrResult) {
             return res.status(404).json({ error: 'QR inválido o inactivo' });
+        }
+
+        const asistenciasHoy = await Asistencia.obtenerAsistenciasHoy(profesorId);
+        
+        // Calcular total de escaneos (cada entrada es 1, cada salida es 1)
+        let totalEscaneos = 0;
+        asistenciasHoy.forEach(a => {
+            if (a.fecha_entrada) totalEscaneos++;
+            if (a.fecha_salida) totalEscaneos++;
+        });
+
+        if (totalEscaneos >= 2) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Ya has alcanzado el límite de 2 escaneos diarios (1 Entrada y 1 Salida)' 
+            });
         }
 
         const estado = await Asistencia.verificarEstado(profesorId);
@@ -54,18 +72,64 @@ router.post('/escanear', auth, async (req, res) => {
         let resultado;
         let tipo;
 
-        if (estado.dentro) {
-            resultado = await Asistencia.registrarSalida(profesorId);
-            tipo = 'salida';
+        // ✅ Lógica para Profesores de Tiempo Completo (TC)
+        // TC puede marcar: ENTRADA con QR fijo de "Dirección" y SALIDA con QR de su coordinación
+        const dedicacionInfo = await Asistencia.obtenerDedicacionProfesor(profesorId);
+        const esTiempoCompleto = dedicacionInfo?.dedicacion === 'TIEMPO_COMPLETO';
+
+        if (esTiempoCompleto) {
+            // Para TC: Validar tipo de QR según la acción esperada
+            if (!estado.dentro) {
+                // Debe ser ENTRADA → acepta QR fijo (dirección) o QR de coordinación
+                if (qrResult.tipo === 'fijo') {
+                    // QR fijo (dirección) → registrar entrada sin id_qr dinámico
+                    resultado = await Asistencia.registrarEntrada(profesorId, null);
+                    tipo = 'entrada';
+                } else {
+                    // QR dinámico de coordinación → también válido para entrada
+                    resultado = await Asistencia.registrarEntrada(profesorId, qrResult.qr.id_qr);
+                    tipo = 'entrada';
+                }
+            } else {
+                // Debe ser SALIDA → acepta QR de su coordinación o QR fijo
+                if (qrResult.tipo === 'dinamico' && qrResult.qr.id_carrera) {
+                    // Verificar que el QR pertenece a la carrera del profesor
+                    if (dedicacionInfo.id_carrera && qrResult.qr.id_carrera !== dedicacionInfo.id_carrera) {
+                        return res.status(400).json({
+                            success: false,
+                            error: `Este QR pertenece a otra carrera. Debes escanear el QR de ${dedicacionInfo.nombre_carrera || 'tu carrera'}`
+                        });
+                    }
+                }
+                resultado = await Asistencia.registrarSalida(profesorId);
+                tipo = 'salida';
+            }
         } else {
-            resultado = await Asistencia.registrarEntrada(profesorId, qr.id_qr);
-            tipo = 'entrada';
+            // Lógica estándar para profesores no-TC
+            if (estado.dentro) {
+                resultado = await Asistencia.registrarSalida(profesorId);
+                tipo = 'salida';
+            } else {
+                const qrId = qrResult.tipo === 'dinamico' ? qrResult.qr.id_qr : null;
+                resultado = await Asistencia.registrarEntrada(profesorId, qrId);
+                tipo = 'entrada';
+            }
+        }
+
+        // Mensaje descriptivo para TC
+        let message;
+        if (esTiempoCompleto) {
+            message = tipo === 'entrada' 
+                ? '✅ Entrada registrada (Dirección)' 
+                : `✅ Salida registrada (${dedicacionInfo?.nombre_carrera || 'Carrera'})`;
+        } else {
+            message = tipo === 'entrada' ? '✅ Entrada registrada' : '✅ Salida registrada';
         }
 
         res.json({
             success: true,
             tipo: tipo,
-            message: tipo === 'entrada' ? '✅ Entrada registrada' : '✅ Salida registrada',
+            message,
             data: resultado,
             hora: new Date().toLocaleTimeString()
         });
@@ -130,7 +194,23 @@ router.get('/historial', auth, async (req, res) => {
     }
 });
 
-// ✅ NUEVO: Obtener todas las asistencias (solo coordinador)
+// ✅ Obtener inasistencias del profesor actual (para la app móvil)
+router.get('/inasistencias', auth, async (req, res) => {
+    try {
+        const idProfesor = req.user.id_profesor;
+        if (!idProfesor) {
+            return res.json({ inasistencias: [] });
+        }
+
+        const inasistencias = await Asistencia.obtenerInasistencias(idProfesor);
+        res.json({ inasistencias });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error interno' });
+    }
+});
+
+// ✅ Obtener todas las asistencias (solo coordinador)
 router.get('/todas', auth, async (req, res) => {
     if (!req.user.esCoordinador) {
         return res.status(403).json({ error: 'Solo coordinadores pueden ver todas las asistencias' });
@@ -156,7 +236,7 @@ router.get('/todas', auth, async (req, res) => {
     }
 });
 
-// ✅ NUEVO: Obtener asistencias por profesor
+// ✅ Obtener asistencias por profesor
 router.get('/profesor/:idProfesor', auth, async (req, res) => {
     if (!req.user.esCoordinador && !req.user.roles.includes('auditor')) {
         return res.status(403).json({ error: 'Acceso denegado' });
@@ -170,7 +250,7 @@ router.get('/profesor/:idProfesor', auth, async (req, res) => {
     }
 });
 
-// ✅ NUEVO: Obtener faltas/inasistencias (para auditor/coordinador)
+// ✅ Obtener faltas/inasistencias (para auditor/coordinador)
 router.get('/faltas', auth, async (req, res) => {
     try {
         const result = await pool.query(

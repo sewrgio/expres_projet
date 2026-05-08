@@ -64,7 +64,7 @@ const CustomSelect = ({
                 onClick={() => {
                   setInternalValue(option.value);
                   if (onChange) {
-                    onChange({ target: { value: option.value, name: name } });
+                    onChange(option.value);
                   }
                   setIsOpen(false);
                 }}

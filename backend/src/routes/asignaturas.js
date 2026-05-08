@@ -66,10 +66,13 @@ router.post('/asignar-profesor', auth, async (req, res) => {
     );
     
     // Crear nueva asignación
+    const maxRes = await pool.query('SELECT COALESCE(MAX(id_asignatura_profesor), 0) + 1 as next_id FROM asignatura_profesor');
+    const nextId = maxRes.rows[0].next_id;
+
     const result = await pool.query(
-      `INSERT INTO asignatura_profesor (id_asignatura, id_profesor, fecha_desde, activo)
-       VALUES ($1, $2, COALESCE($3, CURRENT_DATE), true) RETURNING *`,
-      [id_asignatura, id_profesor, fecha_desde]
+      `INSERT INTO asignatura_profesor (id_asignatura_profesor, id_asignatura, id_profesor, fecha_desde, activo)
+       VALUES ($1, $2, $3, COALESCE($4, CURRENT_DATE), true) RETURNING *`,
+      [nextId, id_asignatura, id_profesor, fecha_desde]
     );
     
     res.status(201).json({ 

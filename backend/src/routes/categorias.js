@@ -50,11 +50,15 @@ router.post('/', auth, async (req, res) => {
   }
 
   try {
+    // Obtener el siguiente ID manualmente
+    const maxCatRes = await pool.query('SELECT COALESCE(MAX(id_categoria), 0) + 1 as next_id FROM categoria');
+    const nextId = maxCatRes.rows[0].next_id;
+
     const result = await pool.query(
-      `INSERT INTO categoria (nombre, descripcion, tip_id) 
-       VALUES ($1, $2, $3) 
+      `INSERT INTO categoria (id_categoria, nombre, descripcion, tip_id) 
+       VALUES ($1, $2, $3, $4) 
        RETURNING *`,
-      [nombre, descripcion, tip_id || null]
+      [nextId, nombre, descripcion, tip_id || null]
     );
 
     res.status(201).json(result.rows[0]);

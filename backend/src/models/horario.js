@@ -34,10 +34,13 @@ const Horario = {
 
   // Crear horario
   async create(id_asignatura_profesor, dia_semana, hora_inicio, hora_fin, aula) {
+    const maxRes = await pool.query('SELECT COALESCE(MAX(id_horario), 0) + 1 as next_id FROM horario');
+    const nextId = maxRes.rows[0].next_id;
+
     const result = await pool.query(`
-      INSERT INTO horario (id_asignatura_profesor, dia_semana, hora_inicio, hora_fin, aula)
-      VALUES ($1, $2, $3, $4, $5) RETURNING *
-    `, [id_asignatura_profesor, dia_semana, hora_inicio, hora_fin, aula]);
+      INSERT INTO horario (id_horario, id_asignatura_profesor, dia_semana, hora_inicio, hora_fin, aula)
+      VALUES ($1, $2, $3, $4, $5, $6) RETURNING *
+    `, [nextId, id_asignatura_profesor, dia_semana, hora_inicio, hora_fin, aula]);
     return result.rows[0];
   },
 

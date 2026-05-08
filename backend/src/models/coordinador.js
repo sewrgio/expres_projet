@@ -43,10 +43,13 @@ const Coordinador = {
 
   // Crear coordinador (asociado a un usuario existente)
   async create(id_usuario_rol, id_carrera) {
+    const maxRes = await pool.query('SELECT COALESCE(MAX(id_coordinador), 0) + 1 as next_id FROM coordinador');
+    const nextId = maxRes.rows[0].next_id;
+
     const result = await pool.query(`
-      INSERT INTO coordinador (id_usuario_rol, id_carrera)
-      VALUES ($1, $2) RETURNING *
-    `, [id_usuario_rol, id_carrera]);
+      INSERT INTO coordinador (id_coordinador, id_usuario_rol, id_carrera, fecha_desde, activo)
+      VALUES ($1, $2, $3, CURRENT_DATE, true) RETURNING *
+    `, [nextId, id_usuario_rol, id_carrera]);
     return result.rows[0];
   },
 

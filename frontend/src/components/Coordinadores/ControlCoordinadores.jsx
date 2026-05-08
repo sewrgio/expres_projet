@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import {
   IconUsers, IconEdit, IconGraduation, IconSave, IconCancel,
-  IconEmail, IconPhone, IconIdCard, IconAlert, IconX, IconCheck, IconPower
+  IconEmail, IconPhone, IconIdCard, IconAlert, IconCheck, IconPower,
+  IconSearch, IconPlus, IconChevronRight
 } from '../Icons/SystemIcons';
 import CustomSelect from '../UI/CustomSelect';
 
@@ -10,8 +11,11 @@ const ControlCoordinadores = () => {
   const [coordinadores, setCoordinadores] = useState([]);
   const [carreras, setCarreras] = useState([]);
   const [cargando, setCargando] = useState(true);
-  const [mensaje, setMensaje] = useState({ texto: '', tipo: '' });
-  const [mensajeVisible, setMensajeVisible] = useState(false);
+  const [busqueda, setBusqueda] = useState('');
+  
+  const [mensaje, setMensaje] = useState('');
+  const [error, setError] = useState('');
+
   const [editando, setEditando] = useState(null);
   const [formData, setFormData] = useState({
     nombre: '',
@@ -20,33 +24,8 @@ const ControlCoordinadores = () => {
     telefono: '',
     id_carrera: ''
   });
-  const [modalDesactivar, setModalDesactivar] = useState({
-    mostrar: false,
-    id_coordinador: null,
-    nombre: ''
-  });
-  const [modalActivar, setModalActivar] = useState({
-    mostrar: false,
-    id_coordinador: null,
-    nombre: ''
-  });
-  const [modalGuardar, setModalGuardar] = useState({
-    mostrar: false,
-    id_coordinador: null,
-    id_usuario: null
-  });
 
-  // Helper para mostrar mensaje que se oculta automáticamente después de 5 segundos
-  const mostrarMensaje = (texto, tipo) => {
-    setMensaje({ texto, tipo });
-    setMensajeVisible(true);
-    setTimeout(() => {
-      setMensajeVisible(false);
-      setTimeout(() => {
-        setMensaje({ texto: '', tipo: '' });
-      }, 300); // Esperar a que termine la animación de salida
-    }, 5000);
-  };
+  const [modalConfirm, setModalConfirm] = useState({ mostrar: false, tipo: '', data: null });
 
   useEffect(() => {
     cargarDatos();
@@ -61,9 +40,9 @@ const ControlCoordinadores = () => {
       ]);
       setCoordinadores(coordsRes.data);
       setCarreras(carrerasRes.data);
-    } catch (error) {
-      console.error('Error cargando datos:', error);
-      mostrarMensaje('❌ Error al cargar datos', 'error');
+    } catch (err) {
+      console.error(err);
+      setError('Error al cargar datos');
     } finally {
       setCargando(false);
     }
@@ -80,669 +59,192 @@ const ControlCoordinadores = () => {
     });
   };
 
-  const handleCancelar = () => {
-    setEditando(null);
-    setFormData({
-      nombre: '',
-      apellido: '',
-      correo: '',
-      telefono: '',
-      id_carrera: ''
-    });
-  };
-
-  const mostrarModalGuardar = (id_coordinador, id_usuario) => {
-    setModalGuardar({
-      mostrar: true,
-      id_coordinador,
-      id_usuario
-    });
-  };
-
-  const cerrarModalGuardar = () => {
-    setModalGuardar({
-      mostrar: false,
-      id_coordinador: null,
-      id_usuario: null
-    });
-  };
-
   const handleConfirmarGuardar = async () => {
     try {
-      const { id_coordinador, id_usuario } = modalGuardar;
-      
-      // Actualizar carrera del coordinador
-      await api.put(`/coordinadores/${id_coordinador}`, {
-        id_carrera: formData.id_carrera
-      });
-
-      // Actualizar datos del usuario
-      await api.put(`/usuarios/${id_usuario}`, {
+      const coord = coordinadores.find(c => c.id_coordinador === editando);
+      await api.put(`/coordinadores/${editando}`, { id_carrera: formData.id_carrera });
+      await api.put(`/usuarios/${coord.id_usuario}`, {
         nombre: formData.nombre,
         apellido: formData.apellido,
         correo: formData.correo,
         telefono: formData.telefono
       });
-
-      mostrarMensaje('✅ Coordinador actualizado exitosamente', 'success');
-      cerrarModalGuardar();
+      setMensaje('✅ Coordinador actualizado');
       setEditando(null);
+      setModalConfirm({ mostrar: false });
       cargarDatos();
-    } catch (error) {
-      console.error('Error actualizando:', error);
-      mostrarMensaje('❌ Error al actualizar coordinador', 'error');
-      cerrarModalGuardar();
+      setTimeout(() => setMensaje(''), 3000);
+    } catch (err) {
+      setError('Error al actualizar');
     }
   };
 
-  const mostrarModalDesactivar = (coord) => {
-    setModalDesactivar({
-      mostrar: true,
-      id_coordinador: coord.id_coordinador,
-      nombre: `${coord.nombre} ${coord.apellido}`
-    });
-  };
-
-  const cerrarModalDesactivar = () => {
-    setModalDesactivar({
-      mostrar: false,
-      id_coordinador: null,
-      nombre: ''
-    });
-  };
-
-  const handleDesactivar = async () => {
+  const handleToggleEstado = async () => {
+    const { tipo, data: coord } = modalConfirm;
+    const action = tipo === 'desactivar' ? 'desactivar' : 'activar';
     try {
-      await api.put(`/coordinadores/${modalDesactivar.id_coordinador}/desactivar`);
-      mostrarMensaje('✅ Coordinador desactivado exitosamente', 'success');
-      cerrarModalDesactivar();
+      await api.put(`/coordinadores/${coord.id_coordinador}/${action}`);
+      setMensaje(`✅ Coordinador ${tipo}o correctamente`);
+      setModalConfirm({ mostrar: false });
       cargarDatos();
-    } catch (error) {
-      console.error('Error desactivando:', error);
-      mostrarMensaje('❌ Error al desactivar coordinador', 'error');
-      cerrarModalDesactivar();
+      setTimeout(() => setMensaje(''), 3000);
+    } catch (err) {
+      setError('Error al cambiar estado');
     }
   };
 
-  const mostrarModalActivar = (coord) => {
-    setModalActivar({
-      mostrar: true,
-      id_coordinador: coord.id_coordinador,
-      nombre: `${coord.nombre} ${coord.apellido}`
-    });
-  };
-
-  const cerrarModalActivar = () => {
-    setModalActivar({
-      mostrar: false,
-      id_coordinador: null,
-      nombre: ''
-    });
-  };
-
-  const handleActivar = async () => {
-    try {
-      await api.put(`/coordinadores/${modalActivar.id_coordinador}/activar`);
-      mostrarMensaje('✅ Coordinador activado exitosamente', 'success');
-      cerrarModalActivar();
-      cargarDatos();
-    } catch (error) {
-      console.error('Error activando:', error);
-      mostrarMensaje('❌ Error al activar coordinador', 'error');
-      cerrarModalActivar();
-    }
-  };
+  const coordinadoresFiltrados = coordinadores.filter(c => 
+    `${c.nombre} ${c.apellido}`.toLowerCase().includes(busqueda.toLowerCase()) ||
+    c.cedula?.includes(busqueda)
+  );
 
   if (cargando) {
     return (
-      <div className="card" style={{ textAlign: 'center', padding: '40px' }}>
-        <div style={{ fontSize: '24px', marginBottom: '10px' }}>⏳</div>
-        <p>Cargando coordinadores...</p>
+      <div className="flex flex-col items-center justify-center p-20 text-indigo-600">
+        <div className="animate-spin text-4xl mb-4">⏳</div>
+        <p className="font-medium animate-pulse">Cargando gestión de coordinadores...</p>
       </div>
     );
   }
 
   return (
-    <div>
-      {/* Header */}
-      <div className="card" style={{ marginBottom: '20px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <div style={{ 
-            width: '50px', 
-            height: '50px', 
-            backgroundColor: '#003366', 
-            borderRadius: '50%', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            color: 'white',
-            fontSize: '24px'
-          }}>
+    <div className="animate-fade-in space-y-8 pb-20">
+      {/* Header Premium */}
+      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+        <div className="flex items-center gap-5">
+          <div className="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-100 text-2xl">
             <IconUsers />
           </div>
           <div>
-            <h2 style={{ margin: 0, color: '#003366' }}>Control de Coordinadores</h2>
-            <p style={{ margin: '5px 0 0 0', color: '#666', fontSize: '14px' }}>
-              Total: {coordinadores.length} coordinadores | 
-              <span style={{ color: '#28a745' }}> {coordinadores.filter(c => c.usuario_activo).length} activos</span> | 
-              <span style={{ color: '#dc3545' }}> {coordinadores.filter(c => !c.usuario_activo).length} inactivos</span>
-            </p>
+            <h1 className="text-2xl font-bold text-slate-800">Control de Coordinadores</h1>
+            <p className="text-slate-500 font-medium">Administración de accesos y asignaciones de carrera</p>
+          </div>
+        </div>
+        <div className="flex gap-4">
+          <div className="bg-emerald-50 px-4 py-2 rounded-xl text-emerald-600 font-bold text-xs uppercase border border-emerald-100">
+            {coordinadores.filter(c => c.usuario_activo).length} Activos
+          </div>
+          <div className="bg-rose-50 px-4 py-2 rounded-xl text-rose-600 font-bold text-xs uppercase border border-rose-100">
+            {coordinadores.filter(c => !c.usuario_activo).length} Inactivos
           </div>
         </div>
       </div>
 
-      {/* Mensaje con animación */}
-      {mensaje.texto && (
-        <div style={{
-          marginBottom: '20px',
-          padding: '15px 20px',
-          borderRadius: '8px',
-          backgroundColor: mensaje.tipo === 'success' ? '#d4edda' : '#f8d7da',
-          color: mensaje.tipo === 'success' ? '#155724' : '#721c24',
-          border: `1px solid ${mensaje.tipo === 'success' ? '#c3e6cb' : '#f5c6cb'}`,
-          opacity: mensajeVisible ? 1 : 0,
-          transform: mensajeVisible ? 'translateY(0)' : 'translateY(-20px)',
-          transition: 'all 0.3s ease-in-out',
-          pointerEvents: mensajeVisible ? 'auto' : 'none'
-        }}>
-          {mensaje.texto}
+      {/* Alertas y Buscador */}
+      <div className="flex flex-col gap-4">
+        {(mensaje || error) && (
+          <div className={`px-6 py-4 rounded-2xl flex items-center gap-3 animate-slide-in shadow-sm border ${mensaje ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100'}`}>
+            {mensaje ? <IconCheck /> : <IconAlert />}
+            <span className="font-bold">{mensaje || error}</span>
+          </div>
+        )}
+
+        <div className="relative group">
+          <IconSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+          <input
+            type="text"
+            placeholder="Buscar por nombre, apellido o cédula..."
+            className="w-full pl-12 pr-6 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all shadow-sm font-medium"
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+          />
         </div>
-      )}
+      </div>
 
-      {/* Grid de coordinadores */}
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', 
-        gap: '20px' 
-      }}>
-        {coordinadores.map((coord) => (
-          <div key={coord.id_coordinador} className="card" style={{ 
-            padding: '20px',
-            opacity: coord.usuario_activo ? 1 : 0.7,
-            borderLeft: coord.usuario_activo ? 'none' : '4px solid #dc3545'
-          }}>
-            {editando === coord.id_coordinador ? (
-              // Modo edición
+      {/* Grid de Coordinadores */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {coordinadoresFiltrados.map(coord => (
+          <div key={coord.id_coordinador} className={`bg-white rounded-[32px] p-8 shadow-sm border transition-all hover:shadow-xl group relative overflow-hidden ${!coord.usuario_activo ? 'border-rose-100' : 'border-slate-100'}`}>
+            {!coord.usuario_activo && <div className="absolute top-0 right-0 bg-rose-500 text-white text-[10px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-widest">Inactivo</div>}
+            
+            <div className="flex items-center gap-5 mb-8">
+              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-xl font-black shadow-inner border border-white ${coord.usuario_activo ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-100 text-slate-400'}`}>
+                {coord.nombre[0]}{coord.apellido[0]}
+              </div>
               <div>
-                <h4 style={{ margin: '0 0 15px 0', color: '#003366' }}>Editar Coordinador</h4>
-                
-                <div style={{ marginBottom: '12px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', color: '#666' }}>
-                    Nombre
-                  </label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={formData.nombre}
-                    onChange={(e) => setFormData({...formData, nombre: e.target.value})}
-                    style={{ width: '100%' }}
-                  />
-                </div>
+                <h3 className="text-lg font-black text-slate-800 leading-tight">{coord.nombre} {coord.apellido}</h3>
+                <p className="text-xs font-black text-indigo-400 uppercase tracking-widest mt-1 flex items-center gap-1">
+                  <IconGraduation width={12} height={12} /> {coord.nombre_carrera}
+                </p>
+              </div>
+            </div>
 
-                <div style={{ marginBottom: '12px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', color: '#666' }}>
-                    Apellido
-                  </label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={formData.apellido}
-                    onChange={(e) => setFormData({...formData, apellido: e.target.value})}
-                    style={{ width: '100%' }}
-                  />
-                </div>
-
-                <div style={{ marginBottom: '12px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', color: '#666' }}>
-                    Correo
-                  </label>
-                  <input
-                    type="email"
-                    className="form-control"
-                    value={formData.correo}
-                    onChange={(e) => setFormData({...formData, correo: e.target.value})}
-                    style={{ width: '100%' }}
-                  />
-                </div>
-
-                <div style={{ marginBottom: '12px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', color: '#666' }}>
-                    Teléfono
-                  </label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={formData.telefono}
-                    onChange={(e) => setFormData({...formData, telefono: e.target.value})}
-                    style={{ width: '100%' }}
-                  />
-                </div>
-
-                <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', color: '#666' }}>
-                    Carrera
-                  </label>
-                  <CustomSelect
-                    name="id_carrera"
-                    value={formData.id_carrera}
-                    onChange={(e) => setFormData({...formData, id_carrera: e.target.value})}
-                    placeholder="Seleccionar carrera"
-                    options={carreras.map(c => ({
-                      value: c.id_carrera,
-                      label: c.nombre_carrera
-                    }))}
-                  />
-                </div>
-
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <button 
-                    className="btn btn-primary" 
-                    onClick={() => mostrarModalGuardar(coord.id_coordinador, coord.id_usuario)}
-                    style={{ flex: 1, padding: '10px' }}
-                  >
-                    <IconSave /> Guardar
-                  </button>
-                  <button 
-                    className="btn btn-secondary" 
-                    onClick={handleCancelar}
-                    style={{ flex: 1, padding: '10px' }}
-                  >
-                    <IconCancel /> Cancelar
-                  </button>
+            {editando === coord.id_coordinador ? (
+              <div className="space-y-4 animate-slide-in">
+                <input className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-bold text-sm" value={formData.nombre} onChange={e => setFormData({...formData, nombre: e.target.value})} placeholder="Nombre" />
+                <input className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-bold text-sm" value={formData.apellido} onChange={e => setFormData({...formData, apellido: e.target.value})} placeholder="Apellido" />
+                <CustomSelect
+                  options={carreras.map(c => ({ value: c.id_carrera, label: c.nombre_carrera }))}
+                  value={formData.id_carrera}
+                  onChange={val => setFormData({...formData, id_carrera: val })}
+                />
+                <div className="flex gap-2 pt-2">
+                  <button onClick={() => setModalConfirm({ mostrar: true, tipo: 'guardar', data: coord })} className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition-all">Guardar</button>
+                  <button onClick={() => setEditando(null)} className="flex-1 bg-slate-100 text-slate-500 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition-all">Cancelar</button>
                 </div>
               </div>
             ) : (
-              // Modo visualización
-              <div>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '12px',
-                  marginBottom: '15px',
-                  paddingBottom: '15px',
-                  borderBottom: '1px solid #eee'
-                }}>
-                  <div style={{ 
-                    width: '45px', 
-                    height: '45px', 
-                    backgroundColor: coord.usuario_activo ? '#003366' : '#6c757d', 
-                    borderRadius: '50%', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    color: 'white',
-                    fontSize: '18px',
-                    fontWeight: 'bold'
-                  }}>
-                    {coord.nombre?.charAt(0)}{coord.apellido?.charAt(0)}
+              <>
+                <div className="space-y-4 mb-8">
+                  <div className="flex items-center gap-3 text-slate-500 text-sm font-medium">
+                    <IconIdCard width={18} height={18} className="text-slate-300" /> {coord.cedula}
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <h4 style={{ margin: 0, color: '#003366' }}>
-                      {coord.nombre} {coord.apellido}
-                    </h4>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-                      <span style={{ fontSize: '12px', color: '#888' }}>
-                        Coordinador
-                      </span>
-                      {coord.usuario_activo ? (
-                        <span style={{ 
-                          fontSize: '11px', 
-                          color: '#28a745', 
-                          backgroundColor: '#d4edda',
-                          padding: '2px 8px',
-                          borderRadius: '10px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px'
-                        }}>
-                          <span style={{ width: '6px', height: '6px', backgroundColor: '#28a745', borderRadius: '50%' }}></span>
-                          En línea
-                        </span>
-                      ) : (
-                        <span style={{ 
-                          fontSize: '11px', 
-                          color: '#dc3545', 
-                          backgroundColor: '#f8d7da',
-                          padding: '2px 8px',
-                          borderRadius: '10px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px'
-                        }}>
-                          <span style={{ width: '6px', height: '6px', backgroundColor: '#dc3545', borderRadius: '50%' }}></span>
-                          Inactivo
-                        </span>
-                      )}
-                    </div>
+                  <div className="flex items-center gap-3 text-slate-500 text-sm font-medium truncate">
+                    <IconEmail width={18} height={18} className="text-slate-300" /> {coord.correo}
+                  </div>
+                  <div className="flex items-center gap-3 text-slate-500 text-sm font-medium">
+                    <IconPhone width={18} height={18} className="text-slate-300" /> {coord.telefono || 'Sin teléfono'}
                   </div>
                 </div>
 
-                <div style={{ marginBottom: '10px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                    <IconIdCard />
-                    <span style={{ fontSize: '14px', color: '#333' }}>{coord.cedula}</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                    <IconEmail />
-                    <span style={{ fontSize: '14px', color: '#333' }}>{coord.correo}</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                    <IconPhone />
-                    <span style={{ fontSize: '14px', color: '#333' }}>
-                      {coord.telefono || 'Sin teléfono'}
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <IconGraduation />
-                    <span style={{ fontSize: '14px', color: '#333', fontWeight: '500' }}>
-                      {coord.nombre_carrera}
-                    </span>
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
-                  <button 
-                    className="btn btn-primary" 
-                    onClick={() => handleEditar(coord)}
-                    style={{ flex: 1, padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-                  >
-                    <IconEdit /> Editar
+                <div className="flex gap-2 pt-6 border-t border-slate-50">
+                  <button onClick={() => handleEditar(coord)} className="flex-1 bg-indigo-50 text-indigo-600 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center gap-2">
+                    <IconEdit width={14} /> Editar
                   </button>
-                  {coord.usuario_activo ? (
-                    <button 
-                      onClick={() => mostrarModalDesactivar(coord)}
-                      style={{ 
-                        flex: 1, 
-                        padding: '10px', 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center', 
-                        gap: '6px',
-                        backgroundColor: '#dc3545',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        transition: 'all 0.2s'
-                      }}
-                    >
-                      <IconPower /> Desactivar
-                    </button>
-                  ) : (
-                    <button 
-                      onClick={() => mostrarModalActivar(coord)}
-                      style={{ 
-                        flex: 1, 
-                        padding: '10px', 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center', 
-                        gap: '6px',
-                        backgroundColor: '#28a745',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        transition: 'all 0.2s',
-                        boxShadow: '0 2px 4px rgba(40, 167, 69, 0.3)'
-                      }}
-                    >
-                      <IconPower /> Activar
-                    </button>
-                  )}
+                  <button 
+                    onClick={() => setModalConfirm({ mostrar: true, tipo: coord.usuario_activo ? 'desactivar' : 'activar', data: coord })}
+                    className={`flex-1 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${coord.usuario_activo ? 'bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white'}`}
+                  >
+                    <IconPower width={14} /> {coord.usuario_activo ? 'Desactivar' : 'Activar'}
+                  </button>
                 </div>
-              </div>
+              </>
             )}
           </div>
         ))}
       </div>
 
-      {coordinadores.length === 0 && (
-        <div className="card" style={{ textAlign: 'center', padding: '40px' }}>
-          <div style={{ fontSize: '48px', marginBottom: '15px' }}>👥</div>
-          <h4 style={{ color: '#666', margin: '0 0 10px 0' }}>No hay coordinadores registrados</h4>
-          <p style={{ color: '#888', margin: 0 }}>Ve a "Agregar Coordinador" para crear uno nuevo</p>
-        </div>
-      )}
-
-      {/* Modal de confirmación para desactivar */}
-      {modalDesactivar.mostrar && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            padding: '30px',
-            maxWidth: '400px',
-            width: '90%',
-            boxShadow: '0 10px 40px rgba(0,0,0,0.3)'
-          }}>
-            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-              <div style={{
-                width: '60px',
-                height: '60px',
-                backgroundColor: '#fff3cd',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 15px'
-              }}>
-                <IconAlert style={{ color: '#856404', width: '30px', height: '30px' }} />
-              </div>
-              <h3 style={{ margin: '0 0 10px 0', color: '#333' }}>
-                ¿Desactivar coordinador?
-              </h3>
-              <p style={{ color: '#666', margin: 0, fontSize: '14px' }}>
-                Estás a punto de desactivar a <strong>{modalDesactivar.nombre}</strong>.
-                El coordinador no podrá acceder al sistema, pero sus datos permanecerán guardados.
-              </p>
+      {/* MODAL DE CONFIRMACIÓN PREMIUM */}
+      {modalConfirm.mostrar && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-fade-in" onClick={() => setModalConfirm({ mostrar: false })}></div>
+          <div className="bg-white rounded-[40px] w-full max-w-md p-10 shadow-2xl relative z-10 animate-zoom-in text-center">
+            <div className={`w-24 h-24 rounded-[32px] flex items-center justify-center text-4xl shadow-2xl mx-auto mb-8 border-4 border-white ${
+              modalConfirm.tipo === 'desactivar' ? 'bg-rose-500 text-white shadow-rose-200' :
+              modalConfirm.tipo === 'activar' ? 'bg-emerald-500 text-white shadow-emerald-200' :
+              'bg-indigo-600 text-white shadow-indigo-200'
+            }`}>
+              {modalConfirm.tipo === 'desactivar' ? <IconPower /> : modalConfirm.tipo === 'activar' ? <IconCheck /> : <IconSave />}
             </div>
+            
+            <h3 className="text-2xl font-black text-slate-800 mb-2 capitalize">¿{modalConfirm.tipo} Coordinador?</h3>
+            <p className="text-slate-500 font-medium mb-8">
+              ¿Estás seguro de realizar esta acción para <strong className="text-slate-800">{modalConfirm.data?.nombre} {modalConfirm.data?.apellido}</strong>?
+            </p>
 
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button
-                onClick={cerrarModalDesactivar}
-                style={{
-                  flex: 1,
-                  padding: '12px',
-                  border: '1px solid #ddd',
-                  borderRadius: '8px',
-                  backgroundColor: 'white',
-                  color: '#333',
-                  cursor: 'pointer',
-                  fontSize: '14px'
-                }}
+            <div className="flex gap-3">
+              <button 
+                onClick={modalConfirm.tipo === 'guardar' ? handleConfirmarGuardar : handleToggleEstado}
+                className={`flex-1 py-4 rounded-2xl font-black transition-all shadow-xl active:scale-95 text-white ${
+                  modalConfirm.tipo === 'desactivar' ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-100' :
+                  modalConfirm.tipo === 'activar' ? 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-100' :
+                  'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-100'
+                }`}
               >
+                Confirmar
+              </button>
+              <button onClick={() => setModalConfirm({ mostrar: false })} className="flex-1 bg-slate-100 text-slate-500 py-4 rounded-2xl font-black hover:bg-slate-200 transition-all">
                 Cancelar
-              </button>
-              <button
-                onClick={handleDesactivar}
-                style={{
-                  flex: 1,
-                  padding: '12px',
-                  border: 'none',
-                  borderRadius: '8px',
-                  backgroundColor: '#dc3545',
-                  color: 'white',
-                  cursor: 'pointer',
-                  fontSize: '14px'
-                }}
-              >
-                Desactivar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal de confirmación para activar */}
-      {modalActivar.mostrar && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            padding: '30px',
-            maxWidth: '400px',
-            width: '90%',
-            boxShadow: '0 10px 40px rgba(0,0,0,0.3)'
-          }}>
-            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-              <div style={{
-                width: '60px',
-                height: '60px',
-                backgroundColor: '#d4edda',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 15px'
-              }}>
-                <IconCheck style={{ color: '#28a745', width: '30px', height: '30px' }} />
-              </div>
-              <h3 style={{ margin: '0 0 10px 0', color: '#333' }}>
-                ¿Activar coordinador?
-              </h3>
-              <p style={{ color: '#666', margin: 0, fontSize: '14px' }}>
-                Estás a punto de activar a <strong>{modalActivar.nombre}</strong>.
-                El coordinador podrá volver a acceder al sistema.
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button
-                onClick={cerrarModalActivar}
-                style={{
-                  flex: 1,
-                  padding: '12px',
-                  border: '1px solid #ddd',
-                  borderRadius: '8px',
-                  backgroundColor: 'white',
-                  color: '#333',
-                  cursor: 'pointer',
-                  fontSize: '14px'
-                }}
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleActivar}
-                style={{
-                  flex: 1,
-                  padding: '12px',
-                  border: 'none',
-                  borderRadius: '8px',
-                  backgroundColor: '#28a745',
-                  color: 'white',
-                  cursor: 'pointer',
-                  fontSize: '14px'
-                }}
-              >
-                Activar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal de confirmación para guardar cambios */}
-      {modalGuardar.mostrar && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            padding: '30px',
-            maxWidth: '400px',
-            width: '90%',
-            boxShadow: '0 10px 40px rgba(0,0,0,0.3)'
-          }}>
-            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-              <div style={{
-                width: '60px',
-                height: '60px',
-                backgroundColor: '#cce5ff',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 15px'
-              }}>
-                <IconSave style={{ color: '#004085', width: '30px', height: '30px' }} />
-              </div>
-              <h3 style={{ margin: '0 0 10px 0', color: '#333' }}>
-                ¿Guardar cambios?
-              </h3>
-              <p style={{ color: '#666', margin: 0, fontSize: '14px' }}>
-                ¿Estás seguro de que deseas guardar los cambios realizados en este coordinador?
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button
-                onClick={cerrarModalGuardar}
-                style={{
-                  flex: 1,
-                  padding: '12px',
-                  border: '1px solid #ddd',
-                  borderRadius: '8px',
-                  backgroundColor: 'white',
-                  color: '#333',
-                  cursor: 'pointer',
-                  fontSize: '14px'
-                }}
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleConfirmarGuardar}
-                style={{
-                  flex: 1,
-                  padding: '12px',
-                  border: 'none',
-                  borderRadius: '8px',
-                  backgroundColor: '#003366',
-                  color: 'white',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '500'
-                }}
-              >
-                <IconSave /> Guardar
               </button>
             </div>
           </div>

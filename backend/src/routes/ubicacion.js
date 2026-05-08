@@ -30,39 +30,40 @@ import pool from '../config/db.js';
 
 // Validar ubicación (público - no requiere autenticación obligatoria para la app móvil)
 router.post('/validar', async (req, res) => {
-  const { latitud, longitud } = req.body;
+    const { latitud, longitud, precision } = req.body;
 
-  if (!latitud || !longitud) {
-    return res.status(400).json({ error: 'Latitud y longitud son requeridos' });
-  }
+    if (!latitud || !longitud) {
+      return res.status(400).json({ error: 'Latitud y longitud son requeridos' });
+    }
 
-  try {
-    const distancia = calcularDistancia(
-      latitud,
-      longitud,
-      CAMPUS_COORDS.lat,
-      CAMPUS_COORDS.lon
-    );
+    try {
+      const distancia = calcularDistancia(
+        latitud,
+        longitud,
+        CAMPUS_COORDS.lat,
+        CAMPUS_COORDS.lon
+      );
 
-    const dentroRango = distancia <= RADIO_PERMITIDO_KM;
+      const dentroRango = distancia <= RADIO_PERMITIDO_KM;
 
-    // Intentar actualizar la ubicación en DB si se proporciona token
-    const token = req.header('Authorization')?.replace('Bearer ', '');
-    if (token) {
-      try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'iujo_secret_key_2024');
-        if (decoded && decoded.id) {
-          const query = `
-            INSERT INTO ubicacion_usuario (id_usuario, latitud, longitud, fecha_actualizacion)
-            VALUES ($1, $2, $3, NOW())
-            ON CONFLICT (id_usuario)
-            DO UPDATE SET
-              latitud = EXCLUDED.latitud,
-              longitud = EXCLUDED.longitud,
-              fecha_actualizacion = NOW()
-          `;
-          await pool.query(query, [decoded.id, latitud, longitud]);
-        }
+      // Intentar actualizar la ubicación en DB si se proporciona token
+      const token = req.header('Authorization')?.replace('Bearer ', '');
+      if (token) {
+        try {
+          const decoded = jwt.verify(token, process.env.JWT_SECRET || 'iujo_secret_key_2024');
+          if (decoded && decoded.id) {
+            const query = `
+              INSERT INTO ubicacion_usuario (id_usuario, latitud, longitud, "precision", fecha_actualizacion)
+              VALUES ($1, $2, $3, $4, NOW())
+              ON CONFLICT (id_usuario)
+              DO UPDATE SET
+                latitud = EXCLUDED.latitud,
+                longitud = EXCLUDED.longitud,
+                "precision" = EXCLUDED."precision",
+                fecha_actualizacion = NOW()
+            `;
+            await pool.query(query, [decoded.id, latitud, longitud, precision || null]);
+          }
       } catch (err) {
         console.error('Error al actualizar ubicación con token en /validar:', err.message);
       }
