@@ -3,6 +3,7 @@ import QR from '../models/qr.js';
 import auth from '../middleware/auth.js';
 import QRCode from 'qrcode';
 import pool from '../config/db.js';
+import { registrarBitacora } from '../utils/bitacora.js';
 
 const router = express.Router();
 
@@ -20,6 +21,14 @@ router.post('/generar', auth, async (req, res) => {
 
   try {
     const qr = await QR.generar(coordinadorId, descripcion || '', ubicacion || '', horasValidez || 2);
+    
+    // Registrar en bitácora del auditor
+    await registrarBitacora(
+      req.user.id,
+      'GENERAR_QR_DINAMICO',
+      `El usuario generó un QR temporal dinámico para: "${descripcion || 'Sin descripción'}" en la ubicación: "${ubicacion || 'Sin ubicación'}". Afectó al sistema agregando un nuevo QR temporal con vigencia de ${horasValidez || 2} horas.`
+    );
+
     const qrImage = await QRCode.toDataURL(qr.codigo_qr);
     
     res.json({
@@ -81,6 +90,14 @@ router.put('/desactivar/:id', auth, async (req, res) => {
 
   try {
     const qr = await QR.desactivar(req.params.id);
+    
+    // Registrar en bitácora del auditor
+    await registrarBitacora(
+      req.user.id,
+      'DESACTIVAR_QR_DINAMICO',
+      `Se desactivó manualmente el QR temporal con ID: ${req.params.id}. Afectó al sistema inhabilitando las lecturas para este código.`
+    );
+
     res.json({ success: true, message: 'QR desactivado', qr });
   } catch (error) {
     console.error(error);
@@ -95,6 +112,14 @@ router.put('/activar/:id', auth, async (req, res) => {
 
   try {
     const qr = await QR.activar(req.params.id);
+    
+    // Registrar en bitácora del auditor
+    await registrarBitacora(
+      req.user.id,
+      'ACTIVAR_QR_DINAMICO',
+      `Se activó manualmente el QR temporal con ID: ${req.params.id}. Afectó al sistema re-habilitando las lecturas para este código.`
+    );
+
     res.json({ success: true, message: 'QR activado', qr });
   } catch (error) {
     console.error(error);
@@ -144,6 +169,13 @@ router.put('/:id', auth, async (req, res) => {
     );
 
     const qrActualizado = result.rows[0];
+    
+    // Registrar en bitácora del auditor
+    await registrarBitacora(
+      req.user.id,
+      'EDITAR_QR_DINAMICO',
+      `Se editó el QR temporal con ID: ${qrId}. Cambió la descripción a "${descripcion || ''}", ubicación a "${ubicacion || ''}" y se extendió la vigencia en +${extensionHoras} horas.`
+    );
     
     // Generar nueva imagen
     const qrImage = await QRCode.toDataURL(qrActualizado.codigo_qr);
@@ -245,6 +277,14 @@ router.post('/fijos', auth, async (req, res) => {
 
   try {
     const qr = await QR.crearQRFijo(nombre, codigo);
+    
+    // Registrar en bitácora del auditor
+    await registrarBitacora(
+      req.user.id,
+      'CREAR_QR_FIJO',
+      `El Auditor creó un nuevo QR fijo de Dirección llamado "${nombre}" con el código identificador "${codigo}". Afectó al sistema habilitando una nueva zona de escaneo fijo.`
+    );
+
     res.json({
       success: true,
       message: 'QR fijo creado exitosamente',
@@ -268,6 +308,14 @@ router.put('/fijos/:id/activar', auth, async (req, res) => {
 
   try {
     const qr = await QR.activarQRFijo(req.params.id);
+    
+    // Registrar en bitácora del auditor
+    await registrarBitacora(
+      req.user.id,
+      'ACTIVAR_QR_FIJO',
+      `El Auditor activó el QR fijo con ID: ${req.params.id}. Afectó al sistema re-habilitando firmas fijas en ese punto.`
+    );
+
     res.json({
       success: true,
       message: 'QR fijo activado',
@@ -287,6 +335,14 @@ router.put('/fijos/:id/desactivar', auth, async (req, res) => {
 
   try {
     const qr = await QR.desactivarQRFijo(req.params.id);
+    
+    // Registrar en bitácora del auditor
+    await registrarBitacora(
+      req.user.id,
+      'DESACTIVAR_QR_FIJO',
+      `El Auditor desactivó el QR fijo con ID: ${req.params.id}. Afectó al sistema bloqueando de forma permanente o temporal las firmas fijas en ese punto.`
+    );
+
     res.json({
       success: true,
       message: 'QR fijo desactivado',

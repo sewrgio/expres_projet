@@ -1,6 +1,7 @@
 import express from 'express';
 import pool from '../config/db.js';
 import auth from '../middleware/auth.js';
+import fs from 'fs';
 
 const router = express.Router();
 
@@ -26,6 +27,50 @@ router.get('/', auth, async (req, res) => {
   } catch (error) {
     console.error('Error obteniendo bitácora:', error);
     res.status(500).json({ error: 'Error al obtener registros de bitácora' });
+  }
+});
+
+// Exportar bitácora manualmente a .txt (solo auditor)
+router.post('/exportar', auth, async (req, res) => {
+  if (!req.user.roles.includes('auditor')) {
+    return res.status(403).json({ error: 'Solo el auditor puede exportar la bitácora' });
+  }
+
+  try {
+    const { verificarYEjecutarExportMensual } = await import('../utils/serverMonitor.js');
+    await verificarYEjecutarExportMensual(true); // Forzar la exportación
+    res.json({ success: true, message: 'La bitácora se ha exportado exitosamente a la carpeta /exports en formato .txt' });
+  } catch (error) {
+    console.error('Error exportando bitácora:', error);
+    res.status(500).json({ error: 'Error al exportar la bitácora' });
+  }
+});
+
+// Descargar bitácora directamente en formato .txt (solo auditor)
+router.get('/descargar', auth, async (req, res) => {
+  if (!req.user.roles.includes('auditor')) {
+    return res.status(403).json({ error: 'Solo el auditor puede descargar la bitácora' });
+  }
+
+  try {
+    const ahora = new Date();
+    const nombresMeses = [
+      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ];
+    const nombreMes = nombresMeses[ahora.getMonth()];
+    const filePath = `/home/sergio/Documentos/expres_projet/exports/bitacora_${nombreMes}_${ahora.getFullYear()}.txt`;
+
+    // Si el archivo no existe físicamente, generarlo primero
+    if (!fs.existsSync(filePath)) {
+      const { verificarYEjecutarExportMensual } = await import('../utils/serverMonitor.js');
+      await verificarYEjecutarExportMensual(true);
+    }
+
+    res.download(filePath);
+  } catch (error) {
+    console.error('Error descargando bitácora:', error);
+    res.status(500).json({ error: 'Error al descargar el archivo de bitácora' });
   }
 });
 

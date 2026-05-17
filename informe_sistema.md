@@ -94,6 +94,29 @@ Durante el ciclo de desarrollo y pruebas, se identificaron y resolvieron quirúr
 *   **Problema:** En el endpoint `/escanear`, un error de sintaxis en la concatenación de variables en los strings de respuesta provocaba fallas en tiempo de ejecución o devolvía valores `NaN` o cadenas rotas al móvil.
 *   **Solución:** Corregimos la sintaxis de plantillas literales (`template literals`) en `backend/src/routes/asistencias.js`, alineando el constructor de mensajes descriptivos para la Entrada y Salida.
 
+### 4️⃣ Implementación de Bitácora Transaccional del Auditor (Qué Afectó y Efecto en Sistema)
+*   **Problema:** El Auditor General no poseía visibilidad transaccional detallada de las acciones del sistema. Se requería registrar con precisión quién operó, cuándo, a qué entidad afectó y cuál fue el impacto exacto en el sistema.
+*   **Solución:** Creamos la tabla `bitacora_logs` y la utilidad transaccional [bitacora.js](file:///home/sergio/Documentos/expres_projet/backend/src/utils/bitacora.js). Se inyectaron hooks de auditoría en:
+    *   **Asistencias:** Escaneos exitosos de docentes (detallando tipo de QR usado y cambio de estado a `DENTRO` o `FUERA`) y todos los intentos bloqueados por exceso de firmas, horario inadecuado o QR incompatible.
+    *   **Códigos QR:** Creaciones, ediciones, ampliaciones de horas válidas, y activaciones/desactivaciones.
+    *   **Usuarios:** Cambios de roles y asignaciones de dedicaciones temporales (Tiempo/Medio Completo).
+
+### 5️⃣ Monitoreo de Caídas del Servidor, Fallos y Tiempos de Inactividad (Uptime/Downtime)
+*   **Problema:** El auditor necesitaba conocer los fallos del sistema: a qué hora ocurrió una caída del servidor, cuándo se levantó nuevamente y cuánto tiempo exacto estuvo fuera de servicio.
+*   **Solución:** Diseñamos un servicio monitor en [serverMonitor.js](file:///home/sergio/Documentos/expres_projet/backend/src/utils/serverMonitor.js) que registra de forma persistente un latido (*heartbeat*) local en `server_status.json`. Al iniciar el servidor backend:
+    *   Si detecta un apagado abrupto anterior (caída/crash), calcula la hora del fallo, la hora de levantada y la duración exacta de inactividad, insertando una alerta de auditoría `SISTEMA_FALLO_CAIDA` en la base de datos.
+    *   Si detecta una parada ordenada (mantenimiento), inserta un registro `SISTEMA_REINICIO` calculando el tiempo programado fuera de servicio.
+
+### 6️⃣ Bucle de Reinicios Infinitos de Nodemon (Conflicto con Heartbeat JSON)
+*   **Problema:** Al implementarse el latido continuo del servidor, la constante escritura en `server_status.json` causaba que Nodemon detectara cambios en archivos, matando y reiniciando el servidor en un bucle infinito cada segundo. Esto causaba bloqueos de puertos (`EADDRINUSE 0.0.0.0:5000`) y registros duplicados.
+*   **Solución:** Creamos el archivo de configuración centralizado [nodemon.json](file:///home/sergio/Documentos/expres_projet/backend/nodemon.json) para instruir a nodemon que **ignore por completo** cualquier cambio en los archivos de persistencia del monitor (`server_status.json` y `export_status.json`), logrando una estabilidad del 100% en desarrollo.
+
+### 7️⃣ Automatización de Exportaciones Mensuales y Descarga Directa en Navegador
+*   **Problema:** El sistema debía archivar automáticamente las bitácoras cada fin de mes en formato `.txt`. Además, al presionar "Exportar" en la interfaz del Auditor, el archivo se generaba localmente en el servidor pero el navegador del usuario no iniciaba la descarga del archivo.
+*   **Solución:**
+    *   **Automatización:** El monitor comprueba cada fin de mes si ya se realizó el archivo automático, compilando todo el mes en un reporte legible en [exports/](file:///home/sergio/Documentos/expres_projet/exports).
+    *   **Descarga en Navegador:** Creamos el endpoint `GET /api/bitacora/descargar` en el backend Express y actualizamos [Bitacora.jsx](file:///home/sergio/Documentos/expres_projet/frontend/src/components/Reportes/Bitacora.jsx) para descargar el archivo de forma programática mediante *blobs* de Javascript en tiempo real. Ahora, al presionar el botón, el archivo se respalda en el servidor y se guarda automáticamente en las descargas locales de la computadora del usuario.
+
 ---
 
 ## ⚠️ 5. CATÁLOGO DE ERRORES COMUNES Y PROTOCOLO DE TROUBLESHOOTING
@@ -165,6 +188,10 @@ A continuación, se presentan los accesos rápidos a los archivos clave del back
 *   **Servidor de Entrada NodeJS:** [server.js](file:///home/sergio/Documentos/expres_projet/backend/server.js)
 *   **Gestión de Endpoints de Asistencia:** [asistencias.js](file:///home/sergio/Documentos/expres_projet/backend/src/routes/asistencias.js)
 *   **Fórmula de Ubicación Geográfica:** [ubicacion.js](file:///home/sergio/Documentos/expres_projet/backend/src/routes/ubicacion.js)
+*   **Monitor de Caídas y Servidor:** [serverMonitor.js](file:///home/sergio/Documentos/expres_projet/backend/src/utils/serverMonitor.js)
+*   **Configuración de Nodemon:** [nodemon.json](file:///home/sergio/Documentos/expres_projet/backend/nodemon.json)
 *   **Definición de Clases de Geolocalización (Flutter):** [location_service.dart](file:///home/sergio/Documentos/iujo_scanner_app/lib/services/location_service.dart)
 *   **Parámetros y Constantes de Horarios y APK:** [constants.dart](file:///home/sergio/Documentos/iujo_scanner_app/lib/config/constants.dart)
 *   **Interfaz de Asignación de Tiempos y Roles (React):** [GestionRoles.jsx](file:///home/sergio/Documentos/expres_projet/frontend/src/components/Usuarios/GestionRoles.jsx)
+*   **Módulo de Visualización de Bitácora (React):** [Bitacora.jsx](file:///home/sergio/Documentos/expres_projet/frontend/src/components/Reportes/Bitacora.jsx)
+*   **Carpeta de Exportaciones TXT:** [exports/](file:///home/sergio/Documentos/expres_projet/exports)

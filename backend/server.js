@@ -19,6 +19,7 @@ import categoriasRoutes from './src/routes/categorias.js';
 import bitacoraRoutes from './src/routes/bitacora.js';
 import { sendRecoveryCode } from './src/services/emailService.js';
 import pool from './src/config/db.js';
+import { iniciarMonitoreoServidor } from './src/utils/serverMonitor.js';
 
 const app = express();
 
@@ -121,6 +122,7 @@ const inicializarRoles = async () => {
   }
 };
 inicializarRoles();
+iniciarMonitoreoServidor();
 
 // Middlewares base (se recomienda que vayan primero)
 app.use(cors());

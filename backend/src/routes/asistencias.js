@@ -3,6 +3,7 @@ import Asistencia from '../models/asistencia.js';
 import QR from '../models/qr.js';
 import auth from '../middleware/auth.js';
 import pool from '../config/db.js';
+import { registrarBitacora } from '../utils/bitacora.js';
 
 const router = express.Router();
 
@@ -89,6 +90,11 @@ router.post('/escanear', auth, async (req, res) => {
         });
 
         if (totalEscaneos >= 2) {
+            await registrarBitacora(
+                req.user.id,
+                'ASISTENCIA_RECHAZADA_LIMITE',
+                `Intento de escaneo rechazado para ${userObj.nombre} ${userObj.apellido} (ID Profesor: ${profesorId}). Razón: El profesor ya alcanzó su tope máximo de 2 lecturas diarias.`
+            );
             return res.status(400).json({ 
                 success: false, 
                 error: 'Ya has alcanzado el límite de 2 escaneos diarios (1 Entrada y 1 Salida).' 
@@ -108,6 +114,11 @@ router.post('/escanear', auth, async (req, res) => {
         if (esTiempoCompleto) {
             // Tiempo Completo: 7:00 AM a 9:00 PM (7:00 a 21:00)
             if (horaActual < 7 || horaActual >= 21) {
+                await registrarBitacora(
+                    req.user.id,
+                    'ASISTENCIA_RECHAZADA_HORARIO',
+                    `Intento de escaneo rechazado para Tiempo Completo (${userObj.nombre} ${userObj.apellido}). Razón: Hora fuera del bloque permitido (7:00 AM - 9:00 PM). Hora del intento: ${ahora.toLocaleTimeString()}.`
+                );
                 return res.status(400).json({
                     success: false,
                     error: 'El horario de escaneo para profesores a Tiempo Completo es de 7:00 AM a 9:00 PM.'
@@ -117,6 +128,11 @@ router.post('/escanear', auth, async (req, res) => {
             // Entrada (Llegada): Solo Dirección (Fijo) o Personal. Prohibido Coordinación (Dinamico) y QR Temporal.
             if (!estado.dentro) {
                 if (qrResult.tipo !== 'fijo' && qrResult.tipo !== 'personal') {
+                    await registrarBitacora(
+                        req.user.id,
+                        'ASISTENCIA_RECHAZADA_QR',
+                        `Intento de ENTRADA rechazado para Tiempo Completo (${userObj.nombre} ${userObj.apellido}) usando QR ${qrResult.tipo}. Razón: Solo se permite entrada en QR Fijo o QR Personal.`
+                    );
                     return res.status(400).json({
                         success: false,
                         error: 'Los profesores a Tiempo Completo solo pueden registrar su entrada usando el QR Fijo de Dirección o su QR Personal.'
@@ -129,6 +145,11 @@ router.post('/escanear', auth, async (req, res) => {
             const inicioMedioTiempo = 14 * 60 + 15; // 2:15 PM
             const finMedioTiempo = 21 * 60; // 9:00 PM
             if (tiempoEnMinutos < inicioMedioTiempo || tiempoEnMinutos >= finMedioTiempo) {
+                await registrarBitacora(
+                    req.user.id,
+                    'ASISTENCIA_RECHAZADA_HORARIO',
+                    `Intento de escaneo rechazado para Medio Tiempo (${userObj.nombre} ${userObj.apellido}). Razón: Hora fuera del bloque permitido (2:15 PM - 9:00 PM). Hora del intento: ${ahora.toLocaleTimeString()}.`
+                );
                 return res.status(400).json({
                     success: false,
                     error: 'El horario de escaneo para profesores a Medio Tiempo es de 2:15 PM a 9:00 PM.'
@@ -137,6 +158,11 @@ router.post('/escanear', auth, async (req, res) => {
 
             // Entrada/Salida: Coordinación, QR Temporal o Personal. Prohibido Fijo (Dirección).
             if (qrResult.tipo === 'fijo') {
+                await registrarBitacora(
+                    req.user.id,
+                    'ASISTENCIA_RECHAZADA_QR',
+                    `Intento de escaneo rechazado para Medio Tiempo (${userObj.nombre} ${userObj.apellido}). Razón: Intentó usar QR Fijo de Dirección, el cual está prohibido para Medio Tiempo.`
+                );
                 return res.status(400).json({
                     success: false,
                     error: 'Los profesores a Medio Tiempo no están autorizados a escanear el QR Fijo de Dirección.'
@@ -145,6 +171,11 @@ router.post('/escanear', auth, async (req, res) => {
         } else {
             // Horario estándar general (7:00 AM a 9:00 PM) para otros perfiles sin dedicación definida
             if (horaActual < 7 || horaActual >= 21) {
+                await registrarBitacora(
+                    req.user.id,
+                    'ASISTENCIA_RECHAZADA_HORARIO',
+                    `Intento de escaneo rechazado para Profesor Estándar (${userObj.nombre} ${userObj.apellido}). Razón: Hora fuera del bloque general permitido (7:00 AM - 9:00 PM).`
+                );
                 return res.status(400).json({
                     success: false,
                     error: 'El horario de escaneo permitido es de 7:00 AM a 9:00 PM.'
@@ -186,6 +217,13 @@ router.post('/escanear', auth, async (req, res) => {
                 message = `✅ Salida registrada (${userObj.nombre_carrera || 'Coordinación'} - QR Temporal)`;
             }
         }
+
+        // REGISTRAR EN BITACORA DEL AUDITOR EL ÉXITO Y EFECTO EN EL SISTEMA
+        await registrarBitacora(
+            req.user.id,
+            tipo === 'entrada' ? 'ASISTENCIA_ENTRADA' : 'ASISTENCIA_SALIDA',
+            `Se registró exitosamente la ${tipo.toUpperCase()} de asistencia del docente ${userObj.nombre} ${userObj.apellido} (Cédula: ${userObj.cedula || 'N/D'}). Código QR leído: "${codigo_qr}" (${qrResult.tipo.toUpperCase()}). Efecto en sistema: Cambió estado de asistencia a '${tipo === 'entrada' ? 'DENTRO' : 'FUERA'}' y sumó 1 lectura diaria.`
+        );
 
         res.json({
             success: true,

@@ -1,6 +1,7 @@
 import express from 'express';
 import pool from '../config/db.js';
 import auth from '../middleware/auth.js';
+import { registrarBitacora } from '../utils/bitacora.js';
 
 const router = express.Router();
 
@@ -144,6 +145,17 @@ router.put('/:id/roles', auth, async (req, res) => {
       )
       WHERE id_usuario = $1
     `, [id]);
+
+    // Obtener detalles del usuario afectado antes del COMMIT
+    const userDetailRes = await client.query('SELECT nombre, apellido, correo FROM usuario WHERE id_usuario = $1', [id]);
+    const targetUser = userDetailRes.rows[0];
+
+    // Registrar acción en la bitácora del auditor
+    await registrarBitacora(
+        req.user.id,
+        'CAMBIO_ROL_DEDICACION',
+        `El Auditor actualizó los roles del usuario ${targetUser.nombre} ${targetUser.apellido} (${targetUser.correo}). Nuevos roles asignados: [${roles.join(', ')}]. Afectó al sistema reestructurando las ventanas horarias y de escaneo QR asociadas a su perfil.`
+    );
 
     await client.query('COMMIT');
     res.json({ success: true, message: 'Roles actualizados correctamente' });

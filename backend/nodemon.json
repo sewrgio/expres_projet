@@ -1,0 +1,8 @@
+{
+  "verbose": true,
+  "ignore": [
+    "src/utils/server_status.json",
+    "src/utils/export_status.json",
+    "node_modules/**/node_modules"
+  ]
+}
