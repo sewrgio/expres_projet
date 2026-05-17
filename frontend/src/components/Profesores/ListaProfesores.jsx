@@ -51,7 +51,9 @@ const ListaProfesores = () => {
       // Filtrar carreras disponibles para el selector (si es coordinador y no auditor)
       let carrerasFiltradas = carrRes.data;
       if (user?.roles?.includes('coordinador') && !user?.roles?.includes('auditor') && user?.ids_carreras) {
-        carrerasFiltradas = carrRes.data.filter(c => user.ids_carreras.includes(c.id_carrera));
+        carrerasFiltradas = carrRes.data.filter(c => 
+          user.ids_carreras.some(id => id == c.id_carrera)
+        );
       }
       setCarreras(carrerasFiltradas);
     } catch (err) {

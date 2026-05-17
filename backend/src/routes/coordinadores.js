@@ -18,19 +18,6 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
-// Obtener coordinador por ID
-router.get('/:id', auth, async (req, res) => {
-  try {
-    const coordinador = await Coordinador.findById(req.params.id);
-    if (!coordinador) {
-      return res.status(404).json({ error: 'Coordinador no encontrado' });
-    }
-    res.json(coordinador);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Error interno' });
-  }
-});
 
 // Obtener usuarios disponibles para ser coordinadores
 router.get('/disponibles/usuarios', auth, async (req, res) => {
@@ -54,6 +41,20 @@ router.get('/disponibles/carreras', auth, async (req, res) => {
   try {
     const carreras = await Coordinador.getCarrerasSinCoordinador();
     res.json(carreras);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// Obtener coordinador por ID
+router.get('/:id', auth, async (req, res) => {
+  try {
+    const coordinador = await Coordinador.findById(req.params.id);
+    if (!coordinador) {
+      return res.status(404).json({ error: 'Coordinador no encontrado' });
+    }
+    res.json(coordinador);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Error interno' });

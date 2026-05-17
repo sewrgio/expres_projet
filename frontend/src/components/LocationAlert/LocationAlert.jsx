@@ -32,15 +32,19 @@ const LocationAlert = ({ enArea, distancia }) => {
   const isInside = enArea;
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: '20px',
-      right: '20px',
-      zIndex: 9999,
-      maxWidth: '380px',
-      width: '100%',
-      animation: 'slideInAlert 0.4s ease-out',
-    }}>
+    <div 
+      role="alert" 
+      aria-live="assertive"
+      style={{
+        position: 'fixed',
+        top: '20px',
+        right: '20px',
+        zIndex: 9999,
+        maxWidth: '380px',
+        width: '100%',
+        animation: 'slideInAlert 0.4s ease-out',
+      }}
+    >
       <div style={{
         background: isInside 
           ? 'linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%)'
@@ -55,19 +59,22 @@ const LocationAlert = ({ enArea, distancia }) => {
         gap: '16px',
         alignItems: 'flex-start',
       }}>
-        <div style={{
-          width: '44px',
-          height: '44px',
-          borderRadius: '50%',
-          background: isInside
-            ? 'linear-gradient(135deg, #43a047 0%, #388e3c 100%)'
-            : 'linear-gradient(135deg, #e53935 0%, #d32f2f 100%)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-          color: 'white',
-        }}>
+        <div 
+          aria-hidden="true"
+          style={{
+            width: '44px',
+            height: '44px',
+            borderRadius: '50%',
+            background: isInside
+              ? 'linear-gradient(135deg, #43a047 0%, #388e3c 100%)'
+              : 'linear-gradient(135deg, #e53935 0%, #d32f2f 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            color: 'white',
+          }}
+        >
           {isInside ? <IconCheck /> : <IconX />}
         </div>
         <div style={{ flex: 1 }}>
@@ -111,22 +118,24 @@ const LocationAlert = ({ enArea, distancia }) => {
             alignItems: 'center',
             gap: '8px',
           }}>
-            <IconScanQR />
+            <IconScanQR aria-hidden="true" />
             {isInside ? '¡Puede escanear QR!' : 'No puede escanear QR hasta estar en el campus'}
           </div>
         </div>
         <button
           onClick={() => setShowAlert(false)}
+          aria-label="Cerrar alerta de ubicación"
           style={{
             background: 'none',
             border: 'none',
             cursor: 'pointer',
-            fontSize: '20px',
+            fontSize: '24px',
             color: isInside ? '#2e7d32' : '#c62828',
             opacity: 0.6,
             padding: '4px',
             lineHeight: 1,
-            transition: 'opacity 0.2s'
+            transition: 'opacity 0.2s',
+            outline: 'none'
           }}
           onMouseEnter={(e) => e.target.style.opacity = '1'}
           onMouseLeave={(e) => e.target.style.opacity = '0.6'}

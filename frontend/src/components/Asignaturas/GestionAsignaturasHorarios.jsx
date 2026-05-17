@@ -68,9 +68,9 @@ const GestionAsignaturasHorarios = () => {
       let carrerasFiltradas = carrRes.data;
 
       if (esCoordinador && !esAuditor && idCarreraCoordinador) {
-        asignaturasFiltradas = asigRes.data.filter(a => a.id_carrera === idCarreraCoordinador);
-        profesoresFiltrados = profRes.data.filter(p => p.id_carrera === idCarreraCoordinador);
-        carrerasFiltradas = carrRes.data.filter(c => c.id_carrera === idCarreraCoordinador);
+        asignaturasFiltradas = asigRes.data.filter(a => a.id_carrera == idCarreraCoordinador);
+        profesoresFiltrados = profRes.data.filter(p => p.id_carrera == idCarreraCoordinador);
+        carrerasFiltradas = carrRes.data.filter(c => c.id_carrera == idCarreraCoordinador);
       }
 
       setAsignaturas(asignaturasFiltradas);

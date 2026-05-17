@@ -143,7 +143,7 @@ const AdministrarQR = () => {
 
   const descargarQR = (qr) => {
     const link = document.createElement('a');
-    link.href = qr.imagen; // El backend ahora devuelve la imagen en base64
+    link.href = qr.imagen;
     link.download = `QR_${qr.codigo_qr}.png`;
     document.body.appendChild(link);
     link.click();
@@ -173,7 +173,6 @@ const AdministrarQR = () => {
           </div>
         </div>
         <div className="flex gap-3">
-
           <button
             className={`px-6 py-3 rounded-2xl font-bold transition-all flex items-center gap-2 shadow-lg ${
               mostrarFormulario 
@@ -200,27 +199,31 @@ const AdministrarQR = () => {
         </div>
       )}
 
-      {/* Modal para generar nuevo QR */}
+      {/* Modal para generar nuevo QR - CORREGIDO */}
       {mostrarFormulario && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-fade-in" onClick={() => setMostrarFormulario(false)}></div>
           <div className="bg-white rounded-[24px] w-full max-w-2xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.1)] relative z-10 animate-zoom-in overflow-visible border-none outline-none">
-             <div className="flex items-center gap-4 mb-8">
-               <div className="text-indigo-600 text-2xl">
-                 <IconPlus />
-               </div>
-               <div>
-                 <h3 className="text-xl font-black text-slate-800 leading-none">Generar Nuevo QR</h3>
-                 <p className="text-slate-400 text-[11px] font-medium mt-1 uppercase tracking-wider">Crea un punto de control de asistencia</p>
-               </div>
-             </div>
+            
+            {/* Header */}
+            <div className="flex items-center gap-4 mb-8">
+              <div className="text-indigo-600 text-2xl">
+                <IconPlus />
+              </div>
+              <div>
+                <h3 className="text-xl font-black text-slate-800 leading-none">Generar Nuevo QR</h3>
+                <p className="text-slate-400 text-[11px] font-medium mt-1 uppercase tracking-wider">Crea un punto de control de asistencia</p>
+              </div>
+            </div>
 
-             <button onClick={() => setMostrarFormulario(false)} className="absolute top-6 right-6 text-slate-300 hover:text-slate-600 transition-colors">
-               <IconX />
-             </button>
+            {/* Botón cerrar */}
+            <button onClick={() => setMostrarFormulario(false)} className="absolute top-6 right-6 text-slate-300 hover:text-slate-600 transition-colors">
+              <IconX />
+            </button>
 
+            {/* Formulario */}
             <form onSubmit={generarQR} className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4 overflow-visible">
-              <div className="md:col-span-2 space-y-1">
+              <div className="md:col-span-2 space-y-2">
                 <label className="text-[11px] font-black text-slate-400 uppercase tracking-wider ml-1">Tiempo de Validez</label>
                 <CustomSelect
                   options={[
@@ -228,7 +231,7 @@ const AdministrarQR = () => {
                     { value: 2, label: '2 Horas (Recomendado)' },
                     { value: 4, label: '4 Horas' },
                     { value: 8, label: '8 Horas' },
-                    { value: 12, label: '12 Horas' },
+                    { value: 12, label: '12 Horas' }, 
                     { value: 24, label: '24 Horas (1 Día)' },
                   ]}
                   value={nuevoQR.horasValidez}
@@ -244,9 +247,10 @@ const AdministrarQR = () => {
                   className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all text-sm font-medium"
                   value={nuevoQR.descripcion}
                   onChange={(e) => setNuevoQR({ ...nuevoQR, descripcion: e.target.value })}
-                  placeholder="Descripción..."
+                  placeholder="Ej: Clase de Matemáticas"
                 />
               </div>
+              
               <div className="space-y-1">
                 <label className="text-[11px] font-black text-slate-400 uppercase tracking-wider ml-1">Ubicación</label>
                 <input
@@ -255,16 +259,23 @@ const AdministrarQR = () => {
                   className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all text-sm font-medium"
                   value={nuevoQR.ubicacion}
                   onChange={(e) => setNuevoQR({ ...nuevoQR, ubicacion: e.target.value })}
-                  placeholder="Ubicación..."
+                  placeholder="Ej: Aula 301, Edificio Principal"
                 />
               </div>
 
-              <div className="md:col-span-2 flex justify-end gap-3 pt-4">
-                <button type="button" className="px-6 py-2.5 text-slate-400 font-bold hover:text-slate-600 transition-all text-sm" onClick={() => setMostrarFormulario(false)}>
+              <div className="md:col-span-2 flex justify-end gap-3 pt-6 mt-2 border-t border-slate-100">
+                <button 
+                  type="button" 
+                  className="px-6 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-all text-sm active:scale-95" 
+                  onClick={() => setMostrarFormulario(false)}
+                >
                   Cancelar
                 </button>
-                <button type="submit" className="px-8 py-2.5 bg-slate-900 text-white rounded-xl font-bold hover:bg-indigo-600 transition-all shadow-lg active:scale-95 flex items-center gap-2 text-sm">
-                  <IconSave width={16} /> Crear Código QR
+                <button 
+                  type="submit" 
+                  className="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 hover:shadow-indigo-200 transition-all shadow-lg active:scale-95 flex items-center gap-2 text-sm"
+                >
+                  <IconSave width={18} /> Crear Código QR
                 </button>
               </div>
             </form>
@@ -318,7 +329,9 @@ const AdministrarQR = () => {
                             onError={(e) => {
                               console.error("Error cargando imagen QR para:", qr.codigo_qr);
                               e.target.style.display = 'none';
-                              e.target.nextSibling.style.display = 'flex';
+                              if (e.target.nextSibling) {
+                                e.target.nextSibling.style.display = 'flex';
+                              }
                             }}
                           />
                         ) : null}
@@ -406,25 +419,24 @@ const AdministrarQR = () => {
         )}
       </div>
 
-      {/* Modal de edición Premium */}
+      {/* Modal de edición */}
       {modalEditar.mostrar && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-fade-in" onClick={cerrarModalEditar}></div>
           <div className="bg-white rounded-[24px] w-full max-w-2xl p-6 shadow-2xl relative z-10 animate-zoom-in">
-
-              <div className="flex items-center gap-4 mb-8">
-                <div className="text-indigo-600 text-2xl">
-                  <IconEdit />
-                </div>
-                <div>
-                  <h3 className="text-xl font-black text-slate-800 leading-none">Editar QR</h3>
-                  <p className="text-slate-400 text-xs font-medium mt-1">Actualiza los datos del punto de control</p>
-                </div>
+            <div className="flex items-center gap-4 mb-8">
+              <div className="text-indigo-600 text-2xl">
+                <IconEdit />
               </div>
+              <div>
+                <h3 className="text-xl font-black text-slate-800 leading-none">Editar QR</h3>
+                <p className="text-slate-400 text-xs font-medium mt-1">Actualiza los datos del punto de control</p>
+              </div>
+            </div>
 
-             <button onClick={cerrarModalEditar} className="absolute top-6 right-6 text-slate-300 hover:text-slate-600 transition-colors">
-               <IconX />
-             </button>
+            <button onClick={cerrarModalEditar} className="absolute top-6 right-6 text-slate-300 hover:text-slate-600 transition-colors">
+              <IconX />
+            </button>
 
             <form onSubmit={guardarEdicion} className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2 space-y-1">
@@ -440,7 +452,6 @@ const AdministrarQR = () => {
                   ]}
                   value={modalEditar.horasExtension}
                   onChange={(val) => setModalEditar({ ...modalEditar, horasExtension: val })}
-                  placeholder="Extender validez"
                 />
               </div>
 
@@ -454,6 +465,7 @@ const AdministrarQR = () => {
                   placeholder="Descripción..."
                 />
               </div>
+              
               <div className="space-y-1">
                 <label className="text-[11px] font-black text-slate-400 uppercase tracking-wider ml-1">Ubicación</label>
                 <input
@@ -465,12 +477,12 @@ const AdministrarQR = () => {
                 />
               </div>
 
-              <div className="md:col-span-2 flex justify-end gap-3 pt-4">
-                <button type="button" className="px-6 py-2.5 text-slate-400 font-bold hover:text-slate-600 transition-all text-sm" onClick={cerrarModalEditar}>
+              <div className="md:col-span-2 flex justify-end gap-3 pt-6 mt-2 border-t border-slate-100">
+                <button type="button" className="px-6 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-all text-sm active:scale-95" onClick={cerrarModalEditar}>
                   Cancelar
                 </button>
-                <button type="submit" className="px-8 py-2.5 bg-slate-900 text-white rounded-xl font-bold hover:bg-indigo-600 transition-all shadow-lg active:scale-95 flex items-center gap-2 text-sm">
-                  <IconSave width={16} /> Guardar Cambios
+                <button type="submit" className="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 hover:shadow-indigo-200 transition-all shadow-lg active:scale-95 flex items-center gap-2 text-sm">
+                  <IconSave width={18} /> Guardar Cambios
                 </button>
               </div>
             </form>
@@ -478,7 +490,7 @@ const AdministrarQR = () => {
         </div>
       )}
 
-      {/* Modal de Confirmación de Acción (Desactivar/Activar) */}
+      {/* Modal de Confirmación */}
       {modalConfirm.mostrar && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-fade-in" onClick={() => setModalConfirm({ mostrar: false, tipo: '', id_qr: null })}></div>
@@ -499,7 +511,7 @@ const AdministrarQR = () => {
             <div className="flex gap-3">
               <button 
                 onClick={handleConfirmarAccion}
-                className={`flex-1 py-4 rounded-2xl font-black transition-all shadow-xl active:scale-95 text-white ${
+                className={`flex-1 py-4 rounded-2xl font-black transition-all shadowo -xl active:scale-95 text-white ${
                   modalConfirm.tipo === 'desactivar' ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-100' : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-100'
                 }`}
               >

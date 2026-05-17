@@ -33,8 +33,8 @@ router.put('/:id', auth, async (req, res) => {
   }
 });
 
-// Obtener todos los usuarios con sus roles
-router.get('/', auth, async (req, res) => {
+// Obtener todos los usuarios con sus roles (soporta alias /todos)
+router.get(['/', '/todos'], auth, async (req, res) => {
   if (!req.user.roles.includes('auditor')) {
     return res.status(403).json({ error: 'Solo el auditor puede ver todos los usuarios' });
   }

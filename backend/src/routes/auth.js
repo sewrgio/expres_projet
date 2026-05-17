@@ -225,15 +225,24 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'La contraseña es incorrecta' });
     }
 
-    // Determinar los roles del usuario desde la columna JSONB (ya cargada en el modelo)
-    const rolesEncontrados = Array.isArray(usuario.rol) ? usuario.rol : [];
-    console.log('Roles encontrados:', rolesEncontrados);
+    // Obtener roles directamente de la tabla usuario_rol (fuente de verdad)
+    const rolesQuery = await pool.query(
+      `SELECT LOWER(c.nombre) as nombre_rol 
+       FROM usuario_rol ur 
+       JOIN categoria c ON ur.id_categoria = c.id_categoria 
+       WHERE ur.id_usuario = $1 AND ur.activo = true AND c.tip_id = 1`,
+      [usuario.id_usuario]
+    );
+    const rolesEncontrados = rolesQuery.rows.map(r => r.nombre_rol.trim());
+    console.log('Roles encontrados (fuente de verdad):', rolesEncontrados);
+
+    const esAdjunto = rolesEncontrados.includes('adjunto coordinacion');
 
     // Obtener id_profesor y carreras múltiples para profesores
     let idProfesor = null;
     let carrerasProfesor = [];
-    if (rolesEncontrados.includes('profesor')) {
-      console.log('Buscando datos de profesor...');
+    if (rolesEncontrados.includes('profesor') || esAdjunto) {
+      console.log('Buscando datos de profesor/adjunto...');
       const profesorQuery = await pool.query(
         `SELECT DISTINCT p.id_profesor, pc.id_carrera, c.nombre_carrera
          FROM profesor p
@@ -243,7 +252,7 @@ router.post('/login', async (req, res) => {
          WHERE ur.id_usuario = $1 AND ur.activo = true`,
         [usuario.id_usuario]
       );
-      console.log('Profesor encontrado:', profesorQuery.rows);
+      console.log('Profesor/Adjunto encontrado:', profesorQuery.rows);
       if (profesorQuery.rows.length > 0) {
         idProfesor = profesorQuery.rows[0].id_profesor;
         carrerasProfesor = profesorQuery.rows
@@ -255,8 +264,8 @@ router.post('/login', async (req, res) => {
     // Obtener id_coordinador y carrera única para coordinadores
     let idCoordinador = null;
     let carreraCoordinador = null;
-    if (rolesEncontrados.includes('coordinador')) {
-      console.log('Buscando datos de coordinador...');
+    if (rolesEncontrados.includes('coordinador') || esAdjunto) {
+      console.log('Buscando datos de coordinador/adjunto...');
       const coordinadorQuery = await pool.query(
         `SELECT c.id_coordinador, c.id_carrera, ca.nombre_carrera
          FROM coordinador c
@@ -265,7 +274,7 @@ router.post('/login', async (req, res) => {
          WHERE ur.id_usuario = $1 AND ur.activo = true`,
         [usuario.id_usuario]
       );
-      console.log('Coordinador encontrado:', coordinadorQuery.rows);
+      console.log('Coordinador/Adjunto encontrado:', coordinadorQuery.rows);
       if (coordinadorQuery.rows.length > 0) {
         idCoordinador = coordinadorQuery.rows[0].id_coordinador;
         if (coordinadorQuery.rows[0].id_carrera) {
@@ -274,6 +283,9 @@ router.post('/login', async (req, res) => {
             nombre: coordinadorQuery.rows[0].nombre_carrera
           };
         }
+      } else if (esAdjunto) {
+        // Si es adjunto y no está en tabla coordinador, usar su id_profesor como id_coordinador virtual
+        idCoordinador = idProfesor;
       }
     }
 
@@ -295,7 +307,7 @@ router.post('/login', async (req, res) => {
         correo: usuario.correo,
         roles: rolesEncontrados,
         esProfesor: rolesEncontrados.includes('profesor'),
-        esCoordinador: rolesEncontrados.includes('coordinador'),
+        esCoordinador: rolesEncontrados.includes('coordinador') || esAdjunto,
         esAuditor: rolesEncontrados.includes('auditor'),
         id_profesor: idProfesor,
         id_coordinador: idCoordinador,
@@ -324,7 +336,7 @@ router.post('/login', async (req, res) => {
         telefono: usuario.telefono,
         roles: rolesEncontrados,
         esProfesor: rolesEncontrados.includes('profesor'),
-        esCoordinador: rolesEncontrados.includes('coordinador'),
+        esCoordinador: rolesEncontrados.includes('coordinador') || esAdjunto,
         esAuditor: rolesEncontrados.includes('auditor'),
         id_profesor: idProfesor,
         id_coordinador: idCoordinador,
@@ -436,29 +448,75 @@ router.get('/verify', async (req, res) => {
 
     const usuario = userQuery.rows[0];
 
-    // Obtener id_carrera si es coordinador
-    let idCarrera = null;
     const rolesQuery = await pool.query(
-      `SELECT LOWER(c.nombre) as nombre_rol FROM usuario_rol ur JOIN categoria c ON ur.id_categoria = c.id_categoria WHERE ur.id_usuario = $1 AND ur.activo = true AND c.tip_id = 1`,
+      `SELECT LOWER(c.nombre) as nombre_rol 
+       FROM usuario_rol ur 
+       JOIN categoria c ON ur.id_categoria = c.id_categoria 
+       WHERE ur.id_usuario = $1 AND ur.activo = true AND c.tip_id = 1`,
       [usuario.id_usuario]
     );
-    const roles = rolesQuery.rows.map(r => r.nombre_rol);
+    const rolesEncontrados = rolesQuery.rows.map(r => r.nombre_rol.trim());
+    const esAdjunto = rolesEncontrados.includes('adjunto coordinacion');
 
-    if (roles.includes('coordinador')) {
-      const coordQuery = await pool.query(`SELECT id_carrera FROM coordinador c JOIN usuario_rol ur ON c.id_usuario_rol = ur.id_usuario_rol WHERE ur.id_usuario = $1 AND ur.activo = true`, [usuario.id_usuario]);
-      if (coordQuery.rows.length > 0) {
-        idCarrera = coordQuery.rows[0].id_carrera;
+    // Obtener datos de profesor/adjunto
+    let idProfesor = null;
+    let carrerasProfesor = [];
+    if (rolesEncontrados.includes('profesor') || esAdjunto) {
+      const profesorQuery = await pool.query(
+        `SELECT DISTINCT p.id_profesor, pc.id_carrera, c.nombre_carrera
+         FROM profesor p
+         JOIN usuario_rol ur ON p.id_usuario_rol = ur.id_usuario_rol
+         LEFT JOIN profesor_carrera pc ON p.id_profesor = pc.id_profesor AND pc.activo = true
+         LEFT JOIN carrera c ON pc.id_carrera = c.id_carrera
+         WHERE ur.id_usuario = $1 AND ur.activo = true`,
+        [usuario.id_usuario]
+      );
+      if (profesorQuery.rows.length > 0) {
+        idProfesor = profesorQuery.rows[0].id_profesor;
+        carrerasProfesor = profesorQuery.rows
+          .filter(row => row.id_carrera)
+          .map(row => ({ id: row.id_carrera, nombre: row.nombre_carrera }));
       }
-    } else if (roles.includes('profesor')) {
-      const profQuery = await pool.query(`SELECT pc.id_carrera FROM profesor_carrera pc JOIN profesor p ON pc.id_profesor = p.id_profesor JOIN usuario_rol ur ON p.id_usuario_rol = ur.id_usuario_rol WHERE ur.id_usuario = $1 AND ur.activo = true AND pc.activo = true`, [usuario.id_usuario]);
-      if (profQuery.rows.length > 0) {
-        idCarrera = profQuery.rows[0].id_carrera;
+    }
+
+    // Obtener datos de coordinador/adjunto
+    let idCoordinador = null;
+    let carreraCoordinador = null;
+    if (rolesEncontrados.includes('coordinador') || esAdjunto) {
+      const coordinadorQuery = await pool.query(
+        `SELECT c.id_coordinador, c.id_carrera, ca.nombre_carrera
+         FROM coordinador c
+         JOIN usuario_rol ur ON c.id_usuario_rol = ur.id_usuario_rol
+         LEFT JOIN carrera ca ON c.id_carrera = ca.id_carrera
+         WHERE ur.id_usuario = $1 AND ur.activo = true`,
+        [usuario.id_usuario]
+      );
+      if (coordinadorQuery.rows.length > 0) {
+        idCoordinador = coordinadorQuery.rows[0].id_coordinador;
+        if (coordinadorQuery.rows[0].id_carrera) {
+          carreraCoordinador = {
+            id: coordinadorQuery.rows[0].id_carrera,
+            nombre: coordinadorQuery.rows[0].nombre_carrera
+          };
+        }
+      } else if (esAdjunto) {
+        idCoordinador = idProfesor;
       }
     }
 
     if (usuario.session_token !== token && usuario.session_token_app !== token) {
       return res.status(401).json({ error: 'Sesión cerrada. Se inició sesión en otro dispositivo.' });
     }
+
+    const idsCarreras = [...new Set([
+      ...(carreraCoordinador ? [carreraCoordinador.id] : []),
+      ...carrerasProfesor.map(c => c.id)
+    ])];
+
+    const todasCarreras = [...new Set([
+      ...(carreraCoordinador ? [carreraCoordinador] : []),
+      ...carrerasProfesor
+    ].map(c => JSON.stringify(c)))].map(c => JSON.parse(c));
 
     res.json({ 
       valid: true, 
@@ -467,8 +525,16 @@ router.get('/verify', async (req, res) => {
         nombre: usuario.nombre, 
         apellido: usuario.apellido, 
         correo: usuario.correo,
-        roles: roles,
-        id_carrera: idCarrera
+        roles: rolesEncontrados,
+        esProfesor: rolesEncontrados.includes('profesor'),
+        esCoordinador: rolesEncontrados.includes('coordinador') || esAdjunto,
+        esAuditor: rolesEncontrados.includes('auditor'),
+        id_profesor: idProfesor,
+        id_coordinador: idCoordinador,
+        id_carrera: carreraCoordinador?.id || carrerasProfesor[0]?.id,
+        nombre_carrera: carreraCoordinador?.nombre || carrerasProfesor[0]?.nombre || 'No disponible',
+        carreras: todasCarreras,
+        ids_carreras: idsCarreras
       } 
     });
   } catch (error) {

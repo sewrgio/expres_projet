@@ -62,8 +62,16 @@ const DashboardProfesor = () => {
     try {
       const response = await api.get('/asistencias/estado');
       setEstado(response.data);
+      let scans = 0;
+      if (response.data.asistenciasHoy) {
+        response.data.asistenciasHoy.forEach(a => {
+          if (a.fecha_entrada) scans++;
+          if (a.fecha_salida) scans++;
+        });
+      }
+      
       setStats({
-        totalHoy: response.data.asistenciasHoy?.length || 0,
+        totalHoy: scans,
         horasHoy: calcularHoras(response.data.asistenciasHoy)
       });
     } catch (error) {
@@ -85,9 +93,9 @@ const DashboardProfesor = () => {
       <div className="row">
         <div className="card">
           <div style={{ fontSize: '48px', fontWeight: 'bold', color: 'var(--primary-blue)', textAlign: 'center' }}>
-            {stats.totalHoy}
+            {stats.totalHoy}/2
           </div>
-          <div style={{ textAlign: 'center' }}>Asistencias hoy</div>
+          <div style={{ textAlign: 'center' }}>Lecturas hoy</div>
         </div>
         <div className="card">
           <div style={{ fontSize: '48px', fontWeight: 'bold', color: 'var(--primary-blue)', textAlign: 'center' }}>

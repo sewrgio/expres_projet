@@ -31,8 +31,8 @@ const Profesor = {
     const nextId = maxRes.rows[0].next_id;
 
     const result = await pool.query(`
-      INSERT INTO profesor (id_profesor, id_usuario_rol)
-      VALUES ($1, $2) RETURNING *
+      INSERT INTO profesor (id_profesor, id_usuario_rol, fecha_ingreso, activo)
+      VALUES ($1, $2, CURRENT_TIMESTAMP, true) RETURNING *
     `, [nextId, usuarioRolId]);
     return result.rows[0];
   }

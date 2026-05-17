@@ -6,7 +6,9 @@ const Asistencia = {
     const hoy = new Date().toISOString().split('T')[0];
     const existente = await pool.query(
       `SELECT * FROM asistencia 
-       WHERE id_profesor = $1 AND DATE(fecha_entrada) = $2 AND fecha_salida IS NULL`,
+       WHERE id_profesor = $1 
+         AND (DATE(fecha_entrada) = $2 OR DATE(fecha_entrada) = CURRENT_DATE) 
+         AND fecha_salida IS NULL`,
       [profesorId, hoy]
     );
     
@@ -30,7 +32,9 @@ const Asistencia = {
     const hoy = new Date().toISOString().split('T')[0];
     const existente = await pool.query(
       `SELECT id_asistencia FROM asistencia 
-       WHERE id_profesor = $1 AND DATE(fecha_entrada) = $2 AND fecha_salida IS NULL
+       WHERE id_profesor = $1 
+         AND (DATE(fecha_entrada) = $2 OR DATE(fecha_entrada) = CURRENT_DATE) 
+         AND fecha_salida IS NULL
        ORDER BY fecha_entrada DESC LIMIT 1`,
       [profesorId, hoy]
     );
@@ -57,7 +61,8 @@ const Asistencia = {
        JOIN usuario_rol ur ON p.id_usuario_rol = ur.id_usuario_rol
        JOIN usuario u ON ur.id_usuario = u.id_usuario
        LEFT JOIN qr q ON a.id_qr = q.id_qr
-       WHERE a.id_profesor = $1 AND DATE(a.fecha_entrada) = $2
+       WHERE a.id_profesor = $1 
+         AND (DATE(a.fecha_entrada) = $2 OR DATE(a.fecha_entrada) = CURRENT_DATE)
        ORDER BY a.fecha_entrada DESC`,
       [profesorId, hoy]
     );
@@ -85,7 +90,8 @@ const Asistencia = {
     const hoy = new Date().toISOString().split('T')[0];
     const result = await pool.query(
       `SELECT * FROM asistencia
-       WHERE id_profesor = $1 AND DATE(fecha_entrada) = $2
+       WHERE id_profesor = $1 
+         AND (DATE(fecha_entrada) = $2 OR DATE(fecha_entrada) = CURRENT_DATE)
        ORDER BY fecha_entrada DESC
        LIMIT 1`,
       [profesorId, hoy]

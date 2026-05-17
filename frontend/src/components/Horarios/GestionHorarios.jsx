@@ -93,7 +93,7 @@ const GestionHorarios = () => {
             <CustomSelect
               name="id_asignatura_profesor"
               value={formData.id_asignatura_profesor}
-              onChange={(e) => setFormData({ ...formData, id_asignatura_profesor: e.target.value })}
+              onChange={(val) => setFormData({ ...formData, id_asignatura_profesor: val })}
               required
               placeholder="Seleccionar Asignatura - Profesor"
               options={asignaturasProfesores.map(ap => ({
@@ -106,7 +106,7 @@ const GestionHorarios = () => {
             <CustomSelect
               name="dia_semana"
               value={formData.dia_semana}
-              onChange={(e) => setFormData({ ...formData, dia_semana: e.target.value })}
+              onChange={(val) => setFormData({ ...formData, dia_semana: val })}
               required
               placeholder="Seleccionar día"
               options={diasSemana.map(dia => ({ value: dia, label: dia }))}

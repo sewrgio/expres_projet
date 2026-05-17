@@ -98,9 +98,16 @@ export const AuthProvider = ({ children }) => {
 
       if (token && userData) {
         try {
-          await api.get('/auth/verify');
-          setUser(JSON.parse(userData));
-          console.log('Sesión verificada exitosamente');
+          const verifyRes = await api.get('/auth/verify');
+          const freshUser = verifyRes.data.user;
+          setUser(freshUser);
+          // Actualizar storage con datos frescos
+          if (storage === 'localStorage') {
+            localStorage.setItem('user', JSON.stringify(freshUser));
+          } else {
+            sessionStorage.setItem('user', JSON.stringify(freshUser));
+          }
+          console.log('Sesión verificada y datos actualizados');
         } catch (err) {
           console.error('Error verificando sesión:', err);
           clearAllStorage();

@@ -37,8 +37,8 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB
 });
 
-// ✅ NUEVO: Obtener todos los justificativos (para el frontend)
-router.get('/', auth, async (req, res) => {
+// ✅ Obtener todos los justificativos (soporta alias /todos)
+router.get(['/', '/todos'], auth, async (req, res) => {
   try {
     let justificativos;
 

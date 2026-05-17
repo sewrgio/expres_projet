@@ -204,8 +204,11 @@ const GestionJustificativos = ({ esVistaProfesores = false }) => {
           <div className="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-100 text-2xl">
             <IconClipboard />
           </div>
+          <div role="status" aria-live="polite" className="sr-only">
+            {esVistaProfesores ? 'Vista de Control de Justificativos' : 'Vista de Mis Justificativos'}
+          </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-800">
+            <h1 className="text-2xl font-bold text-slate-800" id="page-title">
               {esVistaProfesores ? 'Control de Justificativos' : 'Mis Justificativos'}
             </h1>
             <p className="text-slate-500 font-medium">Gestión de inasistencias y soportes documentales</p>
@@ -215,9 +218,10 @@ const GestionJustificativos = ({ esVistaProfesores = false }) => {
         {esVistaProfesores && (
           <button 
             onClick={generarPDF}
-            className="bg-white text-indigo-600 border-2 border-indigo-100 px-6 py-3 rounded-2xl font-bold hover:bg-indigo-50 transition-all flex items-center gap-2 shadow-sm active:scale-95"
+            className="bg-white text-indigo-600 border-2 border-indigo-100 px-6 py-3 rounded-2xl font-bold hover:bg-indigo-50 transition-all flex items-center gap-2 shadow-sm active:scale-95 focus:ring-4 focus:ring-indigo-500/20 outline-none"
+            aria-label="Exportar todos los justificativos a formato PDF"
           >
-            <IconDownload /> Exportar Reporte PDF
+            <IconDownload aria-hidden="true" /> Exportar Reporte PDF
           </button>
         )}
 
@@ -228,24 +232,25 @@ const GestionJustificativos = ({ esVistaProfesores = false }) => {
               const miProf = profesores.find(p => p.id_usuario === user.id_usuario) || { id_profesor: user.id_profesor };
               if (miProf.id_profesor) buscarAsistenciasProfesor(miProf);
             }}
-            className="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold hover:bg-indigo-700 transition-all flex items-center gap-2 shadow-lg active:scale-95"
+            className="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold hover:bg-indigo-700 transition-all flex items-center gap-2 shadow-lg active:scale-95 focus:ring-4 focus:ring-indigo-500/40 outline-none"
+            aria-label="Crear una nueva solicitud de justificativo"
           >
-            <IconPlus /> Solicitar Justificativo
+            <IconPlus aria-hidden="true" /> Solicitar Justificativo
           </button>
         )}
       </div>
 
       {/* Alertas */}
       {(mensaje || error) && (
-        <div className="space-y-3">
+        <div className="space-y-3" role="alert" aria-live="assertive">
           {mensaje && (
             <div className="bg-emerald-50 border border-emerald-100 text-emerald-700 px-6 py-4 rounded-2xl flex items-center gap-3 animate-slide-in shadow-sm">
-              <IconCheck /> <span className="font-bold">{mensaje}</span>
+              <IconCheck aria-hidden="true" /> <span className="font-bold">{mensaje}</span>
             </div>
           )}
           {error && (
             <div className="bg-rose-50 border border-rose-100 text-rose-700 px-6 py-4 rounded-2xl flex items-center gap-3 animate-shake shadow-sm">
-              <IconAlert /> <span className="font-bold">{error}</span>
+              <IconAlert aria-hidden="true" /> <span className="font-bold">{error}</span>
             </div>
           )}
         </div>
@@ -255,17 +260,22 @@ const GestionJustificativos = ({ esVistaProfesores = false }) => {
       {!esVistaProfesores && mostrarForm && (
         <div className="bg-white rounded-[32px] p-8 shadow-sm border border-slate-100 animate-zoom-in">
           <div className="flex justify-between items-center mb-8">
-            <h2 className="text-xl font-black text-slate-800">Nueva Solicitud de Justificativo</h2>
-            <button onClick={() => setMostrarForm(false)} className="text-slate-400 hover:text-slate-600 bg-slate-50 w-10 h-10 rounded-full flex items-center justify-center">
-              <IconCancel />
+            <h2 className="text-xl font-black text-slate-800" id="form-title">Nueva Solicitud de Justificativo</h2>
+            <button 
+              onClick={() => setMostrarForm(false)} 
+              className="text-slate-400 hover:text-slate-600 bg-slate-50 w-10 h-10 rounded-full flex items-center justify-center focus:ring-4 focus:ring-slate-200 outline-none"
+              aria-label="Cerrar formulario de solicitud"
+            >
+              <IconCancel aria-hidden="true" />
             </button>
           </div>
           
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700 ml-1">Seleccionar Asistencia</label>
+                <label className="text-sm font-bold text-slate-700 ml-1" htmlFor="select-asistencia">Seleccionar Asistencia</label>
                 <CustomSelect
+                  id="select-asistencia"
                   options={asistencias.map(a => ({ 
                     value: a.id_asistencia, 
                     label: `${new Date(a.fecha_entrada).toLocaleDateString()} - ${a.nombre_asignatura || 'Sin Asignatura'}` 
@@ -283,7 +293,7 @@ const GestionJustificativos = ({ esVistaProfesores = false }) => {
             </div>
 
             <div className="space-y-4">
-              <label className="text-sm font-bold text-slate-700 ml-1">Soporte Documental (PDF o Imagen)</label>
+              <label className="text-sm font-bold text-slate-700 ml-1" htmlFor="file-upload">Soporte Documental (PDF o Imagen)</label>
               <div className="relative group">
                 <input 
                   type="file" 
@@ -294,16 +304,17 @@ const GestionJustificativos = ({ esVistaProfesores = false }) => {
                 />
                 <label 
                   htmlFor="file-upload"
-                  className="flex flex-col items-center justify-center w-full h-40 border-4 border-dashed border-slate-100 bg-slate-50 rounded-[32px] cursor-pointer group-hover:border-indigo-200 group-hover:bg-indigo-50 transition-all overflow-hidden"
+                  className="flex flex-col items-center justify-center w-full h-40 border-4 border-dashed border-slate-100 bg-slate-50 rounded-[32px] cursor-pointer group-hover:border-indigo-200 group-hover:bg-indigo-50 transition-all overflow-hidden focus-within:ring-4 focus-within:ring-indigo-500/20"
+                  aria-label="Subir soporte documental, solo se permiten archivos PDF o imágenes"
                 >
                   {archivo ? (
                     <div className="flex flex-col items-center gap-2">
-                      <div className="text-3xl">📄</div>
+                      <div className="text-3xl" aria-hidden="true">📄</div>
                       <span className="text-indigo-600 font-bold text-center px-4 truncate max-w-full">{archivo.name}</span>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center gap-2 text-slate-400 group-hover:text-indigo-400 transition-colors">
-                      <div className="text-4xl">📤</div>
+                      <div className="text-4xl" aria-hidden="true">📤</div>
                       <span className="font-black text-xs uppercase tracking-widest">Subir Archivo</span>
                     </div>
                   )}
@@ -312,8 +323,8 @@ const GestionJustificativos = ({ esVistaProfesores = false }) => {
             </div>
 
             <div className="md:col-span-2 flex justify-end gap-3 pt-4">
-              <button type="submit" className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black hover:bg-indigo-700 shadow-xl shadow-indigo-200 transition-all flex items-center gap-2 active:scale-95">
-                <IconSave /> Enviar Solicitud
+              <button type="submit" className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black hover:bg-indigo-700 shadow-xl shadow-indigo-200 transition-all flex items-center gap-2 active:scale-95 focus:ring-4 focus:ring-indigo-500/40 outline-none" aria-label="Enviar solicitud de justificativo">
+                <IconSave aria-hidden="true" /> Enviar Solicitud
               </button>
             </div>
           </form>
@@ -324,25 +335,41 @@ const GestionJustificativos = ({ esVistaProfesores = false }) => {
       {esVistaProfesores && (
         <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col md:flex-row gap-4 items-end">
           <div className="flex-1 space-y-2 w-full">
-            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Buscar Profesor</label>
+            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1" htmlFor="search-profesor">Buscar Profesor</label>
             <div className="relative group">
-              <IconSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-600 transition-colors" />
+              <IconSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-600 transition-colors" aria-hidden="true" />
               <input
+                id="search-profesor"
                 type="text"
                 placeholder="Nombre, cédula o asignatura..."
                 className="w-full pl-12 pr-6 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold"
                 value={terminoBusquedaTabla}
                 onChange={(e) => setTerminoBusquedaTabla(e.target.value)}
+                aria-label="Buscar por nombre, cédula o asignatura"
               />
             </div>
           </div>
           <div className="w-full md:w-48 space-y-2">
-            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Desde</label>
-            <input type="date" className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold" value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} />
+            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1" htmlFor="fecha-inicio">Desde</label>
+            <input 
+              id="fecha-inicio"
+              type="date" 
+              className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500" 
+              value={fechaInicio} 
+              onChange={(e) => setFechaInicio(e.target.value)} 
+              aria-label="Fecha de inicio para filtrar"
+            />
           </div>
           <div className="w-full md:w-48 space-y-2">
-            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Hasta</label>
-            <input type="date" className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} />
+            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1" htmlFor="fecha-fin">Hasta</label>
+            <input 
+              id="fecha-fin"
+              type="date" 
+              className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500" 
+              value={fechaFin} 
+              onChange={(e) => setFechaFin(e.target.value)} 
+              aria-label="Fecha de fin para filtrar"
+            />
           </div>
         </div>
       )}
@@ -402,27 +429,30 @@ const GestionJustificativos = ({ esVistaProfesores = false }) => {
                         {j.documento_url && (
                           <button 
                             onClick={() => verDocumento(j.documento_url)}
-                            className="w-9 h-9 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
+                            className="w-9 h-9 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm focus:ring-4 focus:ring-indigo-500/20 outline-none"
+                            aria-label={`Ver documento de soporte para ${j.nombre} ${j.apellido}`}
                             title="Ver Documento"
                           >
-                            <IconEye />
+                            <IconEye aria-hidden="true" />
                           </button>
                         )}
                         {esVistaProfesores && j.estado === 'pendiente' && (
                           <>
                             <button 
                               onClick={() => handleAprobar(j.id_justificativo)}
-                              className="w-9 h-9 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
+                              className="w-9 h-9 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all shadow-sm focus:ring-4 focus:ring-emerald-500/20 outline-none"
+                              aria-label={`Aprobar justificativo de ${j.nombre} ${j.apellido}`}
                               title="Aprobar"
                             >
-                              <IconCheck />
+                              <IconCheck aria-hidden="true" />
                             </button>
                             <button 
                               onClick={() => setModalRechazo({ mostrar: true, id_justificativo: j.id_justificativo, observaciones: '' })}
-                              className="w-9 h-9 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center hover:bg-rose-600 hover:text-white transition-all shadow-sm"
+                              className="w-9 h-9 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center hover:bg-rose-600 hover:text-white transition-all shadow-sm focus:ring-4 focus:ring-rose-500/20 outline-none"
+                              aria-label={`Rechazar justificativo de ${j.nombre} ${j.apellido}`}
                               title="Rechazar"
                             >
-                              <IconTrash />
+                              <IconTrash aria-hidden="true" />
                             </button>
                           </>
                         )}
@@ -442,25 +472,29 @@ const GestionJustificativos = ({ esVistaProfesores = false }) => {
 
       {/* Modal Visualizar Documento */}
       {modalDocumento.mostrar && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" role="dialog" aria-labelledby="modal-doc-title" aria-modal="true">
           <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-md animate-fade-in" onClick={() => setModalDocumento({ ...modalDocumento, mostrar: false })}></div>
           <div className="bg-white rounded-[40px] w-full max-w-4xl h-[85vh] shadow-2xl relative z-10 animate-zoom-in overflow-hidden flex flex-col">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-              <h3 className="text-xl font-black text-slate-800 flex items-center gap-3">
+              <h3 className="text-xl font-black text-slate-800 flex items-center gap-3" id="modal-doc-title">
                 <div className="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center">
-                  <IconEye />
+                  <IconEye aria-hidden="true" />
                 </div>
                 Visualización de Soporte
               </h3>
-              <button onClick={() => setModalDocumento({ ...modalDocumento, mostrar: false })} className="text-slate-400 hover:text-slate-600 bg-white w-10 h-10 rounded-full flex items-center justify-center shadow-sm">
-                <IconCancel />
+              <button 
+                onClick={() => setModalDocumento({ ...modalDocumento, mostrar: false })} 
+                className="text-slate-400 hover:text-slate-600 bg-white w-10 h-10 rounded-full flex items-center justify-center shadow-sm focus:ring-4 focus:ring-slate-100 outline-none"
+                aria-label="Cerrar vista de documento"
+              >
+                <IconCancel aria-hidden="true" />
               </button>
             </div>
             <div className="flex-1 bg-slate-200 overflow-auto p-4 flex items-center justify-center">
               {modalDocumento.tipo === 'pdf' ? (
-                <iframe src={modalDocumento.url} className="w-full h-full rounded-2xl shadow-lg bg-white" title="Documento Soporte" />
+                <iframe src={modalDocumento.url} className="w-full h-full rounded-2xl shadow-lg bg-white" title="Vista previa del documento soporte PDF" />
               ) : (
-                <img src={modalDocumento.url} className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl" alt="Soporte Justificativo" />
+                <img src={modalDocumento.url} className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl" alt="Imagen del soporte justificativo" />
               )}
             </div>
           </div>
@@ -469,34 +503,39 @@ const GestionJustificativos = ({ esVistaProfesores = false }) => {
 
       {/* Modal Rechazar Justificativo (Personalizado) */}
       {modalRechazo.mostrar && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" role="dialog" aria-labelledby="modal-rechazo-title" aria-modal="true">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-fade-in" onClick={() => setModalRechazo({ mostrar: false, id_justificativo: null, observaciones: '' })}></div>
           <div className="bg-white rounded-[40px] w-full max-w-md p-10 shadow-2xl relative z-10 animate-zoom-in">
             <div className="text-center mb-8">
               <div className="w-20 h-20 bg-rose-50 text-rose-500 rounded-[24px] flex items-center justify-center text-3xl mx-auto mb-6 shadow-lg shadow-rose-100">
-                <IconAlert />
+                <IconAlert aria-hidden="true" />
               </div>
-              <h3 className="text-2xl font-black text-slate-800 mb-2">Rechazar Solicitud</h3>
+              <h3 className="text-2xl font-black text-slate-800 mb-2" id="modal-rechazo-title">Rechazar Solicitud</h3>
               <p className="text-slate-500 font-medium">Por favor, indica el motivo del rechazo para informar al docente.</p>
             </div>
             
+            <label htmlFor="rechazo-observaciones" className="sr-only">Motivo del rechazo</label>
             <textarea
+              id="rechazo-observaciones"
               className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all font-medium text-slate-700 min-h-[120px] mb-8"
               placeholder="Ej: Documento ilegible o fecha incorrecta..."
               value={modalRechazo.observaciones}
               onChange={(e) => setModalRechazo({ ...modalRechazo, observaciones: e.target.value })}
+              aria-required="true"
             />
 
             <div className="flex gap-3">
               <button 
                 onClick={handleRechazar}
-                className="flex-1 bg-rose-500 text-white py-4 rounded-2xl font-black hover:bg-rose-600 transition-all shadow-xl shadow-rose-200 active:scale-95"
+                className="flex-1 bg-rose-500 text-white py-4 rounded-2xl font-black hover:bg-rose-600 transition-all shadow-xl shadow-rose-200 active:scale-95 focus:ring-4 focus:ring-rose-500/40 outline-none"
+                aria-label="Confirmar el rechazo del justificativo"
               >
                 Confirmar Rechazo
               </button>
               <button 
                 onClick={() => setModalRechazo({ mostrar: false, id_justificativo: null, observaciones: '' })} 
-                className="flex-1 bg-slate-100 text-slate-500 py-4 rounded-2xl font-black hover:bg-slate-200 transition-all"
+                className="flex-1 bg-slate-100 text-slate-500 py-4 rounded-2xl font-black hover:bg-slate-200 transition-all focus:ring-4 focus:ring-slate-200 outline-none"
+                aria-label="Cancelar y volver"
               >
                 Cancelar
               </button>

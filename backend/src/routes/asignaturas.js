@@ -5,8 +5,8 @@ import pool from '../config/db.js';
 
 const router = express.Router();
 
-// ✅ Obtener todas las asignaturas (con profesor asignado)
-router.get('/', auth, async (req, res) => {
+// ✅ Obtener todas las asignaturas (con profesor asignado - soporta alias /todos)
+router.get(['/', '/todos'], auth, async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT a.*, c.nombre_carrera,
@@ -46,45 +46,7 @@ router.get('/carrera/:id', async (req, res) => {
   }
 });
 
-// ✅ NUEVO: Asignar profesor a asignatura (solo coordinador)
-router.post('/asignar-profesor', auth, async (req, res) => {
-  if (!req.user.esCoordinador) {
-    return res.status(403).json({ error: 'Acceso denegado' });
-  }
 
-  const { id_asignatura, id_profesor, fecha_desde } = req.body;
-
-  if (!id_asignatura || !id_profesor) {
-    return res.status(400).json({ error: 'Asignatura y profesor son requeridos' });
-  }
-
-  try {
-    // Desactivar asignaciones anteriores
-    await pool.query(
-      `UPDATE asignatura_profesor SET activo = false WHERE id_asignatura = $1`,
-      [id_asignatura]
-    );
-    
-    // Crear nueva asignación
-    const maxRes = await pool.query('SELECT COALESCE(MAX(id_asignatura_profesor), 0) + 1 as next_id FROM asignatura_profesor');
-    const nextId = maxRes.rows[0].next_id;
-
-    const result = await pool.query(
-      `INSERT INTO asignatura_profesor (id_asignatura_profesor, id_asignatura, id_profesor, fecha_desde, activo)
-       VALUES ($1, $2, $3, COALESCE($4, CURRENT_DATE), true) RETURNING *`,
-      [nextId, id_asignatura, id_profesor, fecha_desde]
-    );
-    
-    res.status(201).json({ 
-      success: true, 
-      message: 'Profesor asignado correctamente',
-      asignacion: result.rows[0]
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Error al asignar profesor' });
-  }
-});
 
 // Crear asignatura (solo coordinador)
 router.post('/', auth, async (req, res) => {

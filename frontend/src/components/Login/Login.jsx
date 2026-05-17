@@ -57,11 +57,13 @@ const Login = () => {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 sm:gap-5 2xl:gap-6">
           <div className="relative group">
-            <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors text-lg sm:text-xl 2xl:text-2xl">
+            <label htmlFor="email-input" className="sr-only">Correo electrónico</label>
+            <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors text-lg sm:text-xl 2xl:text-2xl" aria-hidden="true">
               <IconUser />
             </span>
             <input
-              type="text"
+              id="email-input"
+              type="email"
               placeholder="Correo electrónico"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -71,10 +73,12 @@ const Login = () => {
           </div>
 
           <div className="relative group">
-            <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors text-lg sm:text-xl 2xl:text-2xl">
+            <label htmlFor="password-input" className="sr-only">Contraseña</label>
+            <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors text-lg sm:text-xl 2xl:text-2xl" aria-hidden="true">
               <IconLock />
             </span>
             <input
+              id="password-input"
               type={showPassword ? "text" : "password"}
               placeholder="Contraseña"
               value={password}
@@ -113,8 +117,12 @@ const Login = () => {
           </div>
 
           {error && (
-            <div className="bg-red-50 text-red-600 p-3 sm:p-4 rounded-xl text-xs sm:text-sm 2xl:text-base font-medium flex items-start gap-2 border border-red-100 animate-shake">
-              <span className="text-red-500 mt-0.5">⚠️</span>
+            <div 
+              role="alert" 
+              className="bg-red-50 text-red-600 p-3 sm:p-4 rounded-xl text-xs sm:text-sm 2xl:text-base font-medium flex items-start gap-2 border border-red-100 animate-shake"
+              aria-live="assertive"
+            >
+              <span className="text-red-500 mt-0.5" aria-hidden="true">⚠️</span>
               {error}
             </div>
           )}

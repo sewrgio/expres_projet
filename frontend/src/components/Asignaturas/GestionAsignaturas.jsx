@@ -123,7 +123,7 @@ const GestionAsignaturas = () => {
             <CustomSelect
               name="id_carrera"
               value={idCarrera}
-              onChange={(e) => setIdCarrera(e.target.value)}
+              onChange={(val) => setIdCarrera(val)}
               required
               placeholder="Seleccionar carrera"
               options={carreras.map(carr => ({ value: carr.id_carrera, label: carr.nombre_carrera }))}
@@ -202,7 +202,7 @@ const GestionAsignaturas = () => {
               <CustomSelect 
                 name="id_profesor"
                 value={profesorSeleccionado}
-                onChange={(e) => setProfesorSeleccionado(e.target.value)}
+                onChange={(val) => setProfesorSeleccionado(val)}
                 placeholder="Seleccionar profesor"
                 options={profesores.map(prof => ({
                   value: prof.id_profesor,

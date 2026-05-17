@@ -257,7 +257,7 @@ const AgregarCoordinador = () => {
           <CustomSelect 
             name="id_carrera" 
             value={formData.id_carrera} 
-            onChange={(e) => setFormData({...formData, id_carrera: e.target.value})} 
+            onChange={(val) => setFormData({...formData, id_carrera: val})} 
             required={formData.esCoordinador || formData.esAdjuntoCoordinacion}
             disabled={!(formData.esCoordinador || formData.esAdjuntoCoordinacion)}
             placeholder={(formData.esCoordinador || formData.esAdjuntoCoordinacion) ? 'Seleccionar carrera' : 'Solo aplica para Coordinador o Adjunto'}

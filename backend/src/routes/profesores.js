@@ -2,6 +2,7 @@ import express from 'express';
 import Profesor from '../models/profesor.js';
 import auth from '../middleware/auth.js';
 import pool from '../config/db.js';
+import bcrypt from 'bcryptjs';
 
 const router = express.Router();
 
@@ -27,7 +28,6 @@ router.get('/', auth, async (req, res) => {
 
     // Filtro de seguridad para coordinadores
     if (req.user.esCoordinador && !req.user.roles.includes('auditor')) {
-      console.log('DEBUG - Usuario:', req.user.nombre, '| Carreras:', req.user.ids_carreras);
       if (req.user.ids_carreras && req.user.ids_carreras.length > 0) {
         query += ` AND c.id_carrera = ANY($${params.length + 1}::int[])`;
         params.push(req.user.ids_carreras);
@@ -54,20 +54,20 @@ router.get('/todos', auth, async (req, res) => {
 
   try {
     let query = `
-      SELECT p.id_profesor, u.nombre, u.apellido, u.correo
+      SELECT p.id_profesor, u.nombre, u.apellido, u.correo, pc.id_carrera
       FROM profesor p
       JOIN usuario_rol ur ON p.id_usuario_rol = ur.id_usuario_rol
       JOIN usuario u ON ur.id_usuario = u.id_usuario
+      LEFT JOIN profesor_carrera pc ON p.id_profesor = pc.id_profesor AND pc.activo = true
       WHERE u.activo = true
     `;
     const params = [];
 
     // Si es coordinador (y no auditor), filtrar por su carrera
-    if (req.user.esCoordinador && !req.user.roles.includes('auditor') && req.user.ids_carreras.length > 0) {
-      query += ` AND EXISTS (
-        SELECT 1 FROM profesor_carrera pc
-        WHERE pc.id_profesor = p.id_profesor AND pc.id_carrera = ANY($1) AND pc.activo = true
-      )`;
+    if (req.user.esCoordinador && !req.user.roles.includes('auditor') && req.user.ids_carreras && req.user.ids_carreras.length > 0) {
+      query += ` AND (pc.id_carrera = ANY($1::int[]) OR EXISTS (
+        SELECT 1 FROM coordinador c WHERE c.id_usuario_rol = ur.id_usuario_rol AND c.id_carrera = ANY($1::int[])
+      ))`;
       params.push(req.user.ids_carreras);
     }
 
@@ -141,9 +141,92 @@ router.get('/:id', auth, async (req, res) => {
   }
 });
 
+// Crear nuevo profesor
+router.post('/', auth, async (req, res) => {
+  if (!req.user.esCoordinador && !req.user.roles.includes('auditor')) {
+    return res.status(403).json({ error: 'Acceso denegado' });
+  }
+
+  const { nombre, apellido, cedula, correo, telefono, id_carrera } = req.body;
+
+  if (!nombre || !apellido || !cedula || !correo || !id_carrera) {
+    return res.status(400).json({ error: 'Faltan campos requeridos' });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // 1. Crear el usuario
+    const hashedPassword = await bcrypt.hash(cedula, 10); // Contraseña por defecto: cédula
+    const maxUserRes = await client.query('SELECT COALESCE(MAX(id_usuario), 0) + 1 as next_id FROM usuario');
+    const nextUserId = maxUserRes.rows[0].next_id;
+
+    await client.query(
+      `INSERT INTO usuario (id_usuario, nombre, apellido, cedula, correo, telefono, contrasena, activo)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, true)`,
+      [nextUserId, nombre, apellido, cedula, correo, telefono || '', hashedPassword]
+    );
+
+    // 2. Asignar rol de profesor
+    const maxRolRes = await client.query('SELECT COALESCE(MAX(id_usuario_rol), 0) + 1 as next_id FROM usuario_rol');
+    const nextRolId = maxRolRes.rows[0].next_id;
+
+    await client.query(
+      `INSERT INTO usuario_rol (id_usuario_rol, id_usuario, id_categoria, fecha_desde, activo)
+       VALUES ($1, $2, (SELECT id_categoria FROM categoria WHERE nombre = 'Profesor' AND tip_id = 1), CURRENT_TIMESTAMP, true)`,
+      [nextRolId, nextUserId]
+    );
+
+    // 3. Crear registro en tabla profesor
+    const maxProfRes = await client.query('SELECT COALESCE(MAX(id_profesor), 0) + 1 as next_id FROM profesor');
+    const nextProfId = maxProfRes.rows[0].next_id;
+
+    await client.query(
+      `INSERT INTO profesor (id_profesor, id_usuario_rol, fecha_ingreso, activo)
+       VALUES ($1, $2, CURRENT_TIMESTAMP, true)`,
+      [nextProfId, nextRolId]
+    );
+
+    // 4. Asignar carrera en profesor_carrera
+    const maxPCRes = await client.query('SELECT COALESCE(MAX(id_profesor_carrera), 0) + 1 as next_id FROM profesor_carrera');
+    const nextPCId = maxPCRes.rows[0].next_id;
+
+    await client.query(
+      `INSERT INTO profesor_carrera (id_profesor_carrera, id_profesor, id_carrera, dedicacion, fecha_desde, activo)
+       VALUES ($1, $2, $3, 'TIEMPO_COMPLETO', CURRENT_TIMESTAMP, true)`,
+      [nextPCId, nextProfId, id_carrera]
+    );
+
+    // 5. Actualizar rol JSONB
+    await client.query(`
+      UPDATE usuario 
+      SET rol = (
+        SELECT COALESCE(jsonb_agg(LOWER(c.nombre)), '[]'::jsonb)
+        FROM usuario_rol ur
+        JOIN categoria c ON ur.id_categoria = c.id_categoria
+        WHERE ur.id_usuario = $1 AND ur.activo = true AND c.tip_id = 1
+      )
+      WHERE id_usuario = $1
+    `, [nextUserId]);
+
+    await client.query('COMMIT');
+    res.status(201).json({ success: true, message: 'Profesor creado exitosamente' });
+  } catch (error) {
+    if (client) await client.query('ROLLBACK');
+    console.error('Error creando profesor:', error);
+    if (error.code === '23505') {
+      return res.status(400).json({ error: 'La cédula o el correo ya están registrados' });
+    }
+    res.status(500).json({ error: 'Error al crear profesor' });
+  } finally {
+    client.release();
+  }
+});
+
 // Actualizar todos los datos de un profesor
 router.put('/:id', auth, async (req, res) => {
-  if (!req.user.esCoordinador) {
+  if (!req.user.esCoordinador && !req.user.roles.includes('auditor')) {
     return res.status(403).json({ error: 'Acceso denegado' });
   }
 
@@ -191,7 +274,7 @@ router.put('/:id', auth, async (req, res) => {
 
         await client.query(`
           INSERT INTO profesor_carrera (id_profesor_carrera, id_profesor, id_carrera, dedicacion, fecha_desde, activo)
-          VALUES ($1, $2, $3, 'TIEMPO_COMPLETO', CURRENT_DATE, true)
+          VALUES ($1, $2, $3, 'TIEMPO_COMPLETO', CURRENT_TIMESTAMP, true)
         `, [nextId, id, id_carrera]);
       }
     }

@@ -172,7 +172,7 @@ const Register = () => {
             <CustomSelect 
               name="carrera_id" 
               value={formData.carrera_id} 
-              onChange={handleChange} 
+              onChange={(val) => setFormData({...formData, carrera_id: val})} 
               required 
               options={carreras.map(c => ({ value: c.id_carrera, label: c.nombre_carrera }))}
               placeholder="Seleccione su Carrera"
@@ -189,7 +189,7 @@ const Register = () => {
               <CustomSelect 
                 name="prefijo" 
                 value={formData.prefijo} 
-                onChange={handleChange} 
+                onChange={(val) => setFormData({...formData, prefijo: val})} 
                 options={PREFIJOS_VENEZUELA.map(p => ({ value: p, label: p }))}
                 placeholder="Prefijo"
               />

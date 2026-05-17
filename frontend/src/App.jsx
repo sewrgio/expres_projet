@@ -129,7 +129,7 @@ function AppRoutes() {
       
       <Route path="/justificativos-profesores" element={
         <ProtectedRoute roles={['coordinador', 'adjunto coordinacion']}>
-          <Layout><GestionJustificativos /></Layout>
+          <Layout><GestionJustificativos esVistaProfesores={true} /></Layout>
         </ProtectedRoute>
       } />
       

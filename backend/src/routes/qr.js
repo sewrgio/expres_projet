@@ -42,7 +42,7 @@ router.post('/generar', auth, async (req, res) => {
 });
 
 router.get('/mis-qrs', auth, async (req, res) => {
-  if (!req.user.esCoordinador) {
+  if (!req.user.esCoordinador && !req.user.roles.includes('auditor')) {
     return res.status(403).json({ error: 'Acceso denegado' });
   }
 
@@ -124,17 +124,23 @@ router.put('/:id', auth, async (req, res) => {
 
     // Actualizar el QR
     const { descripcion, ubicacion, horasExtension } = req.body;
+    const extensionHoras = parseInt(horasExtension) || 0;
+
     const result = await pool.query(
       `UPDATE qr 
        SET descripcion = $1, 
            ubicacion = $2,
+           activo = CASE 
+             WHEN $3 > 0 THEN true 
+             ELSE activo 
+           END,
            fecha_expiracion = CASE 
-             WHEN $3 > 0 THEN COALESCE(fecha_expiracion, NOW()) + ($3 || ' hours')::interval 
+             WHEN $3 > 0 THEN GREATEST(COALESCE(fecha_expiracion, NOW()), NOW()) + ($3 || ' hours')::interval 
              ELSE fecha_expiracion 
            END
        WHERE id_qr = $4 AND id_coordinador = $5 
        RETURNING *`,
-      [descripcion || '', ubicacion || '', horasExtension || 0, qrId, coordinadorId]
+      [descripcion || '', ubicacion || '', extensionHoras, qrId, coordinadorId]
     );
 
     const qrActualizado = result.rows[0];
@@ -175,8 +181,10 @@ router.get('/mi-qr', auth, async (req, res) => {
       identificador = `auditor_${idUsuario}`;
     }
 
-    // Generar un código único
-    const codigoQR = `${identificador}_${Date.now()}`;
+    // Generar un código único para todo el día
+    const hoy = new Date();
+    const fechaStr = `${hoy.getFullYear()}-${(hoy.getMonth() + 1).toString().padStart(2, '0')}-${hoy.getDate().toString().padStart(2, '0')}`;
+    const codigoQR = `${identificador}_${fechaStr}`;
 
     // Generar imagen QR en base64
     const qrImage = await QRCode.toDataURL(codigoQR);

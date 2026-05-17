@@ -41,7 +41,7 @@ const Layout = ({ children }) => {
       ]
     },
     { path: '/escanear', icon: <IconScanQR />, label: 'Escanear QR', roles: ['coordinador', 'adjunto coordinacion', 'profesor'] },
-    { path: '/justificativos', icon: <IconClipboard />, label: 'Justificativos', roles: ['profesor', 'coordinador', 'adjunto coordinacion'] },
+    { path: '/justificativos', icon: <IconClipboard />, label: 'Mis Justificativos', roles: ['profesor'] },
     {
       label: 'Auditor',
       icon: <IconAddAdmin />,
@@ -65,12 +65,21 @@ const Layout = ({ children }) => {
 
   return (
     <div className="flex min-h-screen bg-slate-50 font-sans text-slate-800 selection:bg-indigo-200">
+      {/* Skip to main content link for keyboard users */}
+      <a 
+        href="#main-content" 
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:bg-indigo-600 focus:text-white focus:px-6 focus:py-3 focus:rounded-xl focus:font-bold focus:shadow-2xl"
+      >
+        Saltar al contenido principal
+      </a>
+
       {/* Botón hamburguesa para móvil */}
       <button 
-        className="lg:hidden fixed top-4 left-4 z-50 bg-[#3f51b5] text-white p-3 rounded-lg shadow-lg hover:bg-[#303f9f] transition-colors"
-        onClick={toggleMenu} aria-label="Menu"
+        className="lg:hidden fixed top-4 left-4 z-50 bg-[#3f51b5] text-white p-3 rounded-lg shadow-lg hover:bg-[#303f9f] transition-colors focus:ring-4 focus:ring-indigo-500/40 outline-none"
+        onClick={toggleMenu} aria-label="Abrir menú lateral"
+        aria-expanded={menuOpen}
       >
-        <IconMenu />
+        <IconMenu aria-hidden="true" />
       </button>
       
       {/* Overlay para cerrar menú */}
@@ -82,7 +91,10 @@ const Layout = ({ children }) => {
       )}
       
       {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-72 2xl:w-80 bg-gradient-to-b from-[#1a237e] to-[#283593] text-white shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col ${menuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+      <aside 
+        className={`fixed inset-y-0 left-0 z-50 w-72 2xl:w-80 bg-gradient-to-b from-[#1a237e] to-[#283593] text-white shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col ${menuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
+        aria-label="Navegación principal"
+      >
         <div className="p-6 text-center border-b border-white/10 bg-black/10">
           <div className="w-16 h-16 2xl:w-20 2xl:h-20 mx-auto bg-gradient-to-br from-amber-500 to-amber-400 rounded-full flex items-center justify-center text-3xl 2xl:text-4xl shadow-[0_8px_20px_rgba(245,158,11,0.3)] mb-4">
             <IconBookOpen />
@@ -93,37 +105,44 @@ const Layout = ({ children }) => {
           </div>
         </div>
         
-        <div className="flex-1 overflow-y-auto py-6 px-3 custom-scrollbar">
+        <nav className="flex-1 overflow-y-auto py-6 px-3 custom-scrollbar" aria-label="Menú de usuario">
           {filteredMenu.map((item, index) => (
             <div key={index} className="mb-1">
+               {/* ... (rest of the mapping logic) ... */}
               {item.dropdown ? (
                 <div>
                   <button
-                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 text-sm 2xl:text-base font-medium ${openDropdown === index ? 'bg-indigo-600/50 text-white shadow-inner' : 'text-slate-300 hover:bg-white/10 hover:text-white hover:translate-x-1'}`}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 text-sm 2xl:text-base font-medium ${openDropdown === index ? 'bg-indigo-600/50 text-white shadow-inner' : 'text-slate-300 hover:bg-white/10 hover:text-white hover:translate-x-1'} focus:ring-2 focus:ring-white/20 outline-none`}
                     onClick={() => setOpenDropdown(openDropdown === index ? null : index)}
+                    aria-expanded={openDropdown === index}
+                    aria-haspopup="true"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="text-lg">{item.icon}</span>
+                      <span className="text-lg" aria-hidden="true">{item.icon}</span>
                       {item.label}
                     </div>
-                    <span className="text-xs">{openDropdown === index ? '▼' : '▶'}</span>
+                    <span className="text-xs" aria-hidden="true">{openDropdown === index ? '▼' : '▶'}</span>
                   </button>
                   
-                  <div className={`overflow-hidden transition-all duration-300 ${openDropdown === index ? 'max-h-[500px] opacity-100 mt-1' : 'max-h-0 opacity-0'}`}>
+                  <div 
+                    className={`overflow-hidden transition-all duration-300 ${openDropdown === index ? 'max-h-[500px] opacity-100 mt-1' : 'max-h-0 opacity-0'}`}
+                    role="group"
+                    aria-label={`Submenú ${item.label}`}
+                  >
                     <div className="bg-black/20 rounded-lg py-2 mx-2">
                       {item.dropdown
                         .filter(subItem => subItem.roles.some(role => user?.roles?.includes(role)))
                         .map((subItem, subIndex) => (
                           <button
                             key={subIndex}
-                            className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm 2xl:text-base transition-all duration-200 ${isActive(subItem.path) ? 'bg-indigo-600/40 text-white font-semibold pl-6' : 'text-slate-300 hover:bg-white/10 hover:text-white hover:pl-6'}`}
+                            className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm 2xl:text-base transition-all duration-200 ${isActive(subItem.path) ? 'bg-indigo-600/40 text-white font-semibold pl-6' : 'text-slate-300 hover:bg-white/10 hover:text-white hover:pl-6'} focus:ring-2 focus:ring-white/20 outline-none`}
                             onClick={() => {
                               navigate(subItem.path);
                               setOpenDropdown(null);
                               closeMenu();
                             }}
                           >
-                            <span>{subItem.icon}</span> {subItem.label}
+                            <span aria-hidden="true">{subItem.icon}</span> {subItem.label}
                           </button>
                         ))}
                     </div>
@@ -131,22 +150,26 @@ const Layout = ({ children }) => {
                 </div>
               ) : (
                 <button
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm 2xl:text-base font-medium ${isActive(item.path) ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-[0_4px_15px_rgba(63,81,181,0.3)]' : 'text-slate-300 hover:bg-white/10 hover:text-white hover:translate-x-1'}`}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm 2xl:text-base font-medium ${isActive(item.path) ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-[0_4px_15px_rgba(63,81,181,0.3)]' : 'text-slate-300 hover:bg-white/10 hover:text-white hover:translate-x-1'} focus:ring-2 focus:ring-white/20 outline-none`}
                   onClick={() => {
                     navigate(item.path);
                     closeMenu();
                   }}
                 >
-                  <span className="text-lg">{item.icon}</span> {item.label}
+                  <span className="text-lg" aria-hidden="true">{item.icon}</span> {item.label}
                 </button>
               )}
             </div>
           ))}
-        </div>
+        </nav>
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col min-w-0 transition-all duration-300 lg:ml-72 2xl:ml-80">
+      <main 
+        id="main-content"
+        className="flex-1 flex flex-col min-w-0 transition-all duration-300 lg:ml-72 2xl:ml-80"
+        tabIndex="-1"
+      >
         <div className="p-3 sm:p-6 lg:p-8 2xl:p-12 w-full max-w-[1920px] mx-auto">
           
           {/* Top Header */}
@@ -156,8 +179,8 @@ const Layout = ({ children }) => {
             </h2>
             
             <div className="flex items-center gap-2 sm:gap-4 bg-slate-50 px-3 py-2 rounded-xl border border-slate-100">
-              <div className="hidden sm:flex w-10 h-10 2xl:w-12 2xl:h-12 rounded-full bg-gradient-to-tr from-indigo-600 to-indigo-400 text-white items-center justify-center font-bold text-sm shadow-md">
-                IU
+              <div className="hidden sm:flex w-10 h-10 2xl:w-12 2xl:h-12 rounded-full bg-gradient-to-tr from-indigo-600 to-indigo-400 text-white items-center justify-center font-bold text-sm shadow-md" aria-hidden="true">
+                {user?.nombre?.charAt(0)}{user?.apellido?.charAt(0)}
               </div>
               <div className="flex flex-col">
                 <span className="font-bold text-slate-800 text-xs sm:text-base 2xl:text-lg leading-tight">
@@ -165,10 +188,11 @@ const Layout = ({ children }) => {
                 </span>
                 <span className="text-[10px] sm:text-xs text-slate-500 font-medium">Conectado</span>
               </div>
-              <div className="w-px h-6 sm:h-8 bg-slate-200 mx-1"></div>
+              <div className="w-px h-6 sm:h-8 bg-slate-200 mx-1" aria-hidden="true"></div>
               <button 
                 onClick={handleLogoutClick}
-                className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 sm:p-2 rounded-lg transition-colors font-semibold text-xs sm:text-base flex items-center gap-1"
+                className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 sm:p-2 rounded-lg transition-colors font-semibold text-xs sm:text-base flex items-center gap-1 focus:ring-2 focus:ring-red-200 outline-none"
+                aria-label="Cerrar sesión"
               >
                 <span>Salir</span>
               </button>

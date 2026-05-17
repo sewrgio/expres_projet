@@ -27,33 +27,61 @@ router.post('/escanear', auth, async (req, res) => {
         return res.status(403).json({ error: 'No tienes permiso para escanear QR' });
     }
 
-    const { codigo_qr } = req.body;
+    const codigo_qr_raw = req.body.codigo_qr;
 
-    if (!codigo_qr) {
+    if (!codigo_qr_raw) {
         return res.status(400).json({ error: 'El código QR es requerido' });
     }
-
-    // Validación de horario (7:00 AM a 9:00 PM)
-    const horaActual = new Date().getHours();
-    if (horaActual < 7 || horaActual >= 21) {
-        return res.status(400).json({ 
-            success: false, 
-            error: 'El horario de escaneo es solo de 7:00 AM a 9:00 PM' 
-        });
-    }
-
-    const profesorId = req.user.id_profesor;
+    
+    const codigo_qr = codigo_qr_raw.trim();
+    let profesorId = req.user.id_profesor;
 
     try {
-        // ✅ Validar QR (intenta dinámico primero, luego fijo)
+        // ✅ Validar cualquier tipo de QR primero
         const qrResult = await QR.validarCualquiera(codigo_qr);
         if (!qrResult) {
             return res.status(404).json({ error: 'QR inválido o inactivo' });
         }
 
+        // Si se escaneó un QR personal, se registra la asistencia para el dueño del QR
+        if (qrResult.tipo === 'personal') {
+            if (qrResult.qr.rol_identificador === 'profesor' || qrResult.qr.rol_identificador === 'coordinador') {
+                profesorId = qrResult.qr.id_usuario_especifico;
+            } else {
+                return res.status(400).json({ error: 'Este código QR no pertenece a un usuario con perfil válido para asistencia.' });
+            }
+        }
+
+        if (!profesorId) {
+            return res.status(400).json({ error: 'No se pudo identificar al profesor para este registro.' });
+        }
+
+        // Obtener detalles del profesor (roles y carrera)
+        const userInfoRes = await pool.query(`
+            SELECT u.id_usuario, COALESCE(u.rol, '[]'::jsonb) as roles,
+                   p.id_profesor,
+                   pc.id_carrera,
+                   car.nombre_carrera
+            FROM profesor p
+            JOIN usuario_rol ur ON p.id_usuario_rol = ur.id_usuario_rol
+            JOIN usuario u ON ur.id_usuario = u.id_usuario
+            LEFT JOIN profesor_carrera pc ON p.id_profesor = pc.id_profesor AND pc.activo = true
+            LEFT JOIN carrera car ON pc.id_carrera = car.id_carrera
+            WHERE p.id_profesor = $1
+            LIMIT 1
+        `, [profesorId]);
+
+        if (userInfoRes.rows.length === 0) {
+            return res.status(404).json({ error: 'Perfil de profesor no encontrado para registrar asistencia.' });
+        }
+
+        const userObj = userInfoRes.rows[0];
+
+        // Obtener el estado actual (si está dentro o fuera)
+        const estado = await Asistencia.verificarEstado(profesorId);
+
+        // 1. Limitar a exactamente dos lecturas al día
         const asistenciasHoy = await Asistencia.obtenerAsistenciasHoy(profesorId);
-        
-        // Calcular total de escaneos (cada entrada es 1, cada salida es 1)
         let totalEscaneos = 0;
         asistenciasHoy.forEach(a => {
             if (a.fecha_entrada) totalEscaneos++;
@@ -63,67 +91,100 @@ router.post('/escanear', auth, async (req, res) => {
         if (totalEscaneos >= 2) {
             return res.status(400).json({ 
                 success: false, 
-                error: 'Ya has alcanzado el límite de 2 escaneos diarios (1 Entrada y 1 Salida)' 
+                error: 'Ya has alcanzado el límite de 2 escaneos diarios (1 Entrada y 1 Salida).' 
             });
         }
 
-        const estado = await Asistencia.verificarEstado(profesorId);
-        
-        let resultado;
-        let tipo;
+        // 2. Aplicar restricciones horarias y de QR según el tipo de dedicación del usuario
+        const userRoles = Array.isArray(userObj.roles) ? userObj.roles : [];
+        const esTiempoCompleto = userRoles.includes('tiempo completo');
+        const esMedioTiempo = userRoles.includes('medio tiempo');
 
-        // ✅ Lógica para Profesores de Tiempo Completo (TC)
-        // TC puede marcar: ENTRADA con QR fijo de "Dirección" y SALIDA con QR de su coordinación
-        const dedicacionInfo = await Asistencia.obtenerDedicacionProfesor(profesorId);
-        const esTiempoCompleto = dedicacionInfo?.dedicacion === 'TIEMPO_COMPLETO';
+        const ahora = new Date();
+        const horaActual = ahora.getHours();
+        const minutosActuales = ahora.getMinutes();
+        const tiempoEnMinutos = horaActual * 60 + minutosActuales;
 
         if (esTiempoCompleto) {
-            // Para TC: Validar tipo de QR según la acción esperada
+            // Tiempo Completo: 7:00 AM a 9:00 PM (7:00 a 21:00)
+            if (horaActual < 7 || horaActual >= 21) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'El horario de escaneo para profesores a Tiempo Completo es de 7:00 AM a 9:00 PM.'
+                });
+            }
+
+            // Entrada (Llegada): Solo Dirección (Fijo) o Personal. Prohibido Coordinación (Dinamico) y QR Temporal.
             if (!estado.dentro) {
-                // Debe ser ENTRADA → acepta QR fijo (dirección) o QR de coordinación
-                if (qrResult.tipo === 'fijo') {
-                    // QR fijo (dirección) → registrar entrada sin id_qr dinámico
-                    resultado = await Asistencia.registrarEntrada(profesorId, null);
-                    tipo = 'entrada';
-                } else {
-                    // QR dinámico de coordinación → también válido para entrada
-                    resultado = await Asistencia.registrarEntrada(profesorId, qrResult.qr.id_qr);
-                    tipo = 'entrada';
+                if (qrResult.tipo !== 'fijo' && qrResult.tipo !== 'personal') {
+                    return res.status(400).json({
+                        success: false,
+                        error: 'Los profesores a Tiempo Completo solo pueden registrar su entrada usando el QR Fijo de Dirección o su QR Personal.'
+                    });
                 }
-            } else {
-                // Debe ser SALIDA → acepta QR de su coordinación o QR fijo
-                if (qrResult.tipo === 'dinamico' && qrResult.qr.id_carrera) {
-                    // Verificar que el QR pertenece a la carrera del profesor
-                    if (dedicacionInfo.id_carrera && qrResult.qr.id_carrera !== dedicacionInfo.id_carrera) {
-                        return res.status(400).json({
-                            success: false,
-                            error: `Este QR pertenece a otra carrera. Debes escanear el QR de ${dedicacionInfo.nombre_carrera || 'tu carrera'}`
-                        });
-                    }
-                }
-                resultado = await Asistencia.registrarSalida(profesorId);
-                tipo = 'salida';
+            }
+            // Salida: en cualquier QR (sin restricciones)
+        } else if (esMedioTiempo) {
+            // Medio Tiempo: 2:15 PM a 9:00 PM (14:15 a 21:00)
+            const inicioMedioTiempo = 14 * 60 + 15; // 2:15 PM
+            const finMedioTiempo = 21 * 60; // 9:00 PM
+            if (tiempoEnMinutos < inicioMedioTiempo || tiempoEnMinutos >= finMedioTiempo) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'El horario de escaneo para profesores a Medio Tiempo es de 2:15 PM a 9:00 PM.'
+                });
+            }
+
+            // Entrada/Salida: Coordinación, QR Temporal o Personal. Prohibido Fijo (Dirección).
+            if (qrResult.tipo === 'fijo') {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Los profesores a Medio Tiempo no están autorizados a escanear el QR Fijo de Dirección.'
+                });
             }
         } else {
-            // Lógica estándar para profesores no-TC
-            if (estado.dentro) {
-                resultado = await Asistencia.registrarSalida(profesorId);
-                tipo = 'salida';
-            } else {
-                const qrId = qrResult.tipo === 'dinamico' ? qrResult.qr.id_qr : null;
-                resultado = await Asistencia.registrarEntrada(profesorId, qrId);
-                tipo = 'entrada';
+            // Horario estándar general (7:00 AM a 9:00 PM) para otros perfiles sin dedicación definida
+            if (horaActual < 7 || horaActual >= 21) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'El horario de escaneo permitido es de 7:00 AM a 9:00 PM.'
+                });
             }
         }
 
-        // Mensaje descriptivo para TC
-        let message;
-        if (esTiempoCompleto) {
-            message = tipo === 'entrada' 
-                ? '✅ Entrada registrada (Dirección)' 
-                : `✅ Salida registrada (${dedicacionInfo?.nombre_carrera || 'Carrera'})`;
+        let resultado;
+        let tipo;
+
+        // Registrar la transacción de asistencia
+        if (!estado.dentro) {
+            // ENTRADA
+            const qrId = qrResult.tipo === 'dinamico' ? qrResult.qr.id_qr : null;
+            resultado = await Asistencia.registrarEntrada(profesorId, qrId);
+            tipo = 'entrada';
         } else {
-            message = tipo === 'entrada' ? '✅ Entrada registrada' : '✅ Salida registrada';
+            // SALIDA
+            resultado = await Asistencia.registrarSalida(profesorId);
+            tipo = 'salida';
+        }
+
+        // Construir mensajes premium descriptivos para la respuesta
+        let message;
+        if (tipo === 'entrada') {
+            if (qrResult.tipo === 'fijo') {
+                message = '✅ Entrada registrada (Dirección - QR Fijo)';
+            } else if (qrResult.tipo === 'personal') {
+                message = '✅ Entrada registrada vía QR Personal';
+            } else {
+                message = `✅ Entrada registrada (${userObj.nombre_carrera || 'Coordinación'} - QR Temporal)`;
+            }
+        } else {
+            if (qrResult.tipo === 'fijo') {
+                message = '✅ Salida registrada (Dirección - QR Fijo)';
+            } else if (qrResult.tipo === 'personal') {
+                message = '✅ Salida registrada vía QR Personal';
+            } else {
+                message = `✅ Salida registrada (${userObj.nombre_carrera || 'Coordinación'} - QR Temporal)`;
+            }
         }
 
         res.json({

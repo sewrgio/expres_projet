@@ -37,20 +37,65 @@ const QR = {
     return result.rows[0];
   },
 
-  // Validar cualquier tipo de QR (primero intenta dinámico, luego fijo)
+  // Validar cualquier tipo de QR (primero intenta dinámico, luego fijo, luego personal)
   async validarCualquiera(codigo_qr) {
-    // Primero intentar QR dinámico (de coordinador)
+    console.log('[QR Model] Validando código:', codigo_qr);
+
+    // 1. Intentar QR dinámico (de coordinador)
     const qrDinamico = await this.validar(codigo_qr);
     if (qrDinamico) {
+      console.log('[QR Model] Encontrado QR dinámico');
       return { tipo: 'dinamico', qr: qrDinamico };
     }
 
-    // Luego intentar QR fijo (dirección, etc.)
+    // 2. Intentar QR fijo (dirección, etc.)
     const qrFijo = await this.validarFijo(codigo_qr);
     if (qrFijo) {
+      console.log('[QR Model] Encontrado QR fijo');
       return { tipo: 'fijo', qr: qrFijo };
     }
 
+    // 3. Intentar QR personal (profesor_ID_FECHA o TIMESTAMP)
+    if (codigo_qr && (codigo_qr.startsWith('profesor_') || codigo_qr.startsWith('coordinador_') || codigo_qr.startsWith('auditor_'))) {
+      const parts = codigo_qr.split('_');
+      if (parts.length >= 3) {
+        const rol = parts[0];
+        const id = parseInt(parts[1], 10);
+        const fechaQR = parts[2]; // Puede ser YYYY-MM-DD o un timestamp en milisegundos
+        
+        const hoy = new Date();
+        const fechaActualStr = `${hoy.getFullYear()}-${(hoy.getMonth() + 1).toString().padStart(2, '0')}-${hoy.getDate().toString().padStart(2, '0')}`;
+        
+        let esValido = false;
+
+        if (fechaQR === fechaActualStr) {
+          // Es válido porque corresponde a la fecha de hoy
+          esValido = true;
+          console.log(`[QR Model] QR Personal válido para el día de hoy (${fechaActualStr}). Rol: ${rol}, ID: ${id}`);
+        } else if (!isNaN(fechaQR)) {
+          // Fallback para QRs antiguos basados en timestamp (validez de 5 minutos)
+          const timestamp = parseInt(fechaQR, 10);
+          if (Date.now() - timestamp < 300000) {
+            esValido = true;
+            console.log(`[QR Model] QR Personal válido por timestamp. Rol: ${rol}, ID: ${id}`);
+          }
+        }
+
+        if (esValido) {
+          return { 
+            tipo: 'personal', 
+            qr: { 
+              rol_identificador: rol,
+              id_usuario_especifico: id
+            } 
+          };
+        } else {
+          console.log('[QR Model] QR Personal expirado o no corresponde al día actual');
+        }
+      }
+    }
+
+    console.log('[QR Model] QR no válido o expirado en todas las categorías');
     return null;
   },
 
@@ -74,7 +119,13 @@ const QR = {
 
   async activar(id_qr) {
     const result = await pool.query(
-      `UPDATE qr SET activo = true WHERE id_qr = $1 RETURNING *`,
+      `UPDATE qr 
+       SET activo = true,
+           fecha_expiracion = CASE 
+             WHEN fecha_expiracion < NOW() THEN NOW() + interval '2 hours'
+             ELSE fecha_expiracion 
+           END
+       WHERE id_qr = $1 RETURNING *`,
       [id_qr]
     );
     return result.rows[0];
