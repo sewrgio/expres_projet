@@ -143,7 +143,7 @@ const Login = () => {
           </button>
         </form>
 
-        <div className="mt-8 sm:mt-10 2xl:mt-12 pt-6 sm:pt-8 border-t border-slate-100 text-center">
+        <div className="mt-4 sm:mt-5 2xl:mt-6 pt-4 sm:pt-5 border-t border-slate-100 text-center">
           <Link to="/register" className="inline-block px-6 py-2 rounded-full text-xs sm:text-sm 2xl:text-base font-bold text-amber-500 hover:text-amber-600 hover:bg-amber-50 transition-all uppercase tracking-wider">
             Crear cuenta
           </Link>

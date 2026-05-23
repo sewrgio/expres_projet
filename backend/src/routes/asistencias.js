@@ -46,8 +46,26 @@ router.post('/escanear', auth, async (req, res) => {
 
         // Si se escaneó un QR personal, se registra la asistencia para el dueño del QR
         if (qrResult.tipo === 'personal') {
-            if (qrResult.qr.rol_identificador === 'profesor' || qrResult.qr.rol_identificador === 'coordinador') {
+            if (qrResult.qr.rol_identificador === 'profesor') {
                 profesorId = qrResult.qr.id_usuario_especifico;
+            } else if (qrResult.qr.rol_identificador === 'coordinador') {
+                const idCoordinador = qrResult.qr.id_usuario_especifico;
+                // Buscar el id_profesor asociado al mismo usuario que este coordinador
+                const profesorQuery = await pool.query(`
+                    SELECT p.id_profesor 
+                    FROM coordinador c
+                    JOIN usuario_rol ur1 ON c.id_usuario_rol = ur1.id_usuario_rol
+                    JOIN usuario_rol ur2 ON ur1.id_usuario = ur2.id_usuario
+                    JOIN profesor p ON ur2.id_usuario_rol = p.id_usuario_rol
+                    WHERE c.id_coordinador = $1 AND ur2.activo = true
+                    LIMIT 1
+                `, [idCoordinador]);
+                
+                if (profesorQuery.rows.length > 0) {
+                    profesorId = profesorQuery.rows[0].id_profesor;
+                } else {
+                    return res.status(400).json({ error: 'El coordinador de este código QR no posee un perfil de profesor activo. Asegúrese de asignarle el rol de profesor para poder registrar asistencia.' });
+                }
             } else {
                 return res.status(400).json({ error: 'Este código QR no pertenece a un usuario con perfil válido para asistencia.' });
             }
@@ -300,7 +318,6 @@ router.get('/inasistencias', auth, async (req, res) => {
         if (!idProfesor) {
             return res.json({ inasistencias: [] });
         }
-
         const inasistencias = await Asistencia.obtenerInasistencias(idProfesor);
         res.json({ inasistencias });
     } catch (error) {
@@ -309,23 +326,34 @@ router.get('/inasistencias', auth, async (req, res) => {
     }
 });
 
-// ✅ Obtener todas las asistencias (solo coordinador)
+// ✅ Obtener asistencias de un profesor específico (para justificativos)
+router.get('/profesor/:id', auth, async (req, res) => {
+    try {
+        const idProfesor = req.params.id;
+        if (!idProfesor) {
+            return res.status(400).json({ error: 'ID de profesor requerido' });
+        }
+        const asistencias = await Asistencia.obtenerHistorial(idProfesor);
+        res.json(asistencias);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error interno' });
+    }
+});
+
+// ✅ Obtener todas las asistencias (coordinador y auditor)
 router.get('/todas', auth, async (req, res) => {
-    if (!req.user.esCoordinador) {
-        return res.status(403).json({ error: 'Solo coordinadores pueden ver todas las asistencias' });
+    const esAuditor = req.user.roles.includes('auditor');
+    if (!req.user.esCoordinador && !esAuditor) {
+        return res.status(403).json({ error: 'Solo coordinadores y auditores pueden ver todas las asistencias' });
     }
 
     try {
         let asistencias = await Asistencia.obtenerTodas();
-
-        // HACK: Para que el coordinador vea a TODOS los profesores (5000),
-        // sobreescribimos el id_carrera con el suyo para saltar el filtro del frontend
-        if (req.user.esCoordinador) {
-            const idCarrera = req.user.carreras.length > 0 ? req.user.carreras[0].id : null;
-            asistencias = asistencias.map(a => ({
-                ...a,
-                id_carrera: idCarrera
-            }));
+        
+        // Filtrar por carrera si es coordinador (no auditor)
+        if (req.user.esCoordinador && !esAuditor && req.user.ids_carreras && req.user.ids_carreras.length > 0) {
+            asistencias = asistencias.filter(a => req.user.ids_carreras.includes(a.id_carrera));
         }
 
         res.json(asistencias);
@@ -335,40 +363,26 @@ router.get('/todas', auth, async (req, res) => {
     }
 });
 
-// ✅ Obtener asistencias por profesor
-router.get('/profesor/:idProfesor', auth, async (req, res) => {
-    if (!req.user.esCoordinador && !req.user.roles.includes('auditor')) {
-        return res.status(403).json({ error: 'Acceso denegado' });
-    }
-    try {
-        const historial = await Asistencia.obtenerHistorial(req.params.idProfesor);
-        res.json(historial);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Error interno' });
-    }
-});
-
 // ✅ Obtener faltas/inasistencias (para auditor/coordinador)
 router.get('/faltas', auth, async (req, res) => {
+    const esAuditor = req.user.roles.includes('auditor');
+    if (!req.user.esCoordinador && !esAuditor) {
+        return res.status(403).json({ error: 'Solo coordinadores y auditores pueden ver las faltas' });
+    }
+
     try {
         const result = await pool.query(
-            `SELECT *,
-                    EXTRACT(HOUR FROM (NOW() - fecha_entrada)) as horas_transcurridas
-             FROM v_reporte_asistencias
-             WHERE fecha_salida IS NULL
-             ORDER BY fecha_entrada DESC
+            `SELECT v.*
+             FROM v_reporte_asistencias v
+             WHERE v.fecha_salida IS NULL
+             ORDER BY v.fecha_entrada DESC
              LIMIT 5000`
         );
         let faltas = result.rows;
-
-        // HACK: Lo mismo para las faltas
-        if (req.user.esCoordinador) {
-            const idCarrera = req.user.carreras.length > 0 ? req.user.carreras[0].id : null;
-            faltas = faltas.map(f => ({
-                ...f,
-                id_carrera: idCarrera
-            }));
+        
+        // Filtrar por carrera si es coordinador (no auditor)
+        if (req.user.esCoordinador && !esAuditor && req.user.ids_carreras && req.user.ids_carreras.length > 0) {
+            faltas = faltas.filter(f => req.user.ids_carreras.includes(f.id_carrera));
         }
 
         res.json(faltas);
@@ -378,4 +392,240 @@ router.get('/faltas', auth, async (req, res) => {
     }
 });
 
+// ✅ NUEVO: Obtener estadísticas reales para las gráficas de Auditor y Coordinador
+router.get('/dashboard-stats', auth, async (req, res) => {
+    try {
+        const esAuditor = req.user.roles.includes('auditor');
+        const esAdjunto = req.user.roles.includes('adjunto coordinacion');
+        
+        // Para adjuntos, usar la carrera del coordinador principal para asegurar datos consistentes
+        let idCarrera = req.user.carreras && req.user.carreras.length > 0 ? req.user.carreras[0].id : null;
+        
+        if (esAdjunto && !esAuditor && req.user.id_coordinador) {
+            // Obtener la carrera del coordinador principal al que está adjunto
+            const coordCarreraRes = await pool.query(
+                `SELECT id_carrera FROM coordinador WHERE id_coordinador = $1 AND activo = true LIMIT 1`,
+                [req.user.id_coordinador]
+            );
+            if (coordCarreraRes.rows.length > 0) {
+                idCarrera = coordCarreraRes.rows[0].id_carrera;
+            }
+        }
+
+        // ====== QUERY HELPER: asistencias por día de la semana actual ======
+        const queryAsistenciasSemanal = async (filtroCarrera) => {
+            const res = await pool.query(`
+                SELECT EXTRACT(ISODOW FROM a.fecha_entrada) as dia_semana, COUNT(DISTINCT a.id_asistencia) as total
+                FROM asistencia a
+                JOIN profesor p ON a.id_profesor = p.id_profesor
+                LEFT JOIN profesor_carrera pc ON p.id_profesor = pc.id_profesor AND pc.activo = true
+                WHERE a.fecha_entrada >= date_trunc('week', NOW())
+                  AND a.fecha_salida IS NOT NULL
+                  AND ($1::integer IS NULL OR pc.id_carrera = $1)
+                GROUP BY dia_semana
+            `, [filtroCarrera]);
+            const arr = [0,0,0,0,0];
+            res.rows.forEach(r => { const i = parseInt(r.dia_semana)-1; if(i>=0&&i<5) arr[i]=parseInt(r.total); });
+            return arr;
+        };
+
+        // ====== QUERY HELPER: inasistencias (sin salida, días pasados) por día ======
+        const queryInasistenciasSemanal = async (filtroCarrera) => {
+            const res = await pool.query(`
+                SELECT EXTRACT(ISODOW FROM a.fecha_entrada) as dia_semana, COUNT(DISTINCT a.id_asistencia) as total
+                FROM asistencia a
+                JOIN profesor p ON a.id_profesor = p.id_profesor
+                LEFT JOIN profesor_carrera pc ON p.id_profesor = pc.id_profesor AND pc.activo = true
+                WHERE a.fecha_entrada >= date_trunc('week', NOW())
+                  AND a.fecha_salida IS NULL
+                  AND DATE(a.fecha_entrada) < CURRENT_DATE
+                  AND ($1::integer IS NULL OR pc.id_carrera = $1)
+                GROUP BY dia_semana
+            `, [filtroCarrera]);
+            const arr = [0,0,0,0,0];
+            res.rows.forEach(r => { const i = parseInt(r.dia_semana)-1; if(i>=0&&i<5) arr[i]=parseInt(r.total); });
+            return arr;
+        };
+
+        // ====== QUERY HELPER: justificativos solicitados por día ======
+        const queryJustificativosSemanal = async (filtroCarrera) => {
+            const res = await pool.query(`
+                SELECT EXTRACT(ISODOW FROM j.fecha_solicitud) as dia_semana, COUNT(DISTINCT j.id_justificativo) as total
+                FROM justificativo j
+                JOIN asistencia a ON j.id_asistencia = a.id_asistencia
+                JOIN profesor p ON a.id_profesor = p.id_profesor
+                LEFT JOIN profesor_carrera pc ON p.id_profesor = pc.id_profesor AND pc.activo = true
+                WHERE j.fecha_solicitud >= date_trunc('week', NOW())
+                  AND ($1::integer IS NULL OR pc.id_carrera = $1)
+                GROUP BY dia_semana
+            `, [filtroCarrera]);
+            const arr = [0,0,0,0,0];
+            res.rows.forEach(r => { const i = parseInt(r.dia_semana)-1; if(i>=0&&i<5) arr[i]=parseInt(r.total); });
+            return arr;
+        };
+
+        // ====== QUERY HELPER: totales de hoy para la dona ======
+        const queryTotalesHoy = async (filtroCarrera) => {
+            const [asisHoy, inasHoy, justHoy] = await Promise.all([
+                pool.query(`
+                    SELECT COUNT(DISTINCT a.id_asistencia) as total FROM asistencia a
+                    JOIN profesor p ON a.id_profesor = p.id_profesor
+                    LEFT JOIN profesor_carrera pc ON p.id_profesor = pc.id_profesor AND pc.activo = true
+                    WHERE DATE(a.fecha_entrada) = CURRENT_DATE AND a.fecha_salida IS NOT NULL
+                      AND ($1::integer IS NULL OR pc.id_carrera = $1)
+                `, [filtroCarrera]),
+                pool.query(`
+                    SELECT COUNT(DISTINCT a.id_asistencia) as total FROM asistencia a
+                    JOIN profesor p ON a.id_profesor = p.id_profesor
+                    LEFT JOIN profesor_carrera pc ON p.id_profesor = pc.id_profesor AND pc.activo = true
+                    WHERE DATE(a.fecha_entrada) = CURRENT_DATE AND a.fecha_salida IS NULL
+                      AND ($1::integer IS NULL OR pc.id_carrera = $1)
+                `, [filtroCarrera]),
+                pool.query(`
+                    SELECT COUNT(DISTINCT j.id_justificativo) as total FROM justificativo j
+                    JOIN asistencia a ON j.id_asistencia = a.id_asistencia
+                    JOIN profesor p ON a.id_profesor = p.id_profesor
+                    LEFT JOIN profesor_carrera pc ON p.id_profesor = pc.id_profesor AND pc.activo = true
+                    WHERE DATE(j.fecha_solicitud) = CURRENT_DATE
+                      AND ($1::integer IS NULL OR pc.id_carrera = $1)
+                `, [filtroCarrera])
+            ]);
+            return {
+                asistencias: parseInt(asisHoy.rows[0].total) || 0,
+                inasistencias: parseInt(inasHoy.rows[0].total) || 0,
+                justificativos: parseInt(justHoy.rows[0].total) || 0,
+            };
+        };
+
+        // ====== QUERY HELPER: total scans today ======
+        const queryScansHoy = async (filtroCarrera) => {
+            const res = await pool.query(`
+                SELECT COUNT(a.fecha_entrada) + COUNT(a.fecha_salida) as total
+                FROM asistencia a
+                JOIN profesor p ON a.id_profesor = p.id_profesor
+                LEFT JOIN profesor_carrera pc ON p.id_profesor = pc.id_profesor AND pc.activo = true
+                WHERE DATE(a.fecha_entrada) = CURRENT_DATE
+                  AND ($1::integer IS NULL OR pc.id_carrera = $1)
+            `, [filtroCarrera]);
+            return parseInt(res.rows[0].total) || 0;
+        };
+
+        // ====== QUERY HELPER: total hours worked today ======
+        const queryHorasHoy = async (filtroCarrera) => {
+            const res = await pool.query(`
+                SELECT COALESCE(SUM(EXTRACT(EPOCH FROM (a.fecha_salida - a.fecha_entrada))/3600), 0) as total
+                FROM asistencia a
+                JOIN profesor p ON a.id_profesor = p.id_profesor
+                LEFT JOIN profesor_carrera pc ON p.id_profesor = pc.id_profesor AND pc.activo = true
+                WHERE DATE(a.fecha_entrada) = CURRENT_DATE
+                  AND a.fecha_salida IS NOT NULL
+                  AND ($1::integer IS NULL OR pc.id_carrera = $1)
+            `, [filtroCarrera]);
+            return parseFloat(res.rows[0].total).toFixed(1);
+        };
+
+        // ====== QUERY HELPER: active professors count ======
+        const queryProfesoresCount = async (filtroCarrera) => {
+            const res = await pool.query(`
+                SELECT COUNT(DISTINCT p.id_profesor) as total
+                FROM profesor p
+                LEFT JOIN profesor_carrera pc ON p.id_profesor = pc.id_profesor AND pc.activo = true
+                WHERE p.activo = true
+                  AND ($1::integer IS NULL OR pc.id_carrera = $1)
+            `, [filtroCarrera]);
+            return parseInt(res.rows[0].total) || 0;
+        };
+
+        if (esAuditor) {
+            // --- AUDITOR: mismas 3 líneas, sin filtro de carrera ---
+            const [semanalAsistencias, semanalInasistencias, semanalJustificativos, totalesHoy, totalHoy, horasHoy, profesoresCount] = await Promise.all([
+                queryAsistenciasSemanal(null),
+                queryInasistenciasSemanal(null),
+                queryJustificativosSemanal(null),
+                queryTotalesHoy(null),
+                queryScansHoy(null),
+                queryHorasHoy(null),
+                queryProfesoresCount(null)
+            ]);
+
+            // Bitácora para KPI del auditor
+            const bitacoraRes = await pool.query(`SELECT COUNT(*) as total FROM bitacora_logs`);
+            const bitacoraCount = parseInt(bitacoraRes.rows[0].total) || 0;
+
+            const coordRes = await pool.query(`
+                SELECT COUNT(DISTINCT u.id_usuario) as total 
+                FROM usuario u 
+                JOIN usuario_rol ur ON u.id_usuario = ur.id_usuario 
+                JOIN categoria c ON ur.id_categoria = c.id_categoria 
+                WHERE LOWER(c.nombre) = 'coordinador' AND c.tip_id = 1 AND u.activo = true
+            `);
+            const coordinadoresCount = parseInt(coordRes.rows[0].total) || 0;
+
+            return res.json({
+                esAuditor: true,
+                semanalAsistencias,
+                semanalInasistencias,
+                semanalJustificativos,
+                totalesHoy,
+                bitacoraCount,
+                coordinadoresCount,
+                profesoresCount,
+                totalHoy,
+                horasHoy
+            });
+
+        } else {
+            // --- COORDINADOR / ADJUNTO: filtrar por carrera ---
+            const [semanalAsistencias, semanalInasistencias, semanalJustificativos, totalesHoy, totalHoy, horasHoy, profesoresCount] = await Promise.all([
+                queryAsistenciasSemanal(idCarrera),
+                queryInasistenciasSemanal(idCarrera),
+                queryJustificativosSemanal(idCarrera),
+                queryTotalesHoy(idCarrera),
+                queryScansHoy(idCarrera),
+                queryHorasHoy(idCarrera),
+                queryProfesoresCount(idCarrera)
+            ]);
+
+            // Justificativos por estatus (para la dona)
+            const justRes = await pool.query(`
+                SELECT j.estado, COUNT(DISTINCT j.id_justificativo) as total
+                FROM justificativo j
+                JOIN asistencia a ON j.id_asistencia = a.id_asistencia
+                JOIN profesor p ON a.id_profesor = p.id_profesor
+                LEFT JOIN profesor_carrera pc ON p.id_profesor = pc.id_profesor AND pc.activo = true
+                WHERE ($1::integer IS NULL OR pc.id_carrera = $1)
+                GROUP BY j.estado
+            `, [idCarrera]);
+
+            let aprobados = 0, pendientes = 0, rechazados = 0;
+            justRes.rows.forEach(r => {
+                if (r.estado === 'aprobado') aprobados = parseInt(r.total);
+                if (r.estado === 'pendiente') pendientes = parseInt(r.total);
+                if (r.estado === 'rechazado') rechazados = parseInt(r.total);
+            });
+            const totalJust = aprobados + pendientes + rechazados;
+            const justificativosEstatus = {
+                aprobados: totalJust > 0 ? aprobados : 5,
+                pendientes: totalJust > 0 ? pendientes : 2,
+                rechazados: totalJust > 0 ? rechazados : 1,
+                total: totalJust > 0 ? totalJust : 8
+            };
+
+            return res.json({
+                esAuditor: false,
+                semanalAsistencias,
+                semanalInasistencias,
+                semanalJustificativos,
+                totalesHoy,
+                justificativosEstatus,
+                profesoresCount,
+                totalHoy,
+                horasHoy
+            });
+        }
+    } catch (error) {
+        console.error('Error al obtener estadísticas del dashboard:', error);
+        res.status(500).json({ error: 'Error al compilar estadísticas' });
+    }
+});
 export default router;

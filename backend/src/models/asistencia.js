@@ -138,10 +138,10 @@ const Asistencia = {
   // Obtener todas las asistencias (para coordinador)
   async obtenerTodas(limite = 5000) {
     const result = await pool.query(
-      `SELECT *, 
-              EXTRACT(HOUR FROM (fecha_salida - fecha_entrada)) as horas_reloj
-       FROM v_reporte_asistencias
-       ORDER BY fecha_entrada DESC
+      `SELECT v.*,
+              EXTRACT(HOUR FROM (v.fecha_salida - v.fecha_entrada)) as horas_reloj
+       FROM v_reporte_asistencias v
+       ORDER BY v.fecha_entrada DESC
        LIMIT $1`,
       [limite]
     );

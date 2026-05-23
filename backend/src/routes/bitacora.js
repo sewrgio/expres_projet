@@ -2,6 +2,11 @@ import express from 'express';
 import pool from '../config/db.js';
 import auth from '../middleware/auth.js';
 import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const router = express.Router();
 
@@ -21,7 +26,7 @@ router.get('/', auth, async (req, res) => {
        FROM bitacora_logs b
        LEFT JOIN usuario u ON b.id_usuario = u.id_usuario
        ORDER BY b.fecha DESC
-       LIMIT 100`
+       LIMIT 5000`
     );
     res.json(result.rows);
   } catch (error) {
@@ -59,7 +64,10 @@ router.get('/descargar', auth, async (req, res) => {
       'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
     ];
     const nombreMes = nombresMeses[ahora.getMonth()];
-    const filePath = `/home/sergio/Documentos/expres_projet/exports/bitacora_${nombreMes}_${ahora.getFullYear()}.txt`;
+    
+    // Ruta multiplataforma
+    const projectRoot = path.resolve(__dirname, '../../../');
+    const filePath = path.join(projectRoot, 'exports', `bitacora_${nombreMes}_${ahora.getFullYear()}.txt`);
 
     // Si el archivo no existe físicamente, generarlo primero
     if (!fs.existsSync(filePath)) {

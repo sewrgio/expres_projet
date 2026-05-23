@@ -124,6 +124,149 @@ const inicializarRoles = async () => {
 inicializarRoles();
 iniciarMonitoreoServidor();
 
+// Sincronización de coordinadores y adjuntos
+
+
+const inicializarDatosCoordinadores = async () => {
+  try {
+    console.log("[DB SEED] Iniciando sincronización de coordinadores...");
+    
+    // 1. Obtener coordinadores que no están en la tabla profesor
+    const coordsSinProfesor = await pool.query(`
+      SELECT c.id_coordinador, c.id_usuario_rol, u.nombre, u.apellido
+      FROM coordinador c
+      JOIN usuario_rol ur ON c.id_usuario_rol = ur.id_usuario_rol
+      JOIN usuario u ON ur.id_usuario = u.id_usuario
+      WHERE NOT EXISTS (
+        SELECT 1 FROM profesor p2 WHERE p2.id_usuario_rol = c.id_usuario_rol
+      )
+    `);
+    
+    console.log(`[DB SEED] Encontrados ${coordsSinProfesor.rows.length} coordinadores sin registro de profesor.`);
+    
+    for (const c of coordsSinProfesor.rows) {
+      const maxIdRes = await pool.query('SELECT COALESCE(MAX(id_profesor), 0) + 1 as next_id FROM profesor');
+      const nextId = maxIdRes.rows[0].next_id;
+      await pool.query(
+        'INSERT INTO profesor (id_profesor, id_usuario_rol, fecha_ingreso, activo) VALUES ($1, $2, CURRENT_DATE, true)',
+        [nextId, c.id_usuario_rol]
+      );
+      console.log(`[DB SEED] Creado profesor ID ${nextId} para coordinador ${c.nombre} ${c.apellido}`);
+    }
+
+    // 2. Asociar carrera si no la tienen en profesor_carrera
+    const coordsSinCarrera = await pool.query(`
+      SELECT p.id_profesor, c.id_carrera, u.nombre, u.apellido
+      FROM coordinador c
+      JOIN profesor p ON c.id_usuario_rol = p.id_usuario_rol
+      JOIN usuario_rol ur ON c.id_usuario_rol = ur.id_usuario_rol
+      JOIN usuario u ON ur.id_usuario = u.id_usuario
+      WHERE NOT EXISTS (
+        SELECT 1 FROM profesor_carrera pc WHERE pc.id_profesor = p.id_profesor
+      )
+    `);
+    for (const cc of coordsSinCarrera.rows) {
+      const maxIdPCRes = await pool.query('SELECT COALESCE(MAX(id_profesor_carrera), 0) + 1 as next_id FROM profesor_carrera');
+      const nextIdPC = maxIdPCRes.rows[0].next_id;
+      await pool.query(
+        'INSERT INTO profesor_carrera (id_profesor_carrera, id_profesor, id_carrera, dedicacion, fecha_desde, activo) VALUES ($1, $2, $3, $4, CURRENT_DATE, true)',
+        [nextIdPC, cc.id_profesor, cc.id_carrera || 1, 'tiempo completo']
+      );
+      console.log(`[DB SEED] Asignada carrera ${cc.id_carrera || 1} a profesor ID ${cc.id_profesor} (${cc.nombre})`);
+    }
+
+    // 3. Generar asistencias y justificativos si tienen menos de 20 asistencias
+    const coordinadoresList = await pool.query(`
+      SELECT p.id_profesor, u.nombre, u.apellido, c.id_carrera
+      FROM coordinador c
+      JOIN profesor p ON c.id_usuario_rol = p.id_usuario_rol
+      JOIN usuario_rol ur ON c.id_usuario_rol = ur.id_usuario_rol
+      JOIN usuario u ON ur.id_usuario = u.id_usuario
+    `);
+
+    for (const coord of coordinadoresList.rows) {
+      const asisCountRes = await pool.query('SELECT COUNT(*) FROM asistencia WHERE id_profesor = $1', [coord.id_profesor]);
+      const count = parseInt(asisCountRes.rows[0].count);
+      
+      if (count < 20) {
+        console.log(`[DB SEED] Generando historial para ${coord.nombre} ${coord.apellido} (ID Profesor: ${coord.id_profesor})...`);
+        
+        // Generar desde hace 30 días
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - 30);
+        const endDate = new Date();
+        
+        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+          if (d.getDay() === 0 || d.getDay() === 6) continue; // omitir fin de semana
+          
+          const fechaStr = d.toISOString().split('T')[0];
+          const maxIdAsisRes = await pool.query('SELECT COALESCE(MAX(id_asistencia), 0) + 1 as next_id FROM asistencia');
+          const idAsistencia = maxIdAsisRes.rows[0].next_id;
+          
+          const randVal = Math.random();
+          
+          // 85% asistencia normal, 15% falta (sin salida)
+          if (randVal < 0.85) {
+            const minEntrada = Math.floor(Math.random() * 60).toString().padStart(2, '0');
+            const entradaStr = `${fechaStr} 08:${minEntrada}:00`;
+            const minSalida = Math.floor(Math.random() * 60).toString().padStart(2, '0');
+            const salidaStr = `${fechaStr} 16:${minSalida}:00`;
+            
+            await pool.query(
+              'INSERT INTO asistencia (id_asistencia, id_profesor, fecha_entrada, fecha_salida) VALUES ($1, $2, $3, $4)',
+              [idAsistencia, coord.id_profesor, entradaStr, salidaStr]
+            );
+          } else {
+            // Falta
+            const minEntrada = Math.floor(Math.random() * 60).toString().padStart(2, '0');
+            const entradaStr = `${fechaStr} 08:${minEntrada}:00`;
+            
+            await pool.query(
+              'INSERT INTO asistencia (id_asistencia, id_profesor, fecha_entrada, fecha_salida) VALUES ($1, $2, $3, NULL)',
+              [idAsistencia, coord.id_profesor, entradaStr]
+            );
+            
+            // 60% la justifica
+            if (Math.random() < 0.6) {
+              const maxIdJustRes = await pool.query('SELECT COALESCE(MAX(id_justificativo), 0) + 1 as next_id FROM justificativo');
+              const idJustificativo = maxIdJustRes.rows[0].next_id;
+              
+              const estados = ['aprobado', 'pendiente', 'rechazado'];
+              const estado = estados[Math.floor(Math.random() * estados.length)];
+              const motivos = ['Cita Médica', 'Asuntos de Coordinación externos', 'Problemas de salud', 'Trámites institucionales'];
+              const motivo = motivos[Math.floor(Math.random() * motivos.length)];
+              
+              const dJustif = new Date(d);
+              dJustif.setDate(dJustif.getDate() + 1);
+              const fechaSoliStr = `${dJustif.toISOString().split('T')[0]} 10:00:00`;
+              
+              await pool.query(
+                "INSERT INTO justificativo (id_justificativo, id_asistencia, estado, fecha_solicitud, motivo, documento_url) VALUES ($1, $2, $3, $4, $5, $6)",
+                [idJustificativo, idAsistencia, estado, fechaSoliStr, motivo, '/uploads/justificativos/ejemplo.pdf']
+              );
+            }
+          }
+        }
+        
+        console.log(`[DB SEED] Historial completado para ${coord.nombre} ${coord.apellido}`);
+      }
+    }
+    
+    // Corregir secuencias
+    try { await pool.query(`SELECT setval(pg_get_serial_sequence('profesor', 'id_profesor'), coalesce(max(id_profesor), 1), max(id_profesor) IS NOT null) FROM profesor`); } catch(e){}
+    try { await pool.query(`SELECT setval(pg_get_serial_sequence('profesor_carrera', 'id_profesor_carrera'), coalesce(max(id_profesor_carrera), 1), max(id_profesor_carrera) IS NOT null) FROM profesor_carrera`); } catch(e){}
+    try { await pool.query(`SELECT setval(pg_get_serial_sequence('asistencia', 'id_asistencia'), coalesce(max(id_asistencia), 1), max(id_asistencia) IS NOT null) FROM asistencia`); } catch(e){}
+    try { await pool.query(`SELECT setval(pg_get_serial_sequence('justificativo', 'id_justificativo'), coalesce(max(id_justificativo), 1), max(id_justificativo) IS NOT null) FROM justificativo`); } catch(e){}
+    
+    console.log("[DB SEED] Sincronización de coordinadores completada con éxito.");
+  } catch (err) {
+    console.error("[DB SEED] Error al sincronizar coordinadores:", err);
+  }
+};
+inicializarDatosCoordinadores();
+
+
+
 // Middlewares base (se recomienda que vayan primero)
 app.use(cors());
 app.use(express.json());

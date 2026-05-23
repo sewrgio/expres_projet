@@ -66,9 +66,14 @@ const EscanearQR = () => {
     obtenerUbicacionDesdeAPK();
     const interval = setInterval(obtenerUbicacionDesdeAPK, 5000); // Polling cada 5 segundos
     
-    // Calcular tiempo restante hasta la próxima medianoche para refrescar el QR automáticamente
+    // Calcular tiempo restante hasta la próxima medianoche (Hora Venezuela) para refrescar el QR automáticamente
     const now = new Date();
-    const millisTillMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 1, 0) - now;
+    const caracasDateStr = now.toLocaleString("en-US", {timeZone: "America/Caracas"});
+    const caracasDate = new Date(caracasDateStr);
+    
+    const nextMidnightCaracas = new Date(caracasDate.getFullYear(), caracasDate.getMonth(), caracasDate.getDate() + 1, 0, 0, 1, 0);
+    const millisTillMidnight = nextMidnightCaracas - caracasDate;
+    
     const midnightTimeout = setTimeout(() => {
       if (user) cargarMiQR();
     }, millisTillMidnight);

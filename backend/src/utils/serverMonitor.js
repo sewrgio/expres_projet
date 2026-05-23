@@ -1,9 +1,20 @@
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
+import os from 'os';
+import { exec } from 'child_process';
+import { fileURLToPath } from 'url';
 import pool from '../config/db.js';
 
-const statusFilePath = path.resolve('/home/sergio/Documentos/expres_projet/backend/src/utils/server_status.json');
-const exportDir = '/home/sergio/Documentos/expres_projet/exports';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Rutas dinámicas multiplataforma (Linux / Windows)
+const backendRoot = path.resolve(__dirname, '../../');
+const projectRoot = path.resolve(backendRoot, '../');
+
+const statusFilePath = path.join(__dirname, 'server_status.json');
+const exportDir = path.join(projectRoot, 'exports');
 
 // Helper para dar formato legible a duraciones
 function formatDuration(ms) {
@@ -97,6 +108,7 @@ export async function iniciarMonitoreoServidor() {
     setInterval(() => {
       actualizarEstadoMonitor('running');
       verificarYEjecutarExportMensual(); // Verificar exportación automática
+      ejecutarChequeoProfundoMensual(); // Verificar chequeo profundo invisible (30 días)
     }, 10000);
 
     // Configurar apagado controlado/señales del sistema
@@ -176,7 +188,7 @@ export async function verificarYEjecutarExportMensual(forzar = false) {
     
     // Cargar registro de exportación
     let exportStatus = {};
-    const exportStatusPath = path.resolve('/home/sergio/Documentos/expres_projet/backend/src/utils/export_status.json');
+    const exportStatusPath = path.join(__dirname, 'export_status.json');
     if (fs.existsSync(exportStatusPath)) {
       try {
         exportStatus = JSON.parse(fs.readFileSync(exportStatusPath, 'utf8'));
@@ -249,7 +261,7 @@ Total Transacciones: ${logs.length}
 
     console.log(`✅ Bitácora exportada exitosamente a: ${filePath}`);
 
-    // 6. Registrar la acción de exportación en la propia bitácora
+    // Registrar la acción de exportación en la propia bitácora
     await pool.query(
       `INSERT INTO bitacora_logs (id_usuario, accion, detalles, fecha) 
        VALUES (NULL, $1, $2, CURRENT_TIMESTAMP)`,
@@ -261,5 +273,110 @@ Total Transacciones: ${logs.length}
 
   } catch (error) {
     console.error('❌ Error al realizar la exportación automática de bitácora:', error);
+  }
+}
+
+/**
+ * Realiza un chequeo profundo de todo el sistema cada 30 días y lo guarda en un archivo JSON invisible (.system_deep_check.json)
+ */
+export async function ejecutarChequeoProfundoMensual(forzar = false) {
+  try {
+    const deepCheckStatusFilePath = path.join(backendRoot, '.deep_check_status.json');
+    const outputFilePath = path.join(backendRoot, '.system_deep_check.json');
+    const ahora = new Date();
+
+    let lastRun = 0;
+    if (fs.existsSync(deepCheckStatusFilePath)) {
+      try {
+        const status = JSON.parse(fs.readFileSync(deepCheckStatusFilePath, 'utf8'));
+        lastRun = new Date(status.last_run).getTime();
+      } catch (e) {}
+    }
+
+    const treintaDiasMs = 30 * 24 * 60 * 60 * 1000; // 30 días en milisegundos
+    
+    // Si no han pasado 30 días y no es forzado, omitir
+    if (ahora.getTime() - lastRun < treintaDiasMs && !forzar) {
+      return;
+    }
+
+    console.log(`🕵️‍♂️ Iniciando Chequeo Profundo del Sistema (Auditoría 30 días)...`);
+
+    // Recopilar información de toda la infraestructura
+    const usuarios = await pool.query('SELECT * FROM usuario');
+    const profesores = await pool.query('SELECT * FROM profesor');
+    const horarios = await pool.query('SELECT * FROM horario');
+    const bitacora = await pool.query('SELECT * FROM bitacora_logs ORDER BY fecha DESC LIMIT 5000');
+    const asistencias = await pool.query('SELECT * FROM asistencia ORDER BY fecha_entrada DESC LIMIT 5000');
+
+    // Extraer anomalías, caídas o bloqueos de los últimos registros
+    const anomalias = bitacora.rows.filter(log => 
+      log.accion.includes('FALLO') || 
+      log.accion.includes('ERROR') || 
+      log.accion.includes('BLOQUEO')
+    );
+
+    const sistemaData = {
+      _warning: "ESTE ES UN ARCHIVO DE AUDITORÍA INVISIBLE GENERADO AUTOMÁTICAMENTE. NO MODIFICAR.",
+      metadata: {
+        fecha_chequeo_utc: ahora.toISOString(),
+        fecha_chequeo_local: ahora.toLocaleString(),
+        proximo_chequeo_estimado: new Date(ahora.getTime() + treintaDiasMs).toISOString(),
+        estadisticas: {
+          total_usuarios: usuarios.rowCount,
+          total_profesores_nomina: profesores.rowCount,
+          total_bloques_horarios: horarios.rowCount,
+          alertas_criticas_y_bloqueos_detectados: anomalias.length
+        }
+      },
+      anomalias_detectadas: anomalias,
+      usuarios_registrados: usuarios.rows,
+      horarios_activos: horarios.rows,
+      profesores_activos: profesores.rows,
+      ultimas_5000_asistencias: asistencias.rows
+    };
+
+    // 1. Configurar encriptación AES-256-CBC
+    const algorithm = 'aes-256-cbc';
+    // Usar la llave JWT del entorno o un fallback fuerte si no existe
+    const rawKey = process.env.JWT_SECRET || 'llave_super_secreta_de_respaldo_iujo_2026';
+    const secretKey = crypto.scryptSync(rawKey, 'salt', 32); 
+    const iv = crypto.randomBytes(16);
+
+    const cipher = crypto.createCipheriv(algorithm, secretKey, iv);
+    let encrypted = cipher.update(JSON.stringify(sistemaData), 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+
+    const finalPayload = {
+      _warning: "SYSTEM VAULT ENCRYPTED AUDIT. DECRYPTION KEY REQUIRED.",
+      iv: iv.toString('hex'),
+      data: encrypted
+    };
+
+    // 2. Crear Bóveda Invisible multiplataforma
+    const vaultDir = path.join(backendRoot, '.sys_vault');
+    if (!fs.existsSync(vaultDir)) {
+      fs.mkdirSync(vaultDir, { recursive: true, mode: 0o700 }); 
+      
+      // Si estamos en Windows Server, aplicar atributo nativo de sistema 'Hidden'
+      if (os.platform() === 'win32') {
+        exec(`attrib +h "${vaultDir}"`, (err) => {
+          if (err) console.error('⚠️ No se pudo ocultar la bóveda en Windows:', err);
+        });
+      }
+    }
+
+    const encryptedOutputFilePath = path.join(vaultDir, '.system_deep_check.enc.json');
+    
+    // 3. Escribir el archivo invisible encriptado (modo 0600: solo lectura/escritura para dueño rw-------)
+    fs.writeFileSync(encryptedOutputFilePath, JSON.stringify(finalPayload, null, 2), { encoding: 'utf8', mode: 0o600 });
+
+    // Actualizar el archivo de estado de ejecución
+    fs.writeFileSync(deepCheckStatusFilePath, JSON.stringify({ last_run: ahora.toISOString() }, null, 2), 'utf8');
+
+    console.log(`✅ Chequeo profundo completado. Datos críticos encriptados (AES-256) y respaldados en bóveda de seguridad invisible.`);
+
+  } catch (error) {
+    console.error('❌ Error crítico al ejecutar el chequeo profundo:', error);
   }
 }

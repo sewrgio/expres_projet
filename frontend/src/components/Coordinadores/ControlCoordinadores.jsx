@@ -169,22 +169,6 @@ const ControlCoordinadores = () => {
               </div>
             </div>
 
-            {editando === coord.id_coordinador ? (
-              <div className="space-y-4 animate-slide-in">
-                <input className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-bold text-sm" value={formData.nombre} onChange={e => setFormData({...formData, nombre: e.target.value})} placeholder="Nombre" />
-                <input className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-bold text-sm" value={formData.apellido} onChange={e => setFormData({...formData, apellido: e.target.value})} placeholder="Apellido" />
-                <CustomSelect
-                  options={carreras.map(c => ({ value: c.id_carrera, label: c.nombre_carrera }))}
-                  value={formData.id_carrera}
-                  onChange={val => setFormData({...formData, id_carrera: val })}
-                />
-                <div className="flex gap-2 pt-2">
-                  <button onClick={() => setModalConfirm({ mostrar: true, tipo: 'guardar', data: coord })} className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition-all">Guardar</button>
-                  <button onClick={() => setEditando(null)} className="flex-1 bg-slate-100 text-slate-500 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition-all">Cancelar</button>
-                </div>
-              </div>
-            ) : (
-              <>
                 <div className="space-y-4 mb-8">
                   <div className="flex items-center gap-3 text-slate-500 text-sm font-medium">
                     <IconIdCard width={18} height={18} className="text-slate-300" /> {coord.cedula}
@@ -208,15 +192,90 @@ const ControlCoordinadores = () => {
                     <IconPower width={14} /> {coord.usuario_activo ? 'Desactivar' : 'Activar'}
                   </button>
                 </div>
-              </>
-            )}
           </div>
         ))}
       </div>
 
+      {/* MODAL DE EDICIÓN PREMIUM (PERFIL COMPLETO) */}
+      {editando && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-fade-in" onClick={() => setEditando(null)}></div>
+          <div className="bg-white rounded-[32px] w-full max-w-lg p-8 shadow-2xl relative z-10 animate-zoom-in flex flex-col max-h-[90vh]">
+            <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
+                  <IconEdit />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-slate-800 leading-none">Editar Perfil</h3>
+                  <p className="text-[11px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Coordinador / Adjunto</p>
+                </div>
+              </div>
+              <button onClick={() => setEditando(null)} className="text-slate-400 hover:text-slate-600 transition-colors bg-slate-50 p-2 rounded-xl">
+                ✕
+              </button>
+            </div>
+            
+            <style>{`
+              .hide-scrollbar::-webkit-scrollbar {
+                display: none;
+              }
+            `}</style>
+            <div className="overflow-y-auto space-y-4 pb-2 hide-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 mb-1 block">Nombre</label>
+                  <input className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 font-bold text-sm transition-all" value={formData.nombre} onChange={e => setFormData({...formData, nombre: e.target.value})} placeholder="Nombre" />
+                </div>
+                
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 mb-1 block">Apellido</label>
+                  <input className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 font-bold text-sm transition-all" value={formData.apellido} onChange={e => setFormData({...formData, apellido: e.target.value})} placeholder="Apellido" />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 mb-1 block">Correo Electrónico Institucional</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"><IconEmail width={16} /></span>
+                  <input type="email" className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 font-bold text-sm transition-all" value={formData.correo} onChange={e => setFormData({...formData, correo: e.target.value})} placeholder="correo@iujo.edu" />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 mb-1 block">Teléfono de Contacto</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"><IconPhone width={16} /></span>
+                  <input type="text" className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 font-bold text-sm transition-all" value={formData.telefono} onChange={e => setFormData({...formData, telefono: e.target.value})} placeholder="0414-XXXXXXX" />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 mb-1 block">Asignación de Carrera</label>
+                <CustomSelect
+                  options={carreras.map(c => ({ value: c.id_carrera, label: c.nombre_carrera }))}
+                  value={formData.id_carrera}
+                  onChange={val => setFormData({...formData, id_carrera: val })}
+                  direction="up"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-6 border-t border-slate-100 mt-6">
+              <button onClick={() => setModalConfirm({ mostrar: true, tipo: 'guardar', data: coordinadores.find(c => c.id_coordinador === editando) })} className="flex-1 bg-indigo-600 text-white py-4 rounded-2xl font-black text-sm transition-all hover:bg-indigo-700 shadow-lg shadow-indigo-200 flex justify-center items-center gap-2">
+                <IconSave /> Guardar Cambios
+              </button>
+              <button onClick={() => setEditando(null)} className="flex-1 bg-slate-100 text-slate-500 py-4 rounded-2xl font-black text-sm hover:bg-slate-200 transition-all">
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* MODAL DE CONFIRMACIÓN PREMIUM */}
       {modalConfirm.mostrar && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-fade-in" onClick={() => setModalConfirm({ mostrar: false })}></div>
           <div className="bg-white rounded-[40px] w-full max-w-md p-10 shadow-2xl relative z-10 animate-zoom-in text-center">
             <div className={`w-24 h-24 rounded-[32px] flex items-center justify-center text-4xl shadow-2xl mx-auto mb-8 border-4 border-white ${

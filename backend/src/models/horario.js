@@ -50,6 +50,17 @@ const Horario = {
     return result.rows[0];
   },
 
+  // Actualizar horario
+  async update(id_horario, id_asignatura_profesor, dia_semana, hora_inicio, hora_fin, aula) {
+    const result = await pool.query(`
+      UPDATE horario 
+      SET id_asignatura_profesor = $2, dia_semana = $3, hora_inicio = $4, hora_fin = $5, aula = $6
+      WHERE id_horario = $1 
+      RETURNING *
+    `, [id_horario, id_asignatura_profesor, dia_semana, hora_inicio, hora_fin, aula]);
+    return result.rows[0];
+  },
+
   // Verificar si hay conflicto de horario
   async verificarConflicto(id_asignatura_profesor, dia_semana, hora_inicio, hora_fin, excluirId = null) {
     const apResult = await pool.query(
@@ -98,7 +109,7 @@ const Horario = {
   // Obtener asignaturas con profesores
   async getAsignaturasConProfesores() {
     const result = await pool.query(`
-      SELECT ap.id_asignatura_profesor, a.nombre_asignatura, 
+      SELECT ap.id_asignatura_profesor, a.id_asignatura, a.nombre_asignatura, 
              p.id_profesor, u.nombre, u.apellido, c.id_carrera, c.nombre_carrera
       FROM asignatura_profesor ap
       JOIN asignatura a ON ap.id_asignatura = a.id_asignatura

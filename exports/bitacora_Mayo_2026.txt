@@ -2,8 +2,8 @@
 📜 REPORTE MENSUAL AUTOMÁTICO DE BITÁCORA Y AUDITORÍA - IUJO ESCANNER
 ================================================================================
 Mes Reportado: Mayo de 2026
-Fecha de Exportación: 16/5/2026, 23:46:11
-Total Transacciones: 1201
+Fecha de Exportación: 17/5/2026, 14:14:06
+Total Transacciones: 1273
 ================================================================================
 
 [REGISTRO #1]
@@ -7211,6 +7211,438 @@ Total Transacciones: 1201
 🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
 👤 OPERADOR: SISTEMA AUTOMÁTICO
 📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 23:44:56 (16 may 2026). Se levantó exitosamente a las 23:45:01. Tiempo total fuera de servicio (caída): 5 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1202]
+📅 FECHA/HORA: 16/5/2026, 23:46:11
+🏷️ ACCIÓN: EXPORTACION_AUTOMATICA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Exportación Mensual Automática: La bitácora del mes de Mayo fue exportada de forma exitosa a un archivo .txt en: /home/sergio/Documentos/expres_projet/exports/bitacora_Mayo_2026.txt. Total de logs exportados: 1201.
+--------------------------------------------------------------------------------
+[REGISTRO #1203]
+📅 FECHA/HORA: 17/5/2026, 0:42:14
+🏷️ ACCIÓN: SISTEMA_APAGADO
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: El servidor del sistema se detuvo de forma ordenada a las 0:42:14 por señal de mantenimiento o apagado (SIGINT).
+--------------------------------------------------------------------------------
+[REGISTRO #1204]
+📅 FECHA/HORA: 17/5/2026, 0:42:14
+🏷️ ACCIÓN: SISTEMA_APAGADO
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: El servidor del sistema se detuvo de forma ordenada a las 0:42:14 por señal de mantenimiento o apagado (SIGINT).
+--------------------------------------------------------------------------------
+[REGISTRO #1205]
+📅 FECHA/HORA: 17/5/2026, 0:42:17
+🏷️ ACCIÓN: SISTEMA_REINICIO
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Reinicio programado: El servidor se levantó a las 00:42:17 tras una parada controlada a las 00:42:14 (17 may 2026). Tiempo de inactividad: 2 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1206]
+📅 FECHA/HORA: 17/5/2026, 9:51:43
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 00:43:07 (17 may 2026). Se levantó exitosamente a las 09:51:43. Tiempo total fuera de servicio (caída): 9 hora(s), 8 minuto(s), 35 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1207]
+📅 FECHA/HORA: 17/5/2026, 10:39:14
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 10:39:05 (17 may 2026). Se levantó exitosamente a las 10:39:13. Tiempo total fuera de servicio (caída): 8 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1208]
+📅 FECHA/HORA: 17/5/2026, 10:41:39
+🏷️ ACCIÓN: SISTEMA_APAGADO
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: El servidor del sistema se detuvo de forma ordenada a las 10:41:39 por señal de mantenimiento o apagado (SIGINT).
+--------------------------------------------------------------------------------
+[REGISTRO #1209]
+📅 FECHA/HORA: 17/5/2026, 10:41:41
+🏷️ ACCIÓN: SISTEMA_REINICIO
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Reinicio programado: El servidor se levantó a las 10:41:41 tras una parada controlada a las 10:41:39 (17 may 2026). Tiempo de inactividad: 2 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1210]
+📅 FECHA/HORA: 17/5/2026, 10:46:08
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 10:46:02 (17 may 2026). Se levantó exitosamente a las 10:46:08. Tiempo total fuera de servicio (caída): 6 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1211]
+📅 FECHA/HORA: 17/5/2026, 10:46:15
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 10:46:08 (17 may 2026). Se levantó exitosamente a las 10:46:15. Tiempo total fuera de servicio (caída): 6 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1212]
+📅 FECHA/HORA: 17/5/2026, 10:46:21
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 10:46:15 (17 may 2026). Se levantó exitosamente a las 10:46:21. Tiempo total fuera de servicio (caída): 5 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1213]
+📅 FECHA/HORA: 17/5/2026, 10:46:27
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 10:46:21 (17 may 2026). Se levantó exitosamente a las 10:46:27. Tiempo total fuera de servicio (caída): 5 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1214]
+📅 FECHA/HORA: 17/5/2026, 10:46:33
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 10:46:27 (17 may 2026). Se levantó exitosamente a las 10:46:33. Tiempo total fuera de servicio (caída): 6 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1215]
+📅 FECHA/HORA: 17/5/2026, 10:46:39
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 10:46:33 (17 may 2026). Se levantó exitosamente a las 10:46:39. Tiempo total fuera de servicio (caída): 5 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1216]
+📅 FECHA/HORA: 17/5/2026, 10:46:47
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 10:46:39 (17 may 2026). Se levantó exitosamente a las 10:46:47. Tiempo total fuera de servicio (caída): 7 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1217]
+📅 FECHA/HORA: 17/5/2026, 10:46:54
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 10:46:47 (17 may 2026). Se levantó exitosamente a las 10:46:54. Tiempo total fuera de servicio (caída): 7 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1218]
+📅 FECHA/HORA: 17/5/2026, 10:47:01
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 10:46:54 (17 may 2026). Se levantó exitosamente a las 10:47:01. Tiempo total fuera de servicio (caída): 6 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1219]
+📅 FECHA/HORA: 17/5/2026, 10:47:07
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 10:47:01 (17 may 2026). Se levantó exitosamente a las 10:47:07. Tiempo total fuera de servicio (caída): 6 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1220]
+📅 FECHA/HORA: 17/5/2026, 10:47:14
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 10:47:07 (17 may 2026). Se levantó exitosamente a las 10:47:14. Tiempo total fuera de servicio (caída): 6 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1221]
+📅 FECHA/HORA: 17/5/2026, 10:47:20
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 10:47:14 (17 may 2026). Se levantó exitosamente a las 10:47:20. Tiempo total fuera de servicio (caída): 6 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1222]
+📅 FECHA/HORA: 17/5/2026, 10:47:27
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 10:47:20 (17 may 2026). Se levantó exitosamente a las 10:47:27. Tiempo total fuera de servicio (caída): 6 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1223]
+📅 FECHA/HORA: 17/5/2026, 10:50:28
+🏷️ ACCIÓN: ACCESO_LOGIN_EXITOSO
+👤 OPERADOR: sergio malave (aj7559410@gmail.com) [Rol: ["profesor","adjunto coordinacion","tiempo completo"]]
+📋 DETALLES: El usuario sergio malave (Roles: profesor, adjunto coordinacion, tiempo completo) inició sesión exitosamente en la plataforma web.
+--------------------------------------------------------------------------------
+[REGISTRO #1224]
+📅 FECHA/HORA: 17/5/2026, 10:51:48
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 10:51:37 (17 may 2026). Se levantó exitosamente a las 10:51:48. Tiempo total fuera de servicio (caída): 10 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1225]
+📅 FECHA/HORA: 17/5/2026, 10:52:55
+🏷️ ACCIÓN: ELIMINAR_PROFESOR
+👤 OPERADOR: sergio malave (aj7559410@gmail.com) [Rol: ["profesor","adjunto coordinacion","tiempo completo"]]
+📋 DETALLES: El coordinador/adjunto/auditor aj7559410@gmail.com eliminó de forma lógica al profesor/a Profesor2 Electronica (ID Profesor: 1101, Cédula/Usuario ID: 301, Correo: prof2.3@iujo.edu).
+--------------------------------------------------------------------------------
+[REGISTRO #1226]
+📅 FECHA/HORA: 17/5/2026, 10:53:10
+🏷️ ACCIÓN: ACCESO_LOGIN_EXITOSO
+👤 OPERADOR: Admin Auditor (auditor@iujo.edu) [Rol: ["auditor"]]
+📋 DETALLES: El usuario Admin Auditor (Roles: auditor) inició sesión exitosamente en la plataforma web.
+--------------------------------------------------------------------------------
+[REGISTRO #1227]
+📅 FECHA/HORA: 17/5/2026, 10:55:28
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 10:55:18 (17 may 2026). Se levantó exitosamente a las 10:55:28. Tiempo total fuera de servicio (caída): 9 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1228]
+📅 FECHA/HORA: 17/5/2026, 11:06:03
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 11:05:58 (17 may 2026). Se levantó exitosamente a las 11:06:03. Tiempo total fuera de servicio (caída): 5 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1229]
+📅 FECHA/HORA: 17/5/2026, 11:09:56
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 11:09:54 (17 may 2026). Se levantó exitosamente a las 11:09:56. Tiempo total fuera de servicio (caída): 2 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1230]
+📅 FECHA/HORA: 17/5/2026, 11:10:39
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 11:10:36 (17 may 2026). Se levantó exitosamente a las 11:10:38. Tiempo total fuera de servicio (caída): 1 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1231]
+📅 FECHA/HORA: 17/5/2026, 11:11:05
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 11:10:59 (17 may 2026). Se levantó exitosamente a las 11:11:05. Tiempo total fuera de servicio (caída): 5 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1232]
+📅 FECHA/HORA: 17/5/2026, 11:11:10
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 11:11:05 (17 may 2026). Se levantó exitosamente a las 11:11:10. Tiempo total fuera de servicio (caída): 5 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1233]
+📅 FECHA/HORA: 17/5/2026, 11:11:44
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 11:11:40 (17 may 2026). Se levantó exitosamente a las 11:11:44. Tiempo total fuera de servicio (caída): 4 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1234]
+📅 FECHA/HORA: 17/5/2026, 11:13:39
+🏷️ ACCIÓN: ACCESO_LOGIN_EXITOSO
+👤 OPERADOR: sergio malave (aj7559410@gmail.com) [Rol: ["profesor","adjunto coordinacion","tiempo completo"]]
+📋 DETALLES: El usuario sergio malave (Roles: profesor, adjunto coordinacion, tiempo completo) inició sesión exitosamente en la plataforma web.
+--------------------------------------------------------------------------------
+[REGISTRO #1235]
+📅 FECHA/HORA: 17/5/2026, 11:31:42
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 11:31:35 (17 may 2026). Se levantó exitosamente a las 11:31:42. Tiempo total fuera de servicio (caída): 7 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1236]
+📅 FECHA/HORA: 17/5/2026, 11:33:33
+🏷️ ACCIÓN: ACTIVAR_QR_DINAMICO
+👤 OPERADOR: sergio malave (aj7559410@gmail.com) [Rol: ["profesor","adjunto coordinacion","tiempo completo"]]
+📋 DETALLES: Se activó manualmente el QR temporal con ID: 7. Afectó al sistema re-habilitando las lecturas para este código.
+--------------------------------------------------------------------------------
+[REGISTRO #1237]
+📅 FECHA/HORA: 17/5/2026, 11:34:41
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 11:34:33 (17 may 2026). Se levantó exitosamente a las 11:34:41. Tiempo total fuera de servicio (caída): 8 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1238]
+📅 FECHA/HORA: 17/5/2026, 11:34:48
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 11:34:41 (17 may 2026). Se levantó exitosamente a las 11:34:48. Tiempo total fuera de servicio (caída): 6 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1239]
+📅 FECHA/HORA: 17/5/2026, 11:36:35
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 11:36:28 (17 may 2026). Se levantó exitosamente a las 11:36:35. Tiempo total fuera de servicio (caída): 7 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1240]
+📅 FECHA/HORA: 17/5/2026, 12:02:12
+🏷️ ACCIÓN: ACCESO_LOGIN_EXITOSO
+👤 OPERADOR: Admin Auditor (auditor@iujo.edu) [Rol: ["auditor"]]
+📋 DETALLES: El usuario Admin Auditor (Roles: auditor) inició sesión exitosamente en la plataforma web.
+--------------------------------------------------------------------------------
+[REGISTRO #1241]
+📅 FECHA/HORA: 17/5/2026, 12:03:06
+🏷️ ACCIÓN: ACCESO_LOGIN_EXITOSO
+👤 OPERADOR: sergio malave (aj7559410@gmail.com) [Rol: ["profesor","adjunto coordinacion","tiempo completo"]]
+📋 DETALLES: El usuario sergio malave (Roles: profesor, adjunto coordinacion, tiempo completo) inició sesión exitosamente en la plataforma web.
+--------------------------------------------------------------------------------
+[REGISTRO #1242]
+📅 FECHA/HORA: 17/5/2026, 12:08:06
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 12:07:57 (17 may 2026). Se levantó exitosamente a las 12:08:06. Tiempo total fuera de servicio (caída): 9 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1243]
+📅 FECHA/HORA: 17/5/2026, 12:08:12
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 12:08:06 (17 may 2026). Se levantó exitosamente a las 12:08:12. Tiempo total fuera de servicio (caída): 5 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1244]
+📅 FECHA/HORA: 17/5/2026, 12:08:19
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 12:08:12 (17 may 2026). Se levantó exitosamente a las 12:08:19. Tiempo total fuera de servicio (caída): 6 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1245]
+📅 FECHA/HORA: 17/5/2026, 12:13:11
+🏷️ ACCIÓN: DESACTIVAR_QR_DINAMICO
+👤 OPERADOR: sergio malave (aj7559410@gmail.com) [Rol: ["profesor","adjunto coordinacion","tiempo completo"]]
+📋 DETALLES: Se desactivó manualmente el QR temporal con ID: 7. Afectó al sistema inhabilitando las lecturas para este código.
+--------------------------------------------------------------------------------
+[REGISTRO #1246]
+📅 FECHA/HORA: 17/5/2026, 12:21:22
+🏷️ ACCIÓN: ACCESO_LOGIN_EXITOSO
+👤 OPERADOR: Profesor3 Electronica (prof3.3@iujo.edu) [Rol: ["profesor","medio tiempo"]]
+📋 DETALLES: El usuario Profesor3 Electronica (Roles: profesor, medio tiempo) inició sesión exitosamente en la plataforma web.
+--------------------------------------------------------------------------------
+[REGISTRO #1247]
+📅 FECHA/HORA: 17/5/2026, 12:23:24
+🏷️ ACCIÓN: ACCESO_LOGIN_EXITOSO
+👤 OPERADOR: sergio malave (aj7559410@gmail.com) [Rol: ["profesor","adjunto coordinacion","tiempo completo"]]
+📋 DETALLES: El usuario sergio malave (Roles: profesor, adjunto coordinacion, tiempo completo) inició sesión exitosamente en la plataforma web.
+--------------------------------------------------------------------------------
+[REGISTRO #1248]
+📅 FECHA/HORA: 17/5/2026, 12:34:34
+🏷️ ACCIÓN: ACCESO_LOGIN_EXITOSO
+👤 OPERADOR: sergio malave (aj7559410@gmail.com) [Rol: ["profesor","adjunto coordinacion","tiempo completo"]]
+📋 DETALLES: El usuario sergio malave (Roles: profesor, adjunto coordinacion, tiempo completo) inició sesión exitosamente en la plataforma web.
+--------------------------------------------------------------------------------
+[REGISTRO #1249]
+📅 FECHA/HORA: 17/5/2026, 12:39:27
+🏷️ ACCIÓN: ACCESO_LOGIN_EXITOSO
+👤 OPERADOR: Profesor3 Electronica (prof3.3@iujo.edu) [Rol: ["profesor","medio tiempo"]]
+📋 DETALLES: El usuario Profesor3 Electronica (Roles: profesor, medio tiempo) inició sesión exitosamente en la plataforma web.
+--------------------------------------------------------------------------------
+[REGISTRO #1250]
+📅 FECHA/HORA: 17/5/2026, 12:41:56
+🏷️ ACCIÓN: SISTEMA_APAGADO
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: El servidor del sistema se detuvo de forma ordenada a las 12:41:56 por señal de mantenimiento o apagado (SIGINT).
+--------------------------------------------------------------------------------
+[REGISTRO #1251]
+📅 FECHA/HORA: 17/5/2026, 12:42:01
+🏷️ ACCIÓN: SISTEMA_REINICIO
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Reinicio programado: El servidor se levantó a las 12:42:01 tras una parada controlada a las 12:41:56 (17 may 2026). Tiempo de inactividad: 4 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1252]
+📅 FECHA/HORA: 17/5/2026, 12:42:21
+🏷️ ACCIÓN: ACCESO_LOGIN_EXITOSO
+👤 OPERADOR: sergio malave (aj7559410@gmail.com) [Rol: ["profesor","adjunto coordinacion","tiempo completo"]]
+📋 DETALLES: El usuario sergio malave (Roles: profesor, adjunto coordinacion, tiempo completo) inició sesión exitosamente en la plataforma web.
+--------------------------------------------------------------------------------
+[REGISTRO #1253]
+📅 FECHA/HORA: 17/5/2026, 12:43:35
+🏷️ ACCIÓN: ACCESO_LOGIN_EXITOSO
+👤 OPERADOR: Admin Auditor (auditor@iujo.edu) [Rol: ["auditor"]]
+📋 DETALLES: El usuario Admin Auditor (Roles: auditor) inició sesión exitosamente en la plataforma web.
+--------------------------------------------------------------------------------
+[REGISTRO #1254]
+📅 FECHA/HORA: 17/5/2026, 12:46:14
+🏷️ ACCIÓN: ACCESO_LOGIN_EXITOSO
+👤 OPERADOR: sergio malave (aj7559410@gmail.com) [Rol: ["profesor","adjunto coordinacion","tiempo completo"]]
+📋 DETALLES: El usuario sergio malave (Roles: profesor, adjunto coordinacion, tiempo completo) inició sesión exitosamente en la plataforma web.
+--------------------------------------------------------------------------------
+[REGISTRO #1255]
+📅 FECHA/HORA: 17/5/2026, 12:57:39
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 12:57:31 (17 may 2026). Se levantó exitosamente a las 12:57:39. Tiempo total fuera de servicio (caída): 7 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1256]
+📅 FECHA/HORA: 17/5/2026, 12:57:50
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 12:57:49 (17 may 2026). Se levantó exitosamente a las 12:57:50. Tiempo total fuera de servicio (caída): 1 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1257]
+📅 FECHA/HORA: 17/5/2026, 13:03:32
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 13:03:31 (17 may 2026). Se levantó exitosamente a las 13:03:32. Tiempo total fuera de servicio (caída): 1 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1258]
+📅 FECHA/HORA: 17/5/2026, 13:14:02
+🏷️ ACCIÓN: ASIGNAR_PROFESOR_ASIGNATURA
+👤 OPERADOR: sergio malave (aj7559410@gmail.com) [Rol: ["profesor","adjunto coordinacion","tiempo completo"]]
+📋 DETALLES: El coordinador aj7559410@gmail.com asignó al docente ID: 1109 a la asignatura ID: 8 (Asignación ID: 1).
+--------------------------------------------------------------------------------
+[REGISTRO #1259]
+📅 FECHA/HORA: 17/5/2026, 13:14:02
+🏷️ ACCIÓN: CREAR_HORARIO
+👤 OPERADOR: sergio malave (aj7559410@gmail.com) [Rol: ["profesor","adjunto coordinacion","tiempo completo"]]
+📋 DETALLES: El coordinador aj7559410@gmail.com creó un bloque de horario (Asignatura-Profesor ID: 1) para el día Lunes de 14:15 a 15:45 en el aula a-12.
+--------------------------------------------------------------------------------
+[REGISTRO #1260]
+📅 FECHA/HORA: 17/5/2026, 13:30:42
+🏷️ ACCIÓN: ACCESO_LOGIN_EXITOSO
+👤 OPERADOR: Profesor3 Electronica (prof3.3@iujo.edu) [Rol: ["profesor","medio tiempo"]]
+📋 DETALLES: El usuario Profesor3 Electronica (Roles: profesor, medio tiempo) inició sesión exitosamente en la plataforma web.
+--------------------------------------------------------------------------------
+[REGISTRO #1261]
+📅 FECHA/HORA: 17/5/2026, 13:31:40
+🏷️ ACCIÓN: ACCESO_LOGIN_EXITOSO
+👤 OPERADOR: Admin Auditor (auditor@iujo.edu) [Rol: ["auditor"]]
+📋 DETALLES: El usuario Admin Auditor (Roles: auditor) inició sesión exitosamente en la plataforma web.
+--------------------------------------------------------------------------------
+[REGISTRO #1262]
+📅 FECHA/HORA: 17/5/2026, 13:40:29
+🏷️ ACCIÓN: ACCESO_LOGIN_EXITOSO
+👤 OPERADOR: Profesor3 Electronica (prof3.3@iujo.edu) [Rol: ["profesor","medio tiempo"]]
+📋 DETALLES: El usuario Profesor3 Electronica (Roles: profesor, medio tiempo) inició sesión exitosamente en la plataforma web.
+--------------------------------------------------------------------------------
+[REGISTRO #1263]
+📅 FECHA/HORA: 17/5/2026, 13:49:09
+🏷️ ACCIÓN: ACCESO_LOGIN_EXITOSO
+👤 OPERADOR: sergio malave (aj7559410@gmail.com) [Rol: ["profesor","adjunto coordinacion","tiempo completo"]]
+📋 DETALLES: El usuario sergio malave (Roles: profesor, adjunto coordinacion, tiempo completo) inició sesión exitosamente en la plataforma web.
+--------------------------------------------------------------------------------
+[REGISTRO #1264]
+📅 FECHA/HORA: 17/5/2026, 13:55:53
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 13:55:43 (17 may 2026). Se levantó exitosamente a las 13:55:52. Tiempo total fuera de servicio (caída): 9 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1265]
+📅 FECHA/HORA: 17/5/2026, 13:56:03
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 13:55:53 (17 may 2026). Se levantó exitosamente a las 13:56:03. Tiempo total fuera de servicio (caída): 10 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1266]
+📅 FECHA/HORA: 17/5/2026, 13:56:47
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 13:56:44 (17 may 2026). Se levantó exitosamente a las 13:56:47. Tiempo total fuera de servicio (caída): 3 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1267]
+📅 FECHA/HORA: 17/5/2026, 13:58:24
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 13:58:17 (17 may 2026). Se levantó exitosamente a las 13:58:24. Tiempo total fuera de servicio (caída): 6 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1268]
+📅 FECHA/HORA: 17/5/2026, 13:58:45
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 13:58:34 (17 may 2026). Se levantó exitosamente a las 13:58:45. Tiempo total fuera de servicio (caída): 10 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1269]
+📅 FECHA/HORA: 17/5/2026, 14:08:32
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 14:08:25 (17 may 2026). Se levantó exitosamente a las 14:08:32. Tiempo total fuera de servicio (caída): 7 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1270]
+📅 FECHA/HORA: 17/5/2026, 14:08:45
+🏷️ ACCIÓN: ACCESO_LOGIN_EXITOSO
+👤 OPERADOR: Admin Auditor (auditor@iujo.edu) [Rol: ["auditor"]]
+📋 DETALLES: El usuario Admin Auditor (Roles: auditor) inició sesión exitosamente en la plataforma web.
+--------------------------------------------------------------------------------
+[REGISTRO #1271]
+📅 FECHA/HORA: 17/5/2026, 14:09:00
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 14:08:52 (17 may 2026). Se levantó exitosamente a las 14:09:00. Tiempo total fuera de servicio (caída): 7 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1272]
+📅 FECHA/HORA: 17/5/2026, 14:09:02
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 14:09:00 (17 may 2026). Se levantó exitosamente a las 14:09:02. Tiempo total fuera de servicio (caída): 1 segundo(s).
+--------------------------------------------------------------------------------
+[REGISTRO #1273]
+📅 FECHA/HORA: 17/5/2026, 14:12:47
+🏷️ ACCIÓN: SISTEMA_FALLO_CAIDA
+👤 OPERADOR: SISTEMA AUTOMÁTICO
+📋 DETALLES: Fallo del Sistema detectado: El servidor se cayó de forma abrupta a las 14:12:42 (17 may 2026). Se levantó exitosamente a las 14:12:47. Tiempo total fuera de servicio (caída): 4 segundo(s).
 --------------------------------------------------------------------------------
 
 *** FIN DEL REPORTE AUTOMÁTICO - IUJO ESCANNER ***

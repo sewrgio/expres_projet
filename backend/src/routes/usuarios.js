@@ -15,6 +15,15 @@ router.put('/:id', auth, async (req, res) => {
   const { nombre, apellido, correo, telefono } = req.body;
 
   try {
+    // ✅ Proteger al auditor para que no pueda ser editado ni modificado
+    const targetUserQuery = await pool.query('SELECT rol FROM usuario WHERE id_usuario = $1', [id]);
+    if (targetUserQuery.rows.length > 0) {
+      const targetRoles = targetUserQuery.rows[0].rol || [];
+      if (targetRoles.includes('auditor')) {
+        return res.status(400).json({ error: 'No se pueden editar los datos del Auditor del sistema' });
+      }
+    }
+
     const result = await pool.query(
       `UPDATE usuario 
        SET nombre = $1, apellido = $2, correo = $3, telefono = $4
@@ -34,19 +43,36 @@ router.put('/:id', auth, async (req, res) => {
   }
 });
 
-// Obtener todos los usuarios con sus roles (soporta alias /todos)
+// Obtener todos los usuarios con sus roles (soporta alias /todos y buscador por parámetro query)
 router.get(['/', '/todos'], auth, async (req, res) => {
   if (!req.user.roles.includes('auditor')) {
     return res.status(403).json({ error: 'Solo el auditor puede ver todos los usuarios' });
   }
 
+  const { search } = req.query;
+
   try {
-    const result = await pool.query(
-      `SELECT id_usuario, nombre, apellido, cedula, correo, telefono, activo,
+    let query = `
+      SELECT id_usuario, nombre, apellido, cedula, correo, telefono, activo,
         COALESCE(rol, '[]'::jsonb) as roles
-       FROM usuario
-       ORDER BY nombre, apellido`
-    );
+      FROM usuario
+    `;
+    const params = [];
+
+    if (search && search.trim() !== '') {
+      const searchPattern = `%${search.trim()}%`;
+      query += `
+        WHERE nombre ILIKE $1 
+           OR apellido ILIKE $1 
+           OR cedula ILIKE $1 
+           OR correo ILIKE $1
+      `;
+      params.push(searchPattern);
+    }
+
+    query += ` ORDER BY nombre, apellido`;
+
+    const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (error) {
     console.error('Error obteniendo usuarios:', error);
@@ -66,6 +92,20 @@ router.put('/:id/roles', auth, async (req, res) => {
   // Validar que no tenga coordinador y adjunto al mismo tiempo
   if (roles.includes('coordinador') && roles.includes('adjunto coordinacion')) {
     return res.status(400).json({ error: 'Un usuario no puede ser Coordinador y Adjunto a la vez' });
+  }
+
+  try {
+    // ✅ Proteger al auditor para que no pueda ser editado ni modificado
+    const targetUserQuery = await pool.query('SELECT rol FROM usuario WHERE id_usuario = $1', [id]);
+    if (targetUserQuery.rows.length > 0) {
+      const targetRoles = targetUserQuery.rows[0].rol || [];
+      if (targetRoles.includes('auditor')) {
+        return res.status(400).json({ error: 'No se pueden editar los roles del Auditor del sistema' });
+      }
+    }
+  } catch (error) {
+    console.error('Error verificando roles del usuario objetivo:', error);
+    return res.status(500).json({ error: 'Error interno de validación' });
   }
 
   let client;

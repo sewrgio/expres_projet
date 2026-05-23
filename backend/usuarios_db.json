@@ -1,0 +1,3162 @@
+[
+  {
+    "id_usuario": 5,
+    "nombre": "sergio",
+    "apellido": "malave",
+    "cedula": "12345678",
+    "correo": "aj7559410@gmail.com",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "adjunto coordinacion",
+      "tiempo completo"
+    ]
+  },
+  {
+    "id_usuario": 6,
+    "nombre": "Admin",
+    "apellido": "Auditor",
+    "cedula": "99999999",
+    "correo": "auditor@iujo.edu",
+    "activo": true,
+    "rol": [
+      "auditor"
+    ]
+  },
+  {
+    "id_usuario": 100,
+    "nombre": "Coordinador",
+    "apellido": "electronica",
+    "cedula": "10000000",
+    "correo": "coord.electronica@iujo.edu",
+    "activo": true,
+    "rol": [
+      "coordinador",
+      "tiempo completo"
+    ]
+  },
+  {
+    "id_usuario": 101,
+    "nombre": "Coordinador",
+    "apellido": "Informatica",
+    "cedula": "20000000",
+    "correo": "coord.informatica@iujo.edu",
+    "activo": true,
+    "rol": [
+      "coordinador",
+      "tiempo completo"
+    ]
+  },
+  {
+    "id_usuario": 102,
+    "nombre": "Coordinador",
+    "apellido": "Electronica2",
+    "cedula": "30000000",
+    "correo": "coord.electronica2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "coordinador",
+      "tiempo completo"
+    ]
+  },
+  {
+    "id_usuario": 103,
+    "nombre": "remo",
+    "apellido": "Administracion",
+    "cedula": "40000000",
+    "correo": "coord.administracion@iujo.edu",
+    "activo": true,
+    "rol": [
+      "coordinador",
+      "tiempo completo"
+    ]
+  },
+  {
+    "id_usuario": 104,
+    "nombre": "juan",
+    "apellido": "Contaduria",
+    "cedula": "50000000",
+    "correo": "coord.contaduria@iujo.edu",
+    "activo": true,
+    "rol": [
+      "coordinador",
+      "tiempo completo"
+    ]
+  },
+  {
+    "id_usuario": 130,
+    "nombre": "Test",
+    "apellido": "User",
+    "cedula": "03312464",
+    "correo": "test03312464@example.com",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 200,
+    "nombre": "Profesor1",
+    "apellido": "electronica",
+    "cedula": "00100001",
+    "correo": "prof1.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 201,
+    "nombre": "Profesor2",
+    "apellido": "electronica",
+    "cedula": "00100002",
+    "correo": "prof2.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 202,
+    "nombre": "Profesor3",
+    "apellido": "electronica",
+    "cedula": "00100003",
+    "correo": "prof3.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 203,
+    "nombre": "Profesor4",
+    "apellido": "electronica",
+    "cedula": "00100004",
+    "correo": "prof4.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 204,
+    "nombre": "Profesor5",
+    "apellido": "electronica",
+    "cedula": "00100005",
+    "correo": "prof5.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 205,
+    "nombre": "Profesor6",
+    "apellido": "electronica",
+    "cedula": "00100006",
+    "correo": "prof6.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 206,
+    "nombre": "Profesor7",
+    "apellido": "electronica",
+    "cedula": "00100007",
+    "correo": "prof7.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 207,
+    "nombre": "Profesor8",
+    "apellido": "electronica",
+    "cedula": "00100008",
+    "correo": "prof8.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 208,
+    "nombre": "Profesor9",
+    "apellido": "electronica",
+    "cedula": "00100009",
+    "correo": "prof9.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 209,
+    "nombre": "Profesor10",
+    "apellido": "electronica",
+    "cedula": "00100010",
+    "correo": "prof10.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 210,
+    "nombre": "Profesor11",
+    "apellido": "electronica",
+    "cedula": "00100011",
+    "correo": "prof11.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 211,
+    "nombre": "Profesor12",
+    "apellido": "electronica",
+    "cedula": "00100012",
+    "correo": "prof12.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 212,
+    "nombre": "Profesor13",
+    "apellido": "electronica",
+    "cedula": "00100013",
+    "correo": "prof13.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 213,
+    "nombre": "Profesor14",
+    "apellido": "electronica",
+    "cedula": "00100014",
+    "correo": "prof14.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 214,
+    "nombre": "Profesor15",
+    "apellido": "electronica",
+    "cedula": "00100015",
+    "correo": "prof15.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 215,
+    "nombre": "Profesor16",
+    "apellido": "electronica",
+    "cedula": "00100016",
+    "correo": "prof16.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 216,
+    "nombre": "Profesor17",
+    "apellido": "electronica",
+    "cedula": "00100017",
+    "correo": "prof17.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 217,
+    "nombre": "Profesor18",
+    "apellido": "electronica",
+    "cedula": "00100018",
+    "correo": "prof18.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 218,
+    "nombre": "Profesor19",
+    "apellido": "electronica",
+    "cedula": "00100019",
+    "correo": "prof19.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 219,
+    "nombre": "Profesor20",
+    "apellido": "electronica",
+    "cedula": "00100020",
+    "correo": "prof20.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 220,
+    "nombre": "Profesor21",
+    "apellido": "electronica",
+    "cedula": "00100021",
+    "correo": "prof21.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 221,
+    "nombre": "Profesor22",
+    "apellido": "electronica",
+    "cedula": "00100022",
+    "correo": "prof22.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 222,
+    "nombre": "Profesor23",
+    "apellido": "electronica",
+    "cedula": "00100023",
+    "correo": "prof23.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 223,
+    "nombre": "Profesor24",
+    "apellido": "electronica",
+    "cedula": "00100024",
+    "correo": "prof24.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 224,
+    "nombre": "Profesor25",
+    "apellido": "electronica",
+    "cedula": "00100025",
+    "correo": "prof25.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 225,
+    "nombre": "Profesor26",
+    "apellido": "electronica",
+    "cedula": "00100026",
+    "correo": "prof26.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 226,
+    "nombre": "Profesor27",
+    "apellido": "electronica",
+    "cedula": "00100027",
+    "correo": "prof27.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 227,
+    "nombre": "Profesor28",
+    "apellido": "electronica",
+    "cedula": "00100028",
+    "correo": "prof28.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 228,
+    "nombre": "Profesor29",
+    "apellido": "electronica",
+    "cedula": "00100029",
+    "correo": "prof29.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 229,
+    "nombre": "Profesor30",
+    "apellido": "electronica",
+    "cedula": "00100030",
+    "correo": "prof30.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 230,
+    "nombre": "Profesor31",
+    "apellido": "electronica",
+    "cedula": "00100031",
+    "correo": "prof31.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 231,
+    "nombre": "Profesor32",
+    "apellido": "electronica",
+    "cedula": "00100032",
+    "correo": "prof32.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 232,
+    "nombre": "Profesor33",
+    "apellido": "electronica",
+    "cedula": "00100033",
+    "correo": "prof33.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 233,
+    "nombre": "Profesor34",
+    "apellido": "electronica",
+    "cedula": "00100034",
+    "correo": "prof34.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 234,
+    "nombre": "Profesor35",
+    "apellido": "electronica",
+    "cedula": "00100035",
+    "correo": "prof35.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 235,
+    "nombre": "Profesor36",
+    "apellido": "electronica",
+    "cedula": "00100036",
+    "correo": "prof36.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 236,
+    "nombre": "Profesor37",
+    "apellido": "electronica",
+    "cedula": "00100037",
+    "correo": "prof37.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 237,
+    "nombre": "Profesor38",
+    "apellido": "electronica",
+    "cedula": "00100038",
+    "correo": "prof38.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 238,
+    "nombre": "Profesor39",
+    "apellido": "electronica",
+    "cedula": "00100039",
+    "correo": "prof39.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 239,
+    "nombre": "Profesor40",
+    "apellido": "electronica",
+    "cedula": "00100040",
+    "correo": "prof40.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 240,
+    "nombre": "Profesor41",
+    "apellido": "electronica",
+    "cedula": "00100041",
+    "correo": "prof41.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 241,
+    "nombre": "Profesor42",
+    "apellido": "electronica",
+    "cedula": "00100042",
+    "correo": "prof42.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 242,
+    "nombre": "Profesor43",
+    "apellido": "electronica",
+    "cedula": "00100043",
+    "correo": "prof43.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 243,
+    "nombre": "Profesor44",
+    "apellido": "electronica",
+    "cedula": "00100044",
+    "correo": "prof44.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 244,
+    "nombre": "Profesor45",
+    "apellido": "electronica",
+    "cedula": "00100045",
+    "correo": "prof45.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 245,
+    "nombre": "Profesor46",
+    "apellido": "electronica",
+    "cedula": "00100046",
+    "correo": "prof46.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 246,
+    "nombre": "Profesor47",
+    "apellido": "electronica",
+    "cedula": "00100047",
+    "correo": "prof47.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 247,
+    "nombre": "Profesor48",
+    "apellido": "electronica",
+    "cedula": "00100048",
+    "correo": "prof48.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 248,
+    "nombre": "Profesor49",
+    "apellido": "electronica",
+    "cedula": "00100049",
+    "correo": "prof49.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 249,
+    "nombre": "Profesor50",
+    "apellido": "electronica",
+    "cedula": "00100050",
+    "correo": "prof50.1@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 250,
+    "nombre": "Profesor1",
+    "apellido": "Informatica",
+    "cedula": "00200001",
+    "correo": "prof1.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 251,
+    "nombre": "Profesor2",
+    "apellido": "Informatica",
+    "cedula": "00200002",
+    "correo": "prof2.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 252,
+    "nombre": "Profesor3",
+    "apellido": "Informatica",
+    "cedula": "00200003",
+    "correo": "prof3.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 253,
+    "nombre": "Profesor4",
+    "apellido": "Informatica",
+    "cedula": "00200004",
+    "correo": "prof4.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 254,
+    "nombre": "Profesor5",
+    "apellido": "Informatica",
+    "cedula": "00200005",
+    "correo": "prof5.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 255,
+    "nombre": "Profesor6",
+    "apellido": "Informatica",
+    "cedula": "00200006",
+    "correo": "prof6.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 256,
+    "nombre": "Profesor7",
+    "apellido": "Informatica",
+    "cedula": "00200007",
+    "correo": "prof7.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 257,
+    "nombre": "Profesor8",
+    "apellido": "Informatica",
+    "cedula": "00200008",
+    "correo": "prof8.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 258,
+    "nombre": "Profesor9",
+    "apellido": "Informatica",
+    "cedula": "00200009",
+    "correo": "prof9.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 259,
+    "nombre": "Profesor10",
+    "apellido": "Informatica",
+    "cedula": "00200010",
+    "correo": "prof10.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 260,
+    "nombre": "Profesor11",
+    "apellido": "Informatica",
+    "cedula": "00200011",
+    "correo": "prof11.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 261,
+    "nombre": "Profesor12",
+    "apellido": "Informatica",
+    "cedula": "00200012",
+    "correo": "prof12.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 262,
+    "nombre": "Profesor13",
+    "apellido": "Informatica",
+    "cedula": "00200013",
+    "correo": "prof13.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 263,
+    "nombre": "Profesor14",
+    "apellido": "Informatica",
+    "cedula": "00200014",
+    "correo": "prof14.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 264,
+    "nombre": "Profesor15",
+    "apellido": "Informatica",
+    "cedula": "00200015",
+    "correo": "prof15.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 265,
+    "nombre": "Profesor16",
+    "apellido": "Informatica",
+    "cedula": "00200016",
+    "correo": "prof16.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 266,
+    "nombre": "Profesor17",
+    "apellido": "Informatica",
+    "cedula": "00200017",
+    "correo": "prof17.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 267,
+    "nombre": "Profesor18",
+    "apellido": "Informatica",
+    "cedula": "00200018",
+    "correo": "prof18.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 268,
+    "nombre": "Profesor19",
+    "apellido": "Informatica",
+    "cedula": "00200019",
+    "correo": "prof19.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 269,
+    "nombre": "Profesor20",
+    "apellido": "Informatica",
+    "cedula": "00200020",
+    "correo": "prof20.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 270,
+    "nombre": "Profesor21",
+    "apellido": "Informatica",
+    "cedula": "00200021",
+    "correo": "prof21.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 271,
+    "nombre": "Profesor22",
+    "apellido": "Informatica",
+    "cedula": "00200022",
+    "correo": "prof22.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 272,
+    "nombre": "Profesor23",
+    "apellido": "Informatica",
+    "cedula": "00200023",
+    "correo": "prof23.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 273,
+    "nombre": "Profesor24",
+    "apellido": "Informatica",
+    "cedula": "00200024",
+    "correo": "prof24.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 274,
+    "nombre": "Profesor25",
+    "apellido": "Informatica",
+    "cedula": "00200025",
+    "correo": "prof25.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 275,
+    "nombre": "Profesor26",
+    "apellido": "Informatica",
+    "cedula": "00200026",
+    "correo": "prof26.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 276,
+    "nombre": "Profesor27",
+    "apellido": "Informatica",
+    "cedula": "00200027",
+    "correo": "prof27.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 277,
+    "nombre": "Profesor28",
+    "apellido": "Informatica",
+    "cedula": "00200028",
+    "correo": "prof28.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 278,
+    "nombre": "Profesor29",
+    "apellido": "Informatica",
+    "cedula": "00200029",
+    "correo": "prof29.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 279,
+    "nombre": "Profesor30",
+    "apellido": "Informatica",
+    "cedula": "00200030",
+    "correo": "prof30.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 280,
+    "nombre": "Profesor31",
+    "apellido": "Informatica",
+    "cedula": "00200031",
+    "correo": "prof31.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 281,
+    "nombre": "Profesor32",
+    "apellido": "Informatica",
+    "cedula": "00200032",
+    "correo": "prof32.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 282,
+    "nombre": "Profesor33",
+    "apellido": "Informatica",
+    "cedula": "00200033",
+    "correo": "prof33.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 283,
+    "nombre": "Profesor34",
+    "apellido": "Informatica",
+    "cedula": "00200034",
+    "correo": "prof34.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 284,
+    "nombre": "Profesor35",
+    "apellido": "Informatica",
+    "cedula": "00200035",
+    "correo": "prof35.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 285,
+    "nombre": "Profesor36",
+    "apellido": "Informatica",
+    "cedula": "00200036",
+    "correo": "prof36.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 286,
+    "nombre": "Profesor37",
+    "apellido": "Informatica",
+    "cedula": "00200037",
+    "correo": "prof37.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 287,
+    "nombre": "Profesor38",
+    "apellido": "Informatica",
+    "cedula": "00200038",
+    "correo": "prof38.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 288,
+    "nombre": "Profesor39",
+    "apellido": "Informatica",
+    "cedula": "00200039",
+    "correo": "prof39.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 289,
+    "nombre": "Profesor40",
+    "apellido": "Informatica",
+    "cedula": "00200040",
+    "correo": "prof40.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 290,
+    "nombre": "Profesor41",
+    "apellido": "Informatica",
+    "cedula": "00200041",
+    "correo": "prof41.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 291,
+    "nombre": "Profesor42",
+    "apellido": "Informatica",
+    "cedula": "00200042",
+    "correo": "prof42.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "tiempo completo"
+    ]
+  },
+  {
+    "id_usuario": 292,
+    "nombre": "Profesor43",
+    "apellido": "Informatica",
+    "cedula": "00200043",
+    "correo": "prof43.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 293,
+    "nombre": "Profesor44",
+    "apellido": "Informatica",
+    "cedula": "00200044",
+    "correo": "prof44.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 294,
+    "nombre": "Profesor45",
+    "apellido": "Informatica",
+    "cedula": "00200045",
+    "correo": "prof45.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 295,
+    "nombre": "Profesor46",
+    "apellido": "Informatica",
+    "cedula": "00200046",
+    "correo": "prof46.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 296,
+    "nombre": "Profesor47",
+    "apellido": "Informatica",
+    "cedula": "00200047",
+    "correo": "prof47.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 297,
+    "nombre": "Profesor48",
+    "apellido": "Informatica",
+    "cedula": "00200048",
+    "correo": "prof48.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 298,
+    "nombre": "Profesor49",
+    "apellido": "Informatica",
+    "cedula": "00200049",
+    "correo": "prof49.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 299,
+    "nombre": "Profesor50",
+    "apellido": "Informatica",
+    "cedula": "00200050",
+    "correo": "prof50.2@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 300,
+    "nombre": "Profesor1",
+    "apellido": "Electronica",
+    "cedula": "00300001",
+    "correo": "prof1.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 301,
+    "nombre": "Profesor2",
+    "apellido": "Electronica",
+    "cedula": "00300002",
+    "correo": "prof2.3@iujo.edu",
+    "activo": false,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 302,
+    "nombre": "Profesor3",
+    "apellido": "Electronica",
+    "cedula": "00300003",
+    "correo": "prof3.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 303,
+    "nombre": "Profesor4",
+    "apellido": "Electronica",
+    "cedula": "00300004",
+    "correo": "prof4.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 304,
+    "nombre": "Profesor5",
+    "apellido": "Electronica",
+    "cedula": "00300005",
+    "correo": "prof5.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 305,
+    "nombre": "Profesor6",
+    "apellido": "Electronica",
+    "cedula": "00300006",
+    "correo": "prof6.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 306,
+    "nombre": "Profesor7",
+    "apellido": "Electronica",
+    "cedula": "00300007",
+    "correo": "prof7.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 307,
+    "nombre": "Profesor8",
+    "apellido": "Electronica",
+    "cedula": "00300008",
+    "correo": "prof8.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 308,
+    "nombre": "Profesor9",
+    "apellido": "Electronica",
+    "cedula": "00300009",
+    "correo": "prof9.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 309,
+    "nombre": "Profesor10",
+    "apellido": "Electronica",
+    "cedula": "00300010",
+    "correo": "prof10.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 310,
+    "nombre": "Profesor11",
+    "apellido": "Electronica",
+    "cedula": "00300011",
+    "correo": "prof11.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 311,
+    "nombre": "Profesor12",
+    "apellido": "Electronica",
+    "cedula": "00300012",
+    "correo": "prof12.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 312,
+    "nombre": "Profesor13",
+    "apellido": "Electronica",
+    "cedula": "00300013",
+    "correo": "prof13.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 313,
+    "nombre": "Profesor14",
+    "apellido": "Electronica",
+    "cedula": "00300014",
+    "correo": "prof14.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 314,
+    "nombre": "Profesor15",
+    "apellido": "Electronica",
+    "cedula": "00300015",
+    "correo": "prof15.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 315,
+    "nombre": "Profesor16",
+    "apellido": "Electronica",
+    "cedula": "00300016",
+    "correo": "prof16.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 316,
+    "nombre": "Profesor17",
+    "apellido": "Electronica",
+    "cedula": "00300017",
+    "correo": "prof17.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 317,
+    "nombre": "Profesor18",
+    "apellido": "Electronica",
+    "cedula": "00300018",
+    "correo": "prof18.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 318,
+    "nombre": "Profesor19",
+    "apellido": "Electronica",
+    "cedula": "00300019",
+    "correo": "prof19.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 319,
+    "nombre": "Profesor20",
+    "apellido": "Electronica",
+    "cedula": "00300020",
+    "correo": "prof20.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 320,
+    "nombre": "Profesor21",
+    "apellido": "Electronica",
+    "cedula": "00300021",
+    "correo": "prof21.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 321,
+    "nombre": "Profesor22",
+    "apellido": "Electronica",
+    "cedula": "00300022",
+    "correo": "prof22.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 322,
+    "nombre": "Profesor23",
+    "apellido": "Electronica",
+    "cedula": "00300023",
+    "correo": "prof23.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 323,
+    "nombre": "Profesor24",
+    "apellido": "Electronica",
+    "cedula": "00300024",
+    "correo": "prof24.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 324,
+    "nombre": "Profesor25",
+    "apellido": "Electronica",
+    "cedula": "00300025",
+    "correo": "prof25.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 325,
+    "nombre": "Profesor26",
+    "apellido": "Electronica",
+    "cedula": "00300026",
+    "correo": "prof26.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 326,
+    "nombre": "Profesor27",
+    "apellido": "Electronica",
+    "cedula": "00300027",
+    "correo": "prof27.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 327,
+    "nombre": "Profesor28",
+    "apellido": "Electronica",
+    "cedula": "00300028",
+    "correo": "prof28.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 328,
+    "nombre": "Profesor29",
+    "apellido": "Electronica",
+    "cedula": "00300029",
+    "correo": "prof29.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 329,
+    "nombre": "Profesor30",
+    "apellido": "Electronica",
+    "cedula": "00300030",
+    "correo": "prof30.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 330,
+    "nombre": "Profesor31",
+    "apellido": "Electronica",
+    "cedula": "00300031",
+    "correo": "prof31.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 331,
+    "nombre": "Profesor32",
+    "apellido": "Electronica",
+    "cedula": "00300032",
+    "correo": "prof32.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 332,
+    "nombre": "Profesor33",
+    "apellido": "Electronica",
+    "cedula": "00300033",
+    "correo": "prof33.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 333,
+    "nombre": "Profesor34",
+    "apellido": "Electronica",
+    "cedula": "00300034",
+    "correo": "prof34.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 334,
+    "nombre": "Profesor35",
+    "apellido": "Electronica",
+    "cedula": "00300035",
+    "correo": "prof35.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 335,
+    "nombre": "Profesor36",
+    "apellido": "Electronica",
+    "cedula": "00300036",
+    "correo": "prof36.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 336,
+    "nombre": "Profesor37",
+    "apellido": "Electronica",
+    "cedula": "00300037",
+    "correo": "prof37.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 337,
+    "nombre": "Profesor38",
+    "apellido": "Electronica",
+    "cedula": "00300038",
+    "correo": "prof38.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 338,
+    "nombre": "Profesor39",
+    "apellido": "Electronica",
+    "cedula": "00300039",
+    "correo": "prof39.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 339,
+    "nombre": "Profesor40",
+    "apellido": "Electronica",
+    "cedula": "00300040",
+    "correo": "prof40.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 340,
+    "nombre": "Profesor41",
+    "apellido": "Electronica",
+    "cedula": "00300041",
+    "correo": "prof41.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 341,
+    "nombre": "Profesor42",
+    "apellido": "Electronica",
+    "cedula": "00300042",
+    "correo": "prof42.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 342,
+    "nombre": "Profesor43",
+    "apellido": "Electronica",
+    "cedula": "00300043",
+    "correo": "prof43.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 343,
+    "nombre": "Profesor44",
+    "apellido": "Electronica",
+    "cedula": "00300044",
+    "correo": "prof44.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 344,
+    "nombre": "Profesor45",
+    "apellido": "Electronica",
+    "cedula": "00300045",
+    "correo": "prof45.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 345,
+    "nombre": "Profesor46",
+    "apellido": "Electronica",
+    "cedula": "00300046",
+    "correo": "prof46.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 346,
+    "nombre": "Profesor47",
+    "apellido": "Electronica",
+    "cedula": "00300047",
+    "correo": "prof47.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 347,
+    "nombre": "Profesor48",
+    "apellido": "Electronica",
+    "cedula": "00300048",
+    "correo": "prof48.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 348,
+    "nombre": "Profesor49",
+    "apellido": "Electronica",
+    "cedula": "00300049",
+    "correo": "prof49.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 349,
+    "nombre": "Profesor50",
+    "apellido": "Electronica",
+    "cedula": "00300050",
+    "correo": "prof50.3@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 350,
+    "nombre": "Profesor1",
+    "apellido": "Administración ",
+    "cedula": "00400001",
+    "correo": "prof1.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 351,
+    "nombre": "Profesor2",
+    "apellido": "Administración ",
+    "cedula": "00400002",
+    "correo": "prof2.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 352,
+    "nombre": "Profesor3",
+    "apellido": "Administración ",
+    "cedula": "00400003",
+    "correo": "prof3.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 353,
+    "nombre": "Profesor4",
+    "apellido": "Administración ",
+    "cedula": "00400004",
+    "correo": "prof4.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 354,
+    "nombre": "Profesor5",
+    "apellido": "Administración ",
+    "cedula": "00400005",
+    "correo": "prof5.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 355,
+    "nombre": "Profesor6",
+    "apellido": "Administración ",
+    "cedula": "00400006",
+    "correo": "prof6.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 356,
+    "nombre": "Profesor7",
+    "apellido": "Administración ",
+    "cedula": "00400007",
+    "correo": "prof7.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 357,
+    "nombre": "Profesor8",
+    "apellido": "Administración ",
+    "cedula": "00400008",
+    "correo": "prof8.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 358,
+    "nombre": "Profesor9",
+    "apellido": "Administración ",
+    "cedula": "00400009",
+    "correo": "prof9.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 359,
+    "nombre": "Profesor10",
+    "apellido": "Administración ",
+    "cedula": "00400010",
+    "correo": "prof10.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 360,
+    "nombre": "Profesor11",
+    "apellido": "Administración ",
+    "cedula": "00400011",
+    "correo": "prof11.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 361,
+    "nombre": "Profesor12",
+    "apellido": "Administración ",
+    "cedula": "00400012",
+    "correo": "prof12.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 362,
+    "nombre": "Profesor13",
+    "apellido": "Administración ",
+    "cedula": "00400013",
+    "correo": "prof13.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 363,
+    "nombre": "Profesor14",
+    "apellido": "Administración ",
+    "cedula": "00400014",
+    "correo": "prof14.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 364,
+    "nombre": "Profesor15",
+    "apellido": "Administración ",
+    "cedula": "00400015",
+    "correo": "prof15.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 365,
+    "nombre": "Profesor16",
+    "apellido": "Administración ",
+    "cedula": "00400016",
+    "correo": "prof16.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 366,
+    "nombre": "Profesor17",
+    "apellido": "Administración ",
+    "cedula": "00400017",
+    "correo": "prof17.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 367,
+    "nombre": "Profesor18",
+    "apellido": "Administración ",
+    "cedula": "00400018",
+    "correo": "prof18.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 368,
+    "nombre": "Profesor19",
+    "apellido": "Administración ",
+    "cedula": "00400019",
+    "correo": "prof19.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 369,
+    "nombre": "Profesor20",
+    "apellido": "Administración ",
+    "cedula": "00400020",
+    "correo": "prof20.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 370,
+    "nombre": "Profesor21",
+    "apellido": "Administración ",
+    "cedula": "00400021",
+    "correo": "prof21.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 371,
+    "nombre": "Profesor22",
+    "apellido": "Administración ",
+    "cedula": "00400022",
+    "correo": "prof22.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 372,
+    "nombre": "Profesor23",
+    "apellido": "Administración ",
+    "cedula": "00400023",
+    "correo": "prof23.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 373,
+    "nombre": "Profesor24",
+    "apellido": "Administración ",
+    "cedula": "00400024",
+    "correo": "prof24.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 374,
+    "nombre": "Profesor25",
+    "apellido": "Administración ",
+    "cedula": "00400025",
+    "correo": "prof25.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 375,
+    "nombre": "Profesor26",
+    "apellido": "Administración ",
+    "cedula": "00400026",
+    "correo": "prof26.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 376,
+    "nombre": "Profesor27",
+    "apellido": "Administración ",
+    "cedula": "00400027",
+    "correo": "prof27.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 377,
+    "nombre": "Profesor28",
+    "apellido": "Administración ",
+    "cedula": "00400028",
+    "correo": "prof28.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 378,
+    "nombre": "Profesor29",
+    "apellido": "Administración ",
+    "cedula": "00400029",
+    "correo": "prof29.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 379,
+    "nombre": "Profesor30",
+    "apellido": "Administración ",
+    "cedula": "00400030",
+    "correo": "prof30.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 380,
+    "nombre": "Profesor31",
+    "apellido": "Administración ",
+    "cedula": "00400031",
+    "correo": "prof31.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 381,
+    "nombre": "Profesor32",
+    "apellido": "Administración ",
+    "cedula": "00400032",
+    "correo": "prof32.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 382,
+    "nombre": "Profesor33",
+    "apellido": "Administración ",
+    "cedula": "00400033",
+    "correo": "prof33.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 383,
+    "nombre": "Profesor34",
+    "apellido": "Administración ",
+    "cedula": "00400034",
+    "correo": "prof34.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 384,
+    "nombre": "Profesor35",
+    "apellido": "Administración ",
+    "cedula": "00400035",
+    "correo": "prof35.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 385,
+    "nombre": "Profesor36",
+    "apellido": "Administración ",
+    "cedula": "00400036",
+    "correo": "prof36.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 386,
+    "nombre": "Profesor37",
+    "apellido": "Administración ",
+    "cedula": "00400037",
+    "correo": "prof37.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 387,
+    "nombre": "Profesor38",
+    "apellido": "Administración ",
+    "cedula": "00400038",
+    "correo": "prof38.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 388,
+    "nombre": "Profesor39",
+    "apellido": "Administración ",
+    "cedula": "00400039",
+    "correo": "prof39.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 389,
+    "nombre": "Profesor40",
+    "apellido": "Administración ",
+    "cedula": "00400040",
+    "correo": "prof40.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 390,
+    "nombre": "Profesor41",
+    "apellido": "Administración ",
+    "cedula": "00400041",
+    "correo": "prof41.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 391,
+    "nombre": "Profesor42",
+    "apellido": "Administración ",
+    "cedula": "00400042",
+    "correo": "prof42.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 392,
+    "nombre": "Profesor43",
+    "apellido": "Administración ",
+    "cedula": "00400043",
+    "correo": "prof43.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 393,
+    "nombre": "Profesor44",
+    "apellido": "Administración ",
+    "cedula": "00400044",
+    "correo": "prof44.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 394,
+    "nombre": "Profesor45",
+    "apellido": "Administración ",
+    "cedula": "00400045",
+    "correo": "prof45.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 395,
+    "nombre": "Profesor46",
+    "apellido": "Administración ",
+    "cedula": "00400046",
+    "correo": "prof46.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 396,
+    "nombre": "Profesor47",
+    "apellido": "Administración ",
+    "cedula": "00400047",
+    "correo": "prof47.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 397,
+    "nombre": "Profesor48",
+    "apellido": "Administración ",
+    "cedula": "00400048",
+    "correo": "prof48.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 398,
+    "nombre": "Profesor49",
+    "apellido": "Administración ",
+    "cedula": "00400049",
+    "correo": "prof49.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 399,
+    "nombre": "Profesor50",
+    "apellido": "Administración ",
+    "cedula": "00400050",
+    "correo": "prof50.4@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 400,
+    "nombre": "Profesor1",
+    "apellido": "Contaduría ",
+    "cedula": "00500001",
+    "correo": "prof1.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 401,
+    "nombre": "Profesor2",
+    "apellido": "Contaduría ",
+    "cedula": "00500002",
+    "correo": "prof2.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 402,
+    "nombre": "Profesor3",
+    "apellido": "Contaduría ",
+    "cedula": "00500003",
+    "correo": "prof3.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 403,
+    "nombre": "Profesor4",
+    "apellido": "Contaduría ",
+    "cedula": "00500004",
+    "correo": "prof4.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 404,
+    "nombre": "Profesor5",
+    "apellido": "Contaduría ",
+    "cedula": "00500005",
+    "correo": "prof5.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 405,
+    "nombre": "Profesor6",
+    "apellido": "Contaduría ",
+    "cedula": "00500006",
+    "correo": "prof6.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 406,
+    "nombre": "Profesor7",
+    "apellido": "Contaduría ",
+    "cedula": "00500007",
+    "correo": "prof7.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 407,
+    "nombre": "Profesor8",
+    "apellido": "Contaduría ",
+    "cedula": "00500008",
+    "correo": "prof8.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 408,
+    "nombre": "Profesor9",
+    "apellido": "Contaduría ",
+    "cedula": "00500009",
+    "correo": "prof9.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 409,
+    "nombre": "Profesor10",
+    "apellido": "Contaduría ",
+    "cedula": "00500010",
+    "correo": "prof10.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 410,
+    "nombre": "Profesor11",
+    "apellido": "Contaduría ",
+    "cedula": "00500011",
+    "correo": "prof11.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 411,
+    "nombre": "Profesor12",
+    "apellido": "Contaduría ",
+    "cedula": "00500012",
+    "correo": "prof12.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 412,
+    "nombre": "Profesor13",
+    "apellido": "Contaduría ",
+    "cedula": "00500013",
+    "correo": "prof13.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 413,
+    "nombre": "Profesor14",
+    "apellido": "Contaduría ",
+    "cedula": "00500014",
+    "correo": "prof14.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 414,
+    "nombre": "Profesor15",
+    "apellido": "Contaduría ",
+    "cedula": "00500015",
+    "correo": "prof15.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 415,
+    "nombre": "Profesor16",
+    "apellido": "Contaduría ",
+    "cedula": "00500016",
+    "correo": "prof16.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 416,
+    "nombre": "Profesor17",
+    "apellido": "Contaduría ",
+    "cedula": "00500017",
+    "correo": "prof17.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 417,
+    "nombre": "Profesor18",
+    "apellido": "Contaduría ",
+    "cedula": "00500018",
+    "correo": "prof18.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 418,
+    "nombre": "Profesor19",
+    "apellido": "Contaduría ",
+    "cedula": "00500019",
+    "correo": "prof19.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 419,
+    "nombre": "Profesor20",
+    "apellido": "Contaduría ",
+    "cedula": "00500020",
+    "correo": "prof20.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 420,
+    "nombre": "Profesor21",
+    "apellido": "Contaduría ",
+    "cedula": "00500021",
+    "correo": "prof21.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 421,
+    "nombre": "Profesor22",
+    "apellido": "Contaduría ",
+    "cedula": "00500022",
+    "correo": "prof22.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 422,
+    "nombre": "Profesor23",
+    "apellido": "Contaduría ",
+    "cedula": "00500023",
+    "correo": "prof23.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 423,
+    "nombre": "Profesor24",
+    "apellido": "Contaduría ",
+    "cedula": "00500024",
+    "correo": "prof24.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 424,
+    "nombre": "Profesor25",
+    "apellido": "Contaduría ",
+    "cedula": "00500025",
+    "correo": "prof25.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 425,
+    "nombre": "Profesor26",
+    "apellido": "Contaduría ",
+    "cedula": "00500026",
+    "correo": "prof26.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 426,
+    "nombre": "Profesor27",
+    "apellido": "Contaduría ",
+    "cedula": "00500027",
+    "correo": "prof27.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 427,
+    "nombre": "Profesor28",
+    "apellido": "Contaduría ",
+    "cedula": "00500028",
+    "correo": "prof28.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 428,
+    "nombre": "Profesor29",
+    "apellido": "Contaduría ",
+    "cedula": "00500029",
+    "correo": "prof29.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 429,
+    "nombre": "Profesor30",
+    "apellido": "Contaduría ",
+    "cedula": "00500030",
+    "correo": "prof30.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 430,
+    "nombre": "Profesor31",
+    "apellido": "Contaduría ",
+    "cedula": "00500031",
+    "correo": "prof31.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 431,
+    "nombre": "Profesor32",
+    "apellido": "Contaduría ",
+    "cedula": "00500032",
+    "correo": "prof32.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 432,
+    "nombre": "Profesor33",
+    "apellido": "Contaduría ",
+    "cedula": "00500033",
+    "correo": "prof33.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 433,
+    "nombre": "Profesor34",
+    "apellido": "Contaduría ",
+    "cedula": "00500034",
+    "correo": "prof34.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 434,
+    "nombre": "Profesor35",
+    "apellido": "Contaduría ",
+    "cedula": "00500035",
+    "correo": "prof35.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 435,
+    "nombre": "Profesor36",
+    "apellido": "Contaduría ",
+    "cedula": "00500036",
+    "correo": "prof36.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 436,
+    "nombre": "Profesor37",
+    "apellido": "Contaduría ",
+    "cedula": "00500037",
+    "correo": "prof37.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 437,
+    "nombre": "Profesor38",
+    "apellido": "Contaduría ",
+    "cedula": "00500038",
+    "correo": "prof38.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 438,
+    "nombre": "Profesor39",
+    "apellido": "Contaduría ",
+    "cedula": "00500039",
+    "correo": "prof39.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 439,
+    "nombre": "Profesor40",
+    "apellido": "Contaduría ",
+    "cedula": "00500040",
+    "correo": "prof40.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 440,
+    "nombre": "Profesor41",
+    "apellido": "Contaduría ",
+    "cedula": "00500041",
+    "correo": "prof41.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 441,
+    "nombre": "Profesor42",
+    "apellido": "Contaduría ",
+    "cedula": "00500042",
+    "correo": "prof42.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 442,
+    "nombre": "Profesor43",
+    "apellido": "Contaduría ",
+    "cedula": "00500043",
+    "correo": "prof43.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 443,
+    "nombre": "Profesor44",
+    "apellido": "Contaduría ",
+    "cedula": "00500044",
+    "correo": "prof44.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 444,
+    "nombre": "Profesor45",
+    "apellido": "Contaduría ",
+    "cedula": "00500045",
+    "correo": "prof45.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 445,
+    "nombre": "Profesor46",
+    "apellido": "Contaduría ",
+    "cedula": "00500046",
+    "correo": "prof46.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 446,
+    "nombre": "Profesor47",
+    "apellido": "Contaduría ",
+    "cedula": "00500047",
+    "correo": "prof47.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 447,
+    "nombre": "Profesor48",
+    "apellido": "Contaduría ",
+    "cedula": "00500048",
+    "correo": "prof48.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 448,
+    "nombre": "Profesor49",
+    "apellido": "Contaduría ",
+    "cedula": "00500049",
+    "correo": "prof49.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 449,
+    "nombre": "Profesor50",
+    "apellido": "Contaduría ",
+    "cedula": "00500050",
+    "correo": "prof50.5@iujo.edu",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 450,
+    "nombre": "lAx <zm k",
+    "apellido": "x z<sn kn< k",
+    "cedula": "12587123",
+    "correo": "xzmkxj@gmail.com",
+    "activo": true,
+    "rol": [
+      "profesor",
+      "medio tiempo"
+    ]
+  },
+  {
+    "id_usuario": 451,
+    "nombre": "Adjunto",
+    "apellido": "Informatica",
+    "cedula": "adj_2",
+    "correo": "adjunto.info@iujo.edu.ve",
+    "activo": true,
+    "rol": [
+      "adjunto coordinacion",
+      "profesor",
+      "tiempo completo"
+    ]
+  },
+  {
+    "id_usuario": 452,
+    "nombre": "Adjunto",
+    "apellido": "Electronica",
+    "cedula": "adj_3",
+    "correo": "adjunto.elec@iujo.edu.ve",
+    "activo": true,
+    "rol": [
+      "adjunto coordinacion",
+      "profesor",
+      "tiempo completo"
+    ]
+  },
+  {
+    "id_usuario": 453,
+    "nombre": "Adjunto",
+    "apellido": "Administracion",
+    "cedula": "adj_4",
+    "correo": "adjunto.admin@iujo.edu.ve",
+    "activo": true,
+    "rol": [
+      "adjunto coordinacion",
+      "profesor",
+      "tiempo completo"
+    ]
+  },
+  {
+    "id_usuario": 454,
+    "nombre": "Adjunto",
+    "apellido": "Contaduria",
+    "cedula": "adj_5",
+    "correo": "adjunto.conta@iujo.edu.ve",
+    "activo": true,
+    "rol": [
+      "adjunto coordinacion",
+      "profesor",
+      "tiempo completo"
+    ]
+  }
+]

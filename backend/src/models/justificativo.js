@@ -20,7 +20,13 @@ const Justificativo = {
              u.nombre, u.apellido, u.correo, u.cedula,
              a.fecha_entrada, a.fecha_salida,
              asig.nombre_asignatura,
-             c.nombre_carrera
+             c.nombre_carrera, pc.id_carrera,
+             EXISTS (
+               SELECT 1 FROM coordinador coord
+               JOIN usuario_rol ur2 ON coord.id_usuario_rol = ur2.id_usuario_rol
+               WHERE ur2.id_usuario = u.id_usuario AND coord.activo = true
+             ) as es_coordinador,
+             u.rol @> '["adjunto coordinacion"]'::jsonb as es_adjunto
       FROM justificativo j
       JOIN asistencia a ON j.id_asistencia = a.id_asistencia
       JOIN profesor p ON a.id_profesor = p.id_profesor
@@ -43,7 +49,7 @@ const Justificativo = {
              u.nombre, u.apellido, u.correo, u.cedula,
              a.fecha_entrada, a.fecha_salida,
              asig.nombre_asignatura,
-             c.nombre_carrera
+             c.nombre_carrera, pc.id_carrera
       FROM justificativo j
       JOIN asistencia a ON j.id_asistencia = a.id_asistencia
       JOIN profesor p ON a.id_profesor = p.id_profesor

@@ -10,8 +10,77 @@ import {
 
 const diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
+const bloquesAcademicos = [
+  // Bloques de 90 minutos (2 Horas Académicas)
+  { value: '14:15-15:45', label: 'Bloque Doble 1: 02:15 PM - 03:45 PM' },
+  { value: '15:45-17:15', label: 'Bloque Doble 2: 03:45 PM - 05:15 PM' },
+  { value: '17:15-18:30', label: 'Bloque Doble 3: 05:15 PM - 06:30 PM' },
+  { value: '18:30-20:00', label: 'Bloque Doble 4: 06:30 PM - 08:00 PM' },
+  // Bloques de 45 minutos (1 Hora Académica)
+  { value: '14:15-15:00', label: 'Bloque Sencillo 1: 02:15 PM - 03:00 PM' },
+  { value: '15:00-15:45', label: 'Bloque Sencillo 2: 03:00 PM - 03:45 PM' },
+  { value: '15:45-16:30', label: 'Bloque Sencillo 3: 03:45 PM - 04:30 PM' },
+  { value: '16:30-17:15', label: 'Bloque Sencillo 4: 04:30 PM - 05:15 PM' },
+  { value: '17:15-18:00', label: 'Bloque Sencillo 5: 05:15 PM - 06:00 PM' },
+  { value: '18:00-18:45', label: 'Bloque Sencillo 6: 06:00 PM - 06:45 PM' },
+  { value: '18:45-19:30', label: 'Bloque Sencillo 7: 06:45 PM - 07:30 PM' },
+  { value: '19:30-20:00', label: 'Bloque Sencillo 8: 07:30 PM - 08:00 PM' }
+];
+
 const GestionAsignaturasHorarios = () => {
   const { user } = useAuth();
+  const esCoordinador = user?.roles?.includes('coordinador') || user?.roles?.includes('adjunto coordinacion');
+  const esAuditor = user?.roles?.includes('auditor');
+
+  const formatTime12 = (timeStr) => {
+    if (!timeStr) return '';
+    const parts = timeStr.split(':');
+    let h = parseInt(parts[0]);
+    const m = parts[1] ? parts[1].substring(0, 2) : '00';
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12;
+    h = h ? h : 12;
+    return `${h}:${m} ${ampm}`;
+  };
+
+  const formatTime12Full = (timeStr) => {
+    if (!timeStr) return '';
+    const parts = timeStr.split(':');
+    let h = parseInt(parts[0]);
+    const m = parts[1] ? parts[1].substring(0, 2) : '00';
+    const ampm = h >= 12 ? 'pm' : 'am';
+    h = h % 12;
+    h = h ? h : 12;
+    const padH = h < 10 ? `0${h}` : h;
+    return `${padH}:${m} ${ampm}`;
+  };
+
+  const getPosicionEstiloGeneral = (inicio, fin) => {
+    if (!inicio || !fin) return { top: '0%', height: 'auto' };
+    const [h1, m1] = inicio.split(':').map(Number);
+    const [h2, m2] = fin.split(':').map(Number);
+    
+    const CALENDAR_START_MINUTES = 14 * 60; // 14:00 (2:00 PM)
+    const CALENDAR_TOTAL_MINUTES = 360; // 6 horas (hasta 20:00)
+    
+    const minutosInicio = h1 * 60 + m1;
+    const minutosFin = h2 * 60 + m2;
+    
+    const startOffset = minutosInicio - CALENDAR_START_MINUTES;
+    const duracion = minutosFin - minutosInicio;
+    
+    const topPct = (startOffset / CALENDAR_TOTAL_MINUTES) * 100;
+    const heightPct = (duracion / CALENDAR_TOTAL_MINUTES) * 100;
+    
+    return {
+      top: `${Math.max(0, Math.min(100, topPct))}%`,
+      height: `${Math.max(10, Math.min(100, heightPct))}%`,
+      position: 'absolute'
+    };
+  };
+
+  const diasSemanaFiltrados = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
+
   const [asignaturas, setAsignaturas] = useState([]);
   const [carreras, setCarreras] = useState([]);
   const [profesores, setProfesores] = useState([]);
@@ -22,6 +91,22 @@ const GestionAsignaturasHorarios = () => {
   const [nombreAsignatura, setNombreAsignatura] = useState('');
   const [idCarrera, setIdCarrera] = useState('');
   const [editandoAsignatura, setEditandoAsignatura] = useState(null);
+  const [bloqueSeleccionado, setBloqueSeleccionado] = useState('');
+
+  // Nuevos estados para la interactividad de la gráfica por bloques
+  const [showModalHorario, setShowModalHorario] = useState(false);
+  const [modoHorario, setModoHorario] = useState('crear');
+  const [horarioEdicion, setHorarioEdicion] = useState(null);
+  const [horarioForm, setHorarioForm] = useState({
+    nombre_asignatura: '',
+    id_profesor: '',
+    dia_semana: 'Lunes',
+    bloque: '14:15-15:45',
+    aula: ''
+  });
+  
+  // Estado para el buscador/filtro de profesores
+  const [filtroProfesor, setFiltroProfesor] = useState('');
   
   // Modales
   const [showModalAsignarProfesor, setShowModalAsignarProfesor] = useState(false);
@@ -38,6 +123,12 @@ const GestionAsignaturasHorarios = () => {
   const [resultadosBusqueda, setResultadosBusqueda] = useState([]);
   const [buscandoProfesor, setBuscandoProfesor] = useState(false);
   const [mostrarResultados, setMostrarResultados] = useState(false);
+
+  // Buscador de profesores (Modal Horario)
+  const [busquedaProfesorModal, setBusquedaProfesorModal] = useState('');
+  const [resultadosBusquedaModal, setResultadosBusquedaModal] = useState([]);
+  const [buscandoProfesorModal, setBuscandoProfesorModal] = useState(false);
+  const [mostrarResultadosModal, setMostrarResultadosModal] = useState(false);
   
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
@@ -59,8 +150,6 @@ const GestionAsignaturasHorarios = () => {
         api.get('/horarios/asignaturas-profesores')
       ]);
       
-      const esCoordinador = user?.roles?.includes('coordinador');
-      const esAuditor = user?.roles?.includes('auditor');
       const idCarreraCoordinador = user?.id_carrera;
 
       let asignaturasFiltradas = asigRes.data;
@@ -134,6 +223,30 @@ const GestionAsignaturasHorarios = () => {
     }
   };
 
+  const buscarProfesoresModal = async (query) => {
+    if (query.length < 2) {
+      setResultadosBusquedaModal([]);
+      setMostrarResultadosModal(false);
+      return;
+    }
+    setBuscandoProfesorModal(true);
+    try {
+      const res = await api.get(`/profesores/buscar?q=${query}`);
+      
+      let filtrados = res.data;
+      if (esCoordinador && !esAuditor && user?.id_carrera) {
+        filtrados = res.data.filter(p => Number(p.id_carrera) === Number(user.id_carrera));
+      }
+      
+      setResultadosBusquedaModal(filtrados);
+      setMostrarResultadosModal(true);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setBuscandoProfesorModal(false);
+    }
+  };
+
   const handleGuardarAsignacion = async () => {
     if (!profesorSeleccionadoData || !asignaturaSeleccionada) return;
     try {
@@ -159,22 +272,35 @@ const GestionAsignaturasHorarios = () => {
   const handleAgregarHorario = async (e, id_ap) => {
     e.preventDefault();
     const formData = new FormData(e.target);
+    
+    if (!bloqueSeleccionado) {
+      setError('❌ Por favor, selecciona un bloque de horario');
+      setTimeout(() => setError(''), 5000);
+      return;
+    }
+
+    const [hora_inicio, hora_fin] = bloqueSeleccionado.split('-');
+    
     const data = {
       id_asignatura_profesor: id_ap,
       dia_semana: formData.get('dia_semana'),
-      hora_inicio: formData.get('hora_inicio'),
-      hora_fin: formData.get('hora_fin'),
+      hora_inicio,
+      hora_fin,
       aula: formData.get('aula')
     };
+
     try {
       await api.post('/horarios', data);
       setMensaje('✅ Horario agregado');
+      setBloqueSeleccionado('');
       cargarDatos();
       e.target.reset();
-      setTimeout(() => setMensaje(''), 3000);
+      setTimeout(() => setMensaje(''), 5000);
     } catch (error) {
-      setError('Error al agregar horario');
-      setTimeout(() => setError(''), 3000);
+      console.error(error);
+      const msg = error.response?.data?.error || error.response?.data?.mensaje || 'Error al agregar horario';
+      setError(`❌ ${msg}`);
+      setTimeout(() => setError(''), 6000);
     }
   };
 
@@ -189,6 +315,128 @@ const GestionAsignaturasHorarios = () => {
     } catch (error) {
       setError('Error al eliminar horario');
       setModalEliminarHorario({ mostrar: false, id_horario: null });
+    }
+  };
+
+  // ✅ NUEVOS HELPERS PARA GESTIONAR HORARIOS DESDE LA GRÁFICA
+  const handleAbrirCrearHorario = (dia = 'Lunes') => {
+    setModoHorario('crear');
+    setHorarioEdicion(null);
+    setHorarioForm({
+      nombre_asignatura: '',
+      id_profesor: '',
+      dia_semana: dia,
+      bloque: '14:15-15:45',
+      aula: ''
+    });
+    setBusquedaProfesorModal('');
+    setMostrarResultadosModal(false);
+    setShowModalHorario(true);
+  };
+
+  const handleAbrirEditarHorario = (h) => {
+    setModoHorario('editar');
+    setHorarioEdicion(h);
+    
+    // Obtener formato HH:MM-HH:MM para el select de bloques
+    const start = h.hora_inicio.substring(0, 5);
+    const end = h.hora_fin.substring(0, 5);
+    const bloqueVal = `${start}-${end}`;
+    
+    // Buscar asignatura y profesor del bloque en asignaturasProfesores
+    const ap = asignaturasProfesores.find(x => Number(x.id_asignatura_profesor) === Number(h.id_asignatura_profesor));
+    const idProfesor = ap ? ap.id_profesor.toString() : '';
+    const nombreProfesor = ap ? `👨‍🏫 ${ap.nombre} ${ap.apellido}` : '';
+    
+    setHorarioForm({
+      nombre_asignatura: h.nombre_asignatura || '',
+      id_profesor: idProfesor,
+      dia_semana: h.dia_semana,
+      bloque: bloqueVal,
+      aula: h.aula || ''
+    });
+    setBusquedaProfesorModal(nombreProfesor);
+    setMostrarResultadosModal(false);
+    setShowModalHorario(true);
+  };
+
+  const handleGuardarHorarioModal = async (e) => {
+    e.preventDefault();
+    if (!horarioForm.nombre_asignatura || !horarioForm.nombre_asignatura.trim()) {
+      setError('❌ Por favor, ingresa el nombre de la asignatura.');
+      setTimeout(() => setError(''), 5000);
+      return;
+    }
+    if (!horarioForm.id_profesor) {
+      setError('❌ Por favor, selecciona un profesor.');
+      setTimeout(() => setError(''), 5000);
+      return;
+    }
+    
+    const [hora_inicio, hora_fin] = horarioForm.bloque.split('-');
+    
+    try {
+      let id_asignatura = null;
+      
+      // 1. Buscar si ya existe la asignatura por nombre (case-insensitive)
+      const asigExistente = asignaturas.find(
+        a => a.nombre_asignatura.trim().toLowerCase() === horarioForm.nombre_asignatura.trim().toLowerCase()
+      );
+      
+      if (asigExistente) {
+        id_asignatura = asigExistente.id_asignatura;
+      } else {
+        // Si no existe, crear la asignatura automáticamente
+        const carreraId = user?.id_carrera || (user?.ids_carreras && user.ids_carreras[0]) || idCarrera || 1;
+        const newAsigRes = await api.post('/asignaturas', {
+          nombre_asignatura: horarioForm.nombre_asignatura.trim(),
+          id_carrera: parseInt(carreraId)
+        });
+        id_asignatura = newAsigRes.data.id_asignatura;
+      }
+      
+      let id_asignatura_profesor = null;
+      
+      // 2. Buscar si ya existe la asignación asignatura_profesor
+      const apExistente = asignaturasProfesores.find(
+        ap => Number(ap.id_asignatura) === Number(id_asignatura) && 
+              Number(ap.id_profesor) === Number(horarioForm.id_profesor)
+      );
+      
+      if (apExistente) {
+        id_asignatura_profesor = apExistente.id_asignatura_profesor;
+      } else {
+        // Si no existe la asignación, crearla en la base de datos
+        const asigProfRes = await api.post('/horarios/asignar-profesor', {
+          id_asignatura: parseInt(id_asignatura),
+          id_profesor: parseInt(horarioForm.id_profesor)
+        });
+        id_asignatura_profesor = asigProfRes.data.asignacion.id_asignatura_profesor;
+      }
+      
+      const data = {
+        id_asignatura_profesor,
+        dia_semana: horarioForm.dia_semana,
+        hora_inicio,
+        hora_fin,
+        aula: horarioForm.aula
+      };
+      
+      if (modoHorario === 'crear') {
+        await api.post('/horarios', data);
+        setMensaje('✅ Horario agregado con éxito');
+      } else {
+        await api.put(`/horarios/${horarioEdicion.id_horario}`, data);
+        setMensaje('✅ Horario actualizado con éxito');
+      }
+      setShowModalHorario(false);
+      cargarDatos();
+      setTimeout(() => setMensaje(''), 5000);
+    } catch (error) {
+      console.error(error);
+      const msg = error.response?.data?.error || error.response?.data?.mensaje || 'Error al procesar el horario';
+      setError(`❌ ${msg}`);
+      setTimeout(() => setError(''), 6000);
     }
   };
 
@@ -223,180 +471,114 @@ const GestionAsignaturasHorarios = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
-        {/* Formulario Asignatura */}
-        <div className="xl:col-span-4 bg-white rounded-[32px] p-8 shadow-sm border border-slate-100 sticky top-24">
-          <h2 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-3">
-            <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
-              <IconPlus />
-            </div>
-            {editandoAsignatura ? 'Editar Asignatura' : 'Nueva Asignatura'}
-          </h2>
-          <form onSubmit={handleGuardarAsignatura} className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700 ml-1">Nombre de Asignatura</label>
-              <input
-                required type="text"
-                className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-medium"
-                value={nombreAsignatura}
-                onChange={(e) => setNombreAsignatura(e.target.value)}
-                placeholder="Ej: Programación Orientada a Objetos"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700 ml-1">Carrera</label>
-              <CustomSelect
-                options={carreras.map(c => ({ value: c.id_carrera, label: c.nombre_carrera }))}
-                value={idCarrera}
-                onChange={(val) => setIdCarrera(val)}
-                placeholder="Seleccionar carrera..."
-                disabled={user?.roles?.includes('coordinador') && !user?.roles?.includes('auditor')}
-              />
-            </div>
-            <div className="flex gap-3 pt-4">
-              <button type="submit" className="flex-1 bg-indigo-600 text-white px-6 py-4 rounded-2xl font-black hover:bg-indigo-700 shadow-xl shadow-indigo-200 transition-all flex items-center justify-center gap-2 active:scale-95">
-                <IconSave /> {editandoAsignatura ? 'Actualizar' : 'Guardar Asignatura'}
+      {/* ✅ SECCIÓN DE CALENDARIO GENERAL DE HORARIOS POR BLOQUES (ESTRUCTURA DE SCREENSHOT) */}
+      <div className="bg-white p-6 sm:p-8 rounded-[32px] shadow-sm border border-slate-100 space-y-6 overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+          <div>
+            <div className="flex items-center gap-3">
+              <h3 className="font-extrabold text-slate-800 text-lg leading-tight">🏫 Sede Caracas</h3>
+              <button 
+                onClick={() => handleAbrirCrearHorario('Lunes')}
+                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center gap-1 active:scale-95"
+              >
+                <IconPlus width={12} height={12} /> Agregar Horario
               </button>
-              {editandoAsignatura && (
-                <button type="button" onClick={() => { setEditandoAsignatura(null); setNombreAsignatura(''); }} className="bg-slate-100 text-slate-500 px-6 py-4 rounded-2xl font-black hover:bg-slate-200 transition-all active:scale-95">
-                  <IconCancel />
-                </button>
-              )}
             </div>
-          </form>
+            <p className="text-xs text-gray-400 mt-1.5">Distribución de asignaturas en el mapa de bloques académicos semanales (Haz click en un bloque para editarlo o eliminarlo)</p>
+          </div>
+          <div className="flex items-center gap-2 text-xs font-bold bg-indigo-50 text-indigo-700 px-3.5 py-1.5 rounded-xl border border-indigo-100">
+            <span>📚 Total Horarios: {horarios.length} bloques</span>
+          </div>
         </div>
 
-        {/* Tabla de Asignaturas */}
-        <div className="xl:col-span-8 bg-white rounded-[32px] shadow-sm border border-slate-100 overflow-hidden">
-          <div className="overflow-x-auto custom-scrollbar">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-50/50">
-                  <th className="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-400">Asignatura</th>
-                  <th className="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-400">Carrera</th>
-                  <th className="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-400">Profesor Asignado</th>
-                  <th className="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-400 text-right">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {asignaturas.map((asig) => {
-                  const asigProf = asignaturasProfesores.find(ap => ap.id_asignatura === asig.id_asignatura);
-                  const estaExpandida = asignaturaExpandida === asig.id_asignatura;
-                  
-                  return (
-                    <React.Fragment key={asig.id_asignatura}>
-                      <tr className={`hover:bg-slate-50/50 transition-colors ${estaExpandida ? 'bg-indigo-50/30' : ''}`}>
-                        <td className="px-6 py-5">
-                          <div className="font-bold text-slate-800">{asig.nombre_asignatura}</div>
-                        </td>
-                        <td className="px-6 py-5">
-                          <span className="text-xs font-black bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg uppercase">
-                            {asig.nombre_carrera}
-                          </span>
-                        </td>
-                        <td className="px-6 py-5">
-                          {asigProf ? (
-                            <div className="flex items-center gap-2 text-indigo-600 font-bold text-sm">
-                              <IconUsers width={16} height={16} />
-                              {asigProf.nombre_profesor}
-                            </div>
-                          ) : (
-                            <button 
-                              onClick={() => { setAsignaturaSeleccionada(asig); setShowModalAsignarProfesor(true); }}
-                              className="text-amber-600 bg-amber-50 px-3 py-1.5 rounded-xl text-xs font-black hover:bg-amber-600 hover:text-white transition-all border border-amber-100 flex items-center gap-1.5"
-                            >
-                              <IconPlus width={12} height={12} /> Asignar Profesor
-                            </button>
-                          )}
-                        </td>
-                        <td className="px-6 py-5 text-right">
-                          <div className="flex justify-end gap-2">
-                            <button
-                              onClick={() => setAsignaturaExpandida(estaExpandida ? null : asig.id_asignatura)}
-                              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${estaExpandida ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'}`}
-                              title="Ver Horarios"
-                            >
-                              <IconClock />
-                            </button>
-                            <button
-                              onClick={() => { setEditandoAsignatura(asig); setNombreAsignatura(asig.nombre_asignatura); setIdCarrera(asig.id_carrera.toString()); }}
-                              className="w-9 h-9 bg-slate-50 text-slate-600 rounded-xl flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all"
-                            >
-                              <IconEdit />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                      {estaExpandida && (
-                        <tr>
-                          <td colSpan="4" className="px-8 py-6 bg-indigo-50/20 border-l-4 border-indigo-600">
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                              {/* Lista de Horarios */}
-                              <div className="space-y-4">
-                                <h4 className="font-black text-indigo-900 flex items-center gap-2">
-                                  <IconClock className="text-indigo-600" /> Horarios Establecidos
-                                </h4>
-                                <div className="space-y-2">
-                                  {horarios.filter(h => h.id_asignatura === asig.id_asignatura).length > 0 ? (
-                                    horarios.filter(h => h.id_asignatura === asig.id_asignatura).map(h => (
-                                      <div key={h.id_horario} className="bg-white p-4 rounded-2xl shadow-sm border border-indigo-100 flex justify-between items-center animate-slide-in">
-                                        <div>
-                                          <div className="font-bold text-slate-800">{h.dia_semana}</div>
-                                          <div className="text-xs font-medium text-slate-500 uppercase tracking-tighter">
-                                            {h.hora_inicio} - {h.hora_fin} • Aula: {h.aula || 'N/A'}
-                                          </div>
-                                        </div>
-                                        <button 
-                                          onClick={() => setModalEliminarHorario({ mostrar: true, id_horario: h.id_horario })}
-                                          className="w-8 h-8 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all flex items-center justify-center"
-                                        >
-                                          <IconTrash width={16} height={16} />
-                                        </button>
-                                      </div>
-                                    ))
-                                  ) : (
-                                    <div className="p-8 border-2 border-dashed border-indigo-100 rounded-3xl text-center text-indigo-300">
-                                      No hay horarios registrados
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
+        <div className="overflow-x-auto custom-scrollbar pb-4">
+          <div className="min-w-[850px] bg-white border border-slate-200/80 rounded-3xl shadow-xl shadow-slate-200/40 overflow-hidden relative">
+            
+            {/* Header Row (Lunes - Viernes) */}
+            <div className="grid grid-cols-[80px_repeat(5,_1fr)] bg-slate-50/80 text-slate-700 border-b border-slate-200/80 backdrop-blur-sm">
+              <div className="p-4 border-r border-slate-200/80 font-black text-center text-[10px] uppercase tracking-widest text-slate-400 flex flex-col items-center justify-center gap-1 bg-slate-100/50">
+                <IconClock width={16} height={16} className="text-indigo-400" />
+                <span>Hora</span>
+              </div>
+              {diasSemanaFiltrados.map((dia) => (
+                <div key={dia} className="p-4 font-black text-center text-sm border-r last:border-r-0 border-slate-200/80 flex items-center justify-center gap-2 group text-slate-700">
+                  <span>{dia}</span>
+                  <button 
+                    onClick={() => handleAbrirCrearHorario(dia)}
+                    className="opacity-0 group-hover:opacity-100 focus:opacity-100 w-6 h-6 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all text-sm font-bold shadow-sm"
+                    title={`Agregar horario el ${dia}`}
+                  >
+                    +
+                  </button>
+                </div>
+              ))}
+            </div>
 
-                              {/* Formulario Agregar Horario */}
-                              {asigProf ? (
-                                <div className="space-y-4">
-                                  <h4 className="font-black text-indigo-900">Agregar Bloque</h4>
-                                  <form onSubmit={(e) => handleAgregarHorario(e, asigProf.id_asignatura_profesor)} className="grid grid-cols-2 gap-3 bg-white p-6 rounded-3xl shadow-sm border border-indigo-100">
-                                    <div className="col-span-2">
-                                      <CustomSelect
-                                        name="dia_semana" required
-                                        options={diasSemana.map(d => ({ value: d, label: d }))}
-                                        placeholder="Seleccionar día..."
-                                      />
-                                    </div>
-                                    <input type="time" name="hora_inicio" required className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:border-indigo-400 text-sm font-bold" />
-                                    <input type="time" name="hora_fin" required className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:border-indigo-400 text-sm font-bold" />
-                                    <input type="text" name="aula" placeholder="Aula (ej: A-102)" className="col-span-2 w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:border-indigo-400 text-sm font-bold" />
-                                    <button type="submit" className="col-span-2 mt-2 bg-indigo-600 text-white py-3 rounded-2xl font-black hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">
-                                      Agregar Horario
-                                    </button>
-                                  </form>
-                                </div>
-                              ) : (
-                                <div className="bg-amber-50 p-6 rounded-3xl border border-amber-100 text-amber-800 text-sm font-medium flex items-center gap-3">
-                                  <IconInfo className="flex-shrink-0" />
-                                  Debes asignar un profesor a la asignatura antes de poder registrar horarios.
-                                </div>
-                              )}
+            {/* Body Rows Grid with absolute-positioned blocks */}
+            <div className="grid grid-cols-[80px_repeat(5,_1fr)] relative h-[420px] bg-white">
+              
+              {/* Axis Column (2 PM, 3 PM, 4 PM, 5 PM, 6 PM, 7 PM) */}
+              <div className="bg-slate-50/50 border-r border-slate-200/80 flex flex-col justify-between py-4 text-center font-bold text-[10px] text-slate-400 uppercase tracking-wider">
+                {['2 PM', '3 PM', '4 PM', '5 PM', '6 PM', '7 PM'].map((h) => (
+                  <div key={h} className="h-8 flex items-center justify-center border-b border-slate-100 last:border-b-0">
+                    {h}
+                  </div>
+                ))}
+              </div>
+
+              {/* Background Grid Lines and Day Columns */}
+              {diasSemanaFiltrados.map((dia) => {
+                const materiasDelDia = horarios.filter(h => h.dia_semana === dia);
+
+                return (
+                  <div key={dia} className="relative border-r last:border-r-0 border-slate-100/80 bg-white h-full group/col hover:bg-slate-50/30 transition-colors">
+                    {/* Horizontal guides lines inside each day */}
+                    <div className="absolute inset-0 flex flex-col justify-between py-4 pointer-events-none">
+                      {[1, 2, 3, 4, 5, 6].map(idx => (
+                        <div key={idx} className="w-full border-t border-slate-100/60 border-dashed"></div>
+                      ))}
+                    </div>
+
+                    {/* Render class blocks for this day */}
+                    {materiasDelDia.map((mat) => {
+                      const posEstilo = getPosicionEstiloGeneral(mat.hora_inicio, mat.hora_fin);
+
+                      return (
+                        <div 
+                          key={mat.id_horario}
+                          style={posEstilo}
+                          onClick={() => handleAbrirEditarHorario(mat)}
+                          className="absolute left-1 right-1 rounded-2xl border border-indigo-100/80 bg-gradient-to-br from-indigo-50 to-blue-50/80 text-slate-800 shadow-sm flex flex-col hover:shadow-lg hover:shadow-indigo-200/50 transition-all duration-300 hover:-translate-y-1 hover:z-20 group cursor-pointer overflow-hidden backdrop-blur-sm"
+                        >
+                          {/* Block Header (Time Bar) */}
+                          <div className="bg-indigo-600/90 text-white py-1 px-2 text-center text-[9px] font-black tracking-widest uppercase shadow-sm">
+                            {formatTime12Full(mat.hora_inicio)} a {formatTime12Full(mat.hora_fin)}
+                          </div>
+
+                          {/* Block Body */}
+                          <div className="p-2 flex-1 flex flex-col justify-center items-center text-center gap-1.5">
+                            <div className="font-black text-[10px] sm:text-[11px] leading-tight text-slate-800 group-hover:text-indigo-700 transition-colors">
+                              {mat.nombre_asignatura}
                             </div>
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                  );
-                })}
-              </tbody>
-            </table>
+                            
+                            {mat.aula && (
+                              <div className="text-[9px] font-extrabold text-indigo-700 bg-indigo-100/60 px-2 py-0.5 rounded-full inline-flex items-center gap-1 border border-indigo-200/50">
+                                📍 {mat.aula}
+                              </div>
+                            )}
+                            
+                            <div className="text-[9px] font-bold text-slate-500 flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_4px_rgba(52,211,153,0.8)]"></span>
+                              {mat.apellido && mat.nombre ? `${mat.apellido}, ${mat.nombre}` : 'Profesor Asignado'}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
@@ -488,6 +670,7 @@ const GestionAsignaturasHorarios = () => {
                   className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-indigo-500 font-bold"
                   value={fechaInicio}
                   onChange={(e) => setFechaInicio(e.target.value)}
+                  max={new Date().toISOString().split('T')[0]}
                 />
               </div>
 
@@ -542,6 +725,156 @@ const GestionAsignaturasHorarios = () => {
               <button onClick={handleEliminarHorario} className="flex-1 bg-rose-500 text-white py-4 rounded-2xl font-black hover:bg-rose-600 transition-all shadow-xl shadow-rose-200 active:scale-95">Eliminar</button>
               <button onClick={() => setModalEliminarHorario({ mostrar: false, id_horario: null })} className="flex-1 bg-slate-100 text-slate-500 py-4 rounded-2xl font-black hover:bg-slate-200 transition-all">Cancelar</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ✅ MODAL INTERACTIVO PARA AGREGAR/EDITAR HORARIOS DESDE LA GRÁFICA */}
+      {showModalHorario && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-fade-in" onClick={() => setShowModalHorario(false)}></div>
+          <div className="bg-white rounded-[40px] w-full max-w-xl p-8 sm:p-10 shadow-2xl relative z-10 animate-zoom-in overflow-visible">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h3 className="text-2xl font-black text-slate-800">
+                  {modoHorario === 'crear' ? 'Agregar Bloque Horario' : 'Editar Bloque Horario'}
+                </h3>
+                <p className="text-indigo-600 font-bold text-sm">
+                  {modoHorario === 'crear' ? 'Configura la distribución horaria de la asignatura' : 'Modifica los parámetros de este bloque académico'}
+                </p>
+              </div>
+              <button onClick={() => setShowModalHorario(false)} className="text-slate-400 hover:text-slate-600 bg-slate-50 w-12 h-12 rounded-full flex items-center justify-center">
+                <IconCancel />
+              </button>
+            </div>
+
+            <form onSubmit={handleGuardarHorarioModal} className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1 block">Asignatura</label>
+                  <input
+                    type="text"
+                    required
+                    className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold text-slate-700 placeholder:font-semibold"
+                    placeholder="Ej: Base de Datos o Programación"
+                    value={horarioForm.nombre_asignatura}
+                    onChange={(e) => setHorarioForm({ ...horarioForm, nombre_asignatura: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2 relative">
+                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1 block">Profesor / Docente</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      required
+                      className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold text-slate-700 placeholder:font-semibold"
+                      placeholder="Buscar profesor..."
+                      value={busquedaProfesorModal}
+                      onChange={(e) => {
+                        setBusquedaProfesorModal(e.target.value);
+                        buscarProfesoresModal(e.target.value);
+                        setHorarioForm(prev => ({ ...prev, id_profesor: '' }));
+                      }}
+                      autoComplete="off"
+                    />
+                    {buscandoProfesorModal && (
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                        <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    )}
+                  </div>
+
+                  {mostrarResultadosModal && (
+                    <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white border border-slate-100 rounded-3xl shadow-2xl shadow-indigo-200/50 max-h-60 overflow-y-auto z-50 p-2 custom-scrollbar animate-slide-in">
+                      {resultadosBusquedaModal.length > 0 ? (
+                        resultadosBusquedaModal.map(prof => (
+                          <button
+                            key={prof.id_profesor}
+                            type="button"
+                            className="w-full flex items-center justify-between p-3.5 hover:bg-indigo-50 rounded-2xl transition-all group text-left"
+                            onClick={() => {
+                              setHorarioForm(prev => ({ ...prev, id_profesor: prof.id_profesor.toString() }));
+                              setBusquedaProfesorModal(`👨‍🏫 ${prof.nombre} ${prof.apellido}`);
+                              setMostrarResultadosModal(false);
+                            }}
+                          >
+                            <div>
+                              <div className="font-bold text-slate-800 group-hover:text-indigo-700 transition-colors">
+                                👨‍🏫 {prof.nombre} {prof.apellido}
+                              </div>
+                              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">
+                                {prof.cedula} • {prof.correo}
+                              </div>
+                            </div>
+                          </button>
+                        ))
+                      ) : (
+                        <div className="p-4 text-center text-sm font-bold text-slate-400">
+                          No se encontraron profesores
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1 block">Día de la Semana</label>
+                  <CustomSelect
+                    value={horarioForm.dia_semana}
+                    onChange={(val) => setHorarioForm({ ...horarioForm, dia_semana: val })}
+                    options={diasSemana.map(d => ({ value: d, label: d }))}
+                    placeholder="Seleccionar día..."
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1 block">Aula / Salón</label>
+                  <input
+                    type="text"
+                    required
+                    className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold text-slate-700"
+                    placeholder="Ej: A-102 o 5º B"
+                    value={horarioForm.aula}
+                    onChange={(e) => setHorarioForm({ ...horarioForm, aula: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1 block">Bloque Académico</label>
+                <CustomSelect
+                  value={horarioForm.bloque}
+                  onChange={(val) => setHorarioForm({ ...horarioForm, bloque: val })}
+                  options={bloquesAcademicos}
+                  placeholder="Seleccionar bloque..."
+                  direction="up"
+                />
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                <button 
+                  type="submit" 
+                  className="flex-1 bg-indigo-600 text-white py-4 rounded-2xl font-black hover:bg-indigo-700 shadow-xl shadow-indigo-200 transition-all flex items-center justify-center gap-2 active:scale-95"
+                >
+                  <IconSave /> {modoHorario === 'crear' ? 'Agregar Horario' : 'Guardar Cambios'}
+                </button>
+                {modoHorario === 'editar' && (
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      setModalEliminarHorario({ mostrar: true, id_horario: horarioEdicion.id_horario });
+                      setShowModalHorario(false);
+                    }} 
+                    className="bg-rose-50 border border-rose-100 text-rose-600 hover:bg-rose-100 py-4 px-6 rounded-2xl font-black transition-all flex items-center justify-center gap-2 active:scale-95"
+                  >
+                    <IconTrash /> Eliminar Bloque
+                  </button>
+                )}
+              </div>
+            </form>
           </div>
         </div>
       )}

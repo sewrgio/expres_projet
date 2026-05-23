@@ -63,8 +63,13 @@ const QR = {
         const id = parseInt(parts[1], 10);
         const fechaQR = parts[2]; // Puede ser YYYY-MM-DD o un timestamp en milisegundos
         
-        const hoy = new Date();
-        const fechaActualStr = `${hoy.getFullYear()}-${(hoy.getMonth() + 1).toString().padStart(2, '0')}-${hoy.getDate().toString().padStart(2, '0')}`;
+        const formatter = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'America/Caracas', 
+          year: 'numeric', 
+          month: '2-digit', 
+          day: '2-digit'
+        });
+        const fechaActualStr = formatter.format(new Date());
         
         let esValido = false;
 

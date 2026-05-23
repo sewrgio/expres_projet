@@ -76,6 +76,8 @@ const Bitacora = () => {
   };
 
   useEffect(() => {
+    let intervalId;
+
     const load = async () => {
       try {
         setCargando(true);
@@ -86,16 +88,21 @@ const Bitacora = () => {
         setCargando(false);
       }
     };
-    load();
+
+    load().then(() => {
+      // Iniciar polling silencioso en tiempo real (cada 5 segundos) tras la carga inicial
+      intervalId = setInterval(() => {
+        fetchLogs();
+      }, 5000);
+    });
+
+    // Limpieza de memoria (Clean-up) al desmontar el componente
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
   }, []);
 
-  if (!user?.roles?.includes('auditor')) {
-    return (
-      <div className="p-8 text-center text-red-500 font-semibold bg-red-50 rounded-xl border border-red-200 max-w-2xl mx-auto mt-12 shadow-sm">
-        🚫 Acceso denegado. Solo el perfil de Auditor General está autorizado para visualizar la bitácora del sistema.
-      </div>
-    );
-  }
+  
 
   // Filtrar logs según búsqueda y categoría seleccionada
   const filteredLogs = logs.filter((log) => {
@@ -119,6 +126,9 @@ const Bitacora = () => {
     if (filtroCategoria === 'roles') {
       return matchesSearch && log.accion === 'CAMBIO_ROL_DEDICACION';
     }
+    if (filtroCategoria === 'sistema') {
+      return matchesSearch && (log.accion.startsWith('SISTEMA_') || log.accion.startsWith('EXPORTACION_'));
+    }
     return matchesSearch;
   });
 
@@ -126,7 +136,12 @@ const Bitacora = () => {
   const totalLogs = logs.length;
   const exitosas = logs.filter(l => l.accion === 'ASISTENCIA_ENTRADA' || l.accion === 'ASISTENCIA_SALIDA').length;
   const rechazadas = logs.filter(l => l.accion.startsWith('ASISTENCIA_RECHAZADA')).length;
-  const configuraciones = logs.filter(l => l.accion.includes('_QR') || l.accion === 'CAMBIO_ROL_DEDICACION').length;
+  const configuraciones = logs.filter(l => 
+    l.accion.includes('_QR') || 
+    l.accion === 'CAMBIO_ROL_DEDICACION' ||
+    l.accion.startsWith('SISTEMA_') ||
+    l.accion.startsWith('EXPORTACION_')
+  ).length;
 
   // Obtener Iniciales del nombre
   const getInitials = (nombre, apellido) => {
@@ -297,7 +312,8 @@ const Bitacora = () => {
               { id: 'asistencias', label: 'Asistencias' },
               { id: 'rechazos', label: 'Bloqueos' },
               { id: 'qr', label: 'Gestión QR' },
-              { id: 'roles', label: 'Roles / Dedicación' }
+              { id: 'roles', label: 'Roles / Dedicación' },
+              { id: 'sistema', label: 'Sistema / Servidor' }
             ].map(cat => (
               <button
                 key={cat.id}
@@ -315,21 +331,91 @@ const Bitacora = () => {
         </div>
       </div>
 
-      {/* Tabla Premium Glassmorphism */}
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left border-collapse">
+       {/* Vista de Dispositivos Móviles / Tablets (Tarjetas Premium sin scrollbar) */}
+      <div className="block md:hidden space-y-4">
+        {filteredLogs.map((log) => {
+          const partes = log.detalles?.split('. ') || [];
+          const descripcionAccion = partes[0] || '';
+          const efectoAccion = partes.slice(1).join('. ') || '';
+          
+          const esSistema = !log.usuario_nombre;
+          const iniciales = esSistema ? 'SYS' : getInitials(log.usuario_nombre, log.usuario_apellido);
+          const nombreCompleto = esSistema ? 'SISTEMA' : `${log.usuario_nombre} ${log.usuario_apellido}`;
+          const correoCompleto = esSistema ? 'sistema@iujo.edu.ve' : log.usuario_correo;
+          const bgGradient = esSistema 
+            ? 'from-slate-700 to-slate-900 shadow-slate-700/20' 
+            : 'from-indigo-500 to-indigo-700 shadow-indigo-500/20';
+
+          return (
+            <div key={log.id} className="bg-white p-5 rounded-2xl shadow-md border border-gray-100/70 space-y-4 hover:shadow-lg transition-all duration-300">
+              {/* Encabezado: Operador/Sistema y Badge de Acción */}
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center space-x-3">
+                  <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${bgGradient} flex items-center justify-center text-white text-xs font-black shadow-md`}>
+                    {iniciales}
+                  </div>
+                  <div className="flex flex-col">
+                    <span className={`font-semibold leading-none ${esSistema ? 'text-slate-500 font-extrabold tracking-wider text-[10px] bg-slate-100 px-1.5 py-0.5 rounded-md w-fit' : 'text-gray-900 text-sm'}`}>
+                      {nombreCompleto}
+                    </span>
+                    <span className="text-[9px] text-gray-400 mt-1 leading-none font-medium">
+                      {correoCompleto}
+                    </span>
+                  </div>
+                </div>
+                <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase border tracking-wider ${getBadgeStyle(log.accion)}`}>
+                  {log.accion}
+                </span>
+              </div>
+
+              {/* Fecha y Hora en Formato Premium */}
+              <div className="text-[10px] text-gray-500 flex items-center space-x-1.5 font-semibold bg-gray-50 px-2.5 py-1.5 rounded-lg w-fit">
+                <IconClock className="w-3.5 h-3.5 text-gray-400" />
+                <span>
+                  {new Date(log.fecha).toLocaleDateString([], { day: '2-digit', month: 'short', year: 'numeric' })} - {new Date(log.fecha).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                </span>
+              </div>
+
+              {/* Detalle y Efecto */}
+              <div className="space-y-2">
+                <p className="text-gray-700 font-medium text-xs leading-relaxed">
+                  {descripcionAccion}
+                </p>
+                {efectoAccion && (
+                  <div className="flex items-start gap-1 bg-indigo-50/40 p-2.5 rounded-xl border border-indigo-100/40">
+                    <span className="text-indigo-500 mt-0.5"><IconChevronRight className="w-3.5 h-3.5 flex-shrink-0" /></span>
+                    <span className="text-[10px] text-indigo-700 font-semibold leading-relaxed">
+                      {efectoAccion}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+
+        {filteredLogs.length === 0 && (
+          <div className="bg-white p-12 rounded-2xl text-center text-gray-400 border border-gray-100">
+            <IconClipboard className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+            <p className="font-semibold text-gray-500">No se encontraron transacciones</p>
+            <p className="text-xs text-gray-400 mt-1">Ajusta tus filtros o términos de búsqueda.</p>
+          </div>
+        )}
+      </div>
+
+      {/* Vista de Escritorio (Tabla Premium Rediseñada y Totalmente Fluida) */}
+      <div className="hidden md:block bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+        <table className="w-full text-sm text-left border-collapse table-fixed">
             <thead className="bg-gray-50 text-gray-700 border-b border-gray-100 font-bold uppercase tracking-wider text-xs">
               <tr>
-                <th className="px-6 py-4">🕒 Hora y Fecha</th>
-                <th className="px-6 py-4">👤 Operador / Usuario</th>
-                <th className="px-6 py-4">🏷️ Acción Realizada</th>
+                <th className="px-6 py-4 w-[160px]">🕒 Hora y Fecha</th>
+                <th className="px-6 py-4 w-[240px]">👤 Operador / Usuario</th>
+                <th className="px-6 py-4 w-[220px]">🏷️ Acción Realizada</th>
                 <th className="px-6 py-4">📋 Detalle, Qué Afectó y Efecto en Sistema</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {filteredLogs.map((log) => {
-                // Separar la cadena de detalles para darle un aspecto visual premium
                 const partes = log.detalles?.split('. ') || [];
                 const descripcionAccion = partes[0] || '';
                 const efectoAccion = partes.slice(1).join('. ') || '';
@@ -345,7 +431,7 @@ const Bitacora = () => {
                           <span className="text-gray-800 font-semibold">
                             {new Date(log.fecha).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                           </span>
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs text-gray-400 font-medium">
                             {new Date(log.fecha).toLocaleDateString([], { day: '2-digit', month: 'short', year: 'numeric' })}
                           </span>
                         </div>
@@ -353,36 +439,48 @@ const Bitacora = () => {
                     </td>
                     
                     <td className="px-6 py-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center text-white text-xs font-bold shadow-md shadow-indigo-500/10">
-                          {getInitials(log.usuario_nombre, log.usuario_apellido)}
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-gray-900 font-semibold leading-none">
-                            {log.usuario_nombre} {log.usuario_apellido}
-                          </span>
-                          <span className="text-xs text-gray-400 mt-1 leading-none">
-                            {log.usuario_correo}
-                          </span>
-                        </div>
-                      </div>
+                      {(() => {
+                        const esSistema = !log.usuario_nombre;
+                        const iniciales = esSistema ? 'SYS' : getInitials(log.usuario_nombre, log.usuario_apellido);
+                        const nombreCompleto = esSistema ? 'SISTEMA' : `${log.usuario_nombre} ${log.usuario_apellido}`;
+                        const correoCompleto = esSistema ? 'sistema@iujo.edu.ve' : log.usuario_correo;
+                        const bgGradient = esSistema 
+                          ? 'from-slate-700 to-slate-900 shadow-slate-700/20' 
+                          : 'from-indigo-500 to-indigo-700 shadow-indigo-500/20';
+
+                        return (
+                          <div className="flex items-center space-x-3">
+                            <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${bgGradient} flex items-center justify-center text-white text-xs font-black shadow-md flex-shrink-0`}>
+                              {iniciales}
+                            </div>
+                            <div className="flex flex-col">
+                              <span className={`font-semibold leading-none ${esSistema ? 'text-slate-500 font-extrabold tracking-wider text-[11px] bg-slate-100 px-1.5 py-0.5 rounded-md w-fit' : 'text-gray-900'}`}>
+                                {nombreCompleto}
+                              </span>
+                              <span className="text-[10px] text-gray-400 mt-1 leading-none font-medium">
+                                {correoCompleto}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </td>
 
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase border tracking-wider ${getBadgeStyle(log.accion)}`}>
+                    <td className="px-6 py-4">
+                      <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-extrabold uppercase border tracking-wider break-all ${getBadgeStyle(log.accion)}`}>
                         {log.accion}
                       </span>
                     </td>
 
-                    <td className="px-6 py-4 max-w-md">
-                      <div className="space-y-1.5">
-                        <p className="text-gray-700 font-medium text-xs leading-relaxed">
+                    <td className="px-6 py-4">
+                      <div className="space-y-1.5 max-w-xl">
+                        <p className="text-gray-700 font-medium text-xs leading-relaxed break-words">
                           {descripcionAccion}
                         </p>
                         {efectoAccion && (
-                          <div className="flex items-start gap-1 bg-indigo-50/40 p-2 rounded-lg border border-indigo-100/40">
-                            <span className="text-indigo-500 mt-0.5"><IconChevronRight className="w-3.5 h-3.5" /></span>
-                            <span className="text-[11px] text-indigo-700 font-semibold leading-relaxed">
+                          <div className="flex items-start gap-1 bg-indigo-50/40 p-2.5 rounded-xl border border-indigo-100/40 w-fit">
+                            <span className="text-indigo-500 mt-0.5 flex-shrink-0"><IconChevronRight className="w-3.5 h-3.5" /></span>
+                            <span className="text-[11px] text-indigo-700 font-semibold leading-relaxed break-words">
                               {efectoAccion}
                             </span>
                           </div>
@@ -404,7 +502,6 @@ const Bitacora = () => {
               )}
             </tbody>
           </table>
-        </div>
       </div>
     </div>
   );

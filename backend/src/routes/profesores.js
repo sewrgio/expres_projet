@@ -3,6 +3,7 @@ import Profesor from '../models/profesor.js';
 import auth from '../middleware/auth.js';
 import pool from '../config/db.js';
 import bcrypt from 'bcryptjs';
+import { registrarBitacora } from '../utils/bitacora.js';
 
 const router = express.Router();
 
@@ -211,6 +212,13 @@ router.post('/', auth, async (req, res) => {
     `, [nextUserId]);
 
     await client.query('COMMIT');
+    
+    await registrarBitacora(
+      req.user.id,
+      'CREAR_PROFESOR',
+      `El coordinador/adjunto ${req.user.correo} creó al profesor/a ${nombre} ${apellido} (Cédula: ${cedula}, Correo: ${correo}) asignándole la carrera ID: ${id_carrera}.`
+    );
+
     res.status(201).json({ success: true, message: 'Profesor creado exitosamente' });
   } catch (error) {
     if (client) await client.query('ROLLBACK');
@@ -280,11 +288,84 @@ router.put('/:id', auth, async (req, res) => {
     }
 
     await client.query('COMMIT');
+
+    await registrarBitacora(
+      req.user.id,
+      'MODIFICAR_PROFESOR',
+      `El coordinador/adjunto ${req.user.correo} modificó al profesor/a ${nombre} ${apellido} (ID Profesor: ${id}, Cédula: ${cedula}, Correo: ${correo}), asociándolo a la carrera ID: ${id_carrera}.`
+    );
+
     res.json({ success: true, message: 'Datos del profesor actualizados correctamente' });
   } catch (error) {
     if (client) await client.query('ROLLBACK');
     console.error('Error editando profesor:', error);
     res.status(500).json({ error: 'Error al actualizar profesor' });
+  } finally {
+    client.release();
+  }
+});
+
+// Eliminar/desactivar profesor (desactivar usuario asociado)
+router.delete('/:id', auth, async (req, res) => {
+  if (!req.user.esCoordinador && !req.user.roles.includes('auditor')) {
+    return res.status(403).json({ error: 'Acceso denegado' });
+  }
+
+  const { id } = req.params;
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // 1. Obtener el id_usuario del profesor
+    const userRes = await client.query(`
+      SELECT ur.id_usuario, u.nombre, u.apellido, u.correo
+      FROM profesor p
+      JOIN usuario_rol ur ON p.id_usuario_rol = ur.id_usuario_rol
+      JOIN usuario u ON ur.id_usuario = u.id_usuario
+      WHERE p.id_profesor = $1
+    `, [id]);
+
+    if (userRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Profesor no encontrado' });
+    }
+
+    const { id_usuario, nombre, apellido, correo } = userRes.rows[0];
+
+    // 2. Marcar usuario como inactivo
+    await client.query(`
+      UPDATE usuario 
+      SET activo = false 
+      WHERE id_usuario = $1
+    `, [id_usuario]);
+
+    // 3. Marcar profesor como inactivo
+    await client.query(`
+      UPDATE profesor 
+      SET activo = false 
+      WHERE id_profesor = $1
+    `, [id]);
+
+    // 4. Marcar profesor_carrera como inactivo
+    await client.query(`
+      UPDATE profesor_carrera 
+      SET activo = false 
+      WHERE id_profesor = $1 AND activo = true
+    `, [id]);
+
+    await client.query('COMMIT');
+
+    // 5. Registrar en bitácora
+    await registrarBitacora(
+      req.user.id,
+      'ELIMINAR_PROFESOR',
+      `El coordinador/adjunto/auditor ${req.user.correo} eliminó de forma lógica al profesor/a ${nombre} ${apellido} (ID Profesor: ${id}, Cédula/Usuario ID: ${id_usuario}, Correo: ${correo}).`
+    );
+
+    res.json({ success: true, message: 'Profesor eliminado exitosamente' });
+  } catch (error) {
+    if (client) await client.query('ROLLBACK');
+    console.error('Error al eliminar profesor:', error);
+    res.status(500).json({ error: 'Error al eliminar profesor' });
   } finally {
     client.release();
   }

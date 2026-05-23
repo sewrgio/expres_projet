@@ -2,14 +2,15 @@ import React, { useState, useEffect, useCallback } from 'react';
 import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import CustomSelect from '../UI/CustomSelect';
-import { 
-  IconClipboard, IconPlus, IconCheck, IconAlert, 
+import {
+  IconClipboard, IconPlus, IconCheck, IconAlert,
   IconDownload, IconSearch, IconInfo, IconChevronRight,
   IconClock, IconTrash, IconCancel, IconSave, IconEye,
   IconUser, IconGraduation, IconBookOpen, IconX
 } from '../Icons/SystemIcons';
 import { jsPDF } from "jspdf";
 import autoTable from 'jspdf-autotable';
+import { addLogoHeader, addWatermark } from '../../utils/pdfHelper';
 
 const GestionJustificativos = ({ esVistaProfesores = false }) => {
   const { user } = useAuth();
@@ -41,7 +42,7 @@ const GestionJustificativos = ({ esVistaProfesores = false }) => {
   const cargarDatos = useCallback(async () => {
     try {
       setCargando(true);
-      const res = await api.get(esVistaProfesores ? '/justificativos/todos' : '/justificativos');
+      const res = await api.get(esVistaProfesores ? '/justificativos/todos' : '/justificativos/mis-justificativos');
       setJustificativos(res.data);
       
       if (esVistaProfesores) {
@@ -145,17 +146,25 @@ const GestionJustificativos = ({ esVistaProfesores = false }) => {
     setModalDocumento({ mostrar: true, url: fullUrl, tipo });
   };
 
-  const generarPDF = () => {
+  const generarPDF = async () => {
     try {
       const doc = new jsPDF();
-      doc.setFontSize(20);
-      doc.setTextColor(0, 51, 102);
-      doc.text("Reporte de Justificativos", 14, 22);
+
+      // Agregar logo en el membrete
+      const logoUrl = '/6933620737_368c2eb1b7.jpg';
+      const headerY = await addLogoHeader(doc, logoUrl);
+
+      // Agregar marca de agua con el logo
+      await addWatermark(doc, logoUrl);
+
+      // Título del reporte
+      doc.setFontSize(14);
+      doc.setTextColor(80, 80, 80);
+      doc.text("Reporte de Justificativos", 105, headerY + 10, { align: 'center' });
       doc.setFontSize(10);
       doc.setTextColor(100);
-      doc.text(`Institución: IUJO`, 14, 30);
-      doc.text(`Generado por: ${user.nombre} ${user.apellido}`, 14, 35);
-      doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 40);
+      doc.text(`Generado por: ${user.nombre} ${user.apellido}`, 14, headerY + 20);
+      doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, headerY + 27);
 
       const tableColumn = ["Profesor", "Cédula", "Carrera", "Fecha Solicitud", "Asignatura", "Estado"];
       const tableRows = justificativos
@@ -173,10 +182,10 @@ const GestionJustificativos = ({ esVistaProfesores = false }) => {
           j.estado.toUpperCase()
         ]);
 
-      autoTable(doc, { 
-        head: [tableColumn], 
-        body: tableRows, 
-        startY: 50,
+      autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: headerY + 35,
         styles: { fontSize: 8 },
         headStyles: { fillColor: [63, 81, 181] }
       });
@@ -229,13 +238,13 @@ const GestionJustificativos = ({ esVistaProfesores = false }) => {
           <button 
             onClick={() => {
               setMostrarForm(true);
-              const miProf = profesores.find(p => p.id_usuario === user.id_usuario) || { id_profesor: user.id_profesor };
+              const miProf = profesores.find(p => p.id_usuario === user.id_usuario) || { id_profesor: user.id_profesor || user.id_usuario };
               if (miProf.id_profesor) buscarAsistenciasProfesor(miProf);
             }}
             className="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold hover:bg-indigo-700 transition-all flex items-center gap-2 shadow-lg active:scale-95 focus:ring-4 focus:ring-indigo-500/40 outline-none"
             aria-label="Crear una nueva solicitud de justificativo"
           >
-            <IconPlus aria-hidden="true" /> Solicitar Justificativo
+            <IconPlus aria-hidden="true" /> Montar Justificativo
           </button>
         )}
       </div>
@@ -357,6 +366,7 @@ const GestionJustificativos = ({ esVistaProfesores = false }) => {
               className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500" 
               value={fechaInicio} 
               onChange={(e) => setFechaInicio(e.target.value)} 
+              max={new Date().toISOString().split('T')[0]}
               aria-label="Fecha de inicio para filtrar"
             />
           </div>
@@ -368,6 +378,7 @@ const GestionJustificativos = ({ esVistaProfesores = false }) => {
               className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500" 
               value={fechaFin} 
               onChange={(e) => setFechaFin(e.target.value)} 
+              max={new Date().toISOString().split('T')[0]}
               aria-label="Fecha de fin para filtrar"
             />
           </div>

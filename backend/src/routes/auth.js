@@ -5,6 +5,7 @@ import crypto from 'crypto';
 import Usuario from '../models/usuario.js';
 import pool from '../config/db.js';
 import { sendVerificationEmail, sendRecoveryCode } from '../services/emailService.js';
+import { registrarBitacora } from '../utils/bitacora.js';
 
 const router = express.Router();
 
@@ -206,15 +207,18 @@ router.post('/login', async (req, res) => {
     console.log('Usuario encontrado:', usuario ? 'Sí' : 'No');
 
     if (!usuario) {
+      await registrarBitacora(null, 'ACCESO_LOGIN_FALLIDO', `Intento de inicio de sesión fallido: no existe cuenta con el correo: ${correo}`);
       return res.status(401).json({ error: 'No existe una cuenta con este correo electrónico' });
     }
 
     // Verificar que el usuario esté activo
     if (!usuario.activo) {
+      await registrarBitacora(usuario.id_usuario, 'ACCESO_LOGIN_BLOQUEADO', `Intento de inicio de sesión bloqueado: el usuario ${correo} está inactivo o desactivado.`);
       return res.status(403).json({ error: 'Tu cuenta ha sido desactivada. Contacta al administrador para más información.' });
     }
 
     if (!usuario.email_verificado) {
+      await registrarBitacora(usuario.id_usuario, 'ACCESO_LOGIN_FALLIDO', `Intento de inicio de sesión fallido: el usuario ${correo} no ha verificado su correo electrónico.`);
       return res.status(403).json({ error: 'Por favor, verifica tu correo electrónico antes de iniciar sesión' });
     }
 
@@ -222,6 +226,7 @@ router.post('/login', async (req, res) => {
     console.log('Contraseña válida:', passValido);
 
     if (!passValido) {
+      await registrarBitacora(usuario.id_usuario, 'ACCESO_LOGIN_FALLIDO', `Intento de inicio de sesión fallido: contraseña incorrecta para el correo: ${correo}`);
       return res.status(401).json({ error: 'La contraseña es incorrecta' });
     }
 
@@ -323,6 +328,12 @@ router.post('/login', async (req, res) => {
     console.log('Actualizando session_token...');
     await Usuario.updateSessionToken(usuario.id_usuario, token, plataforma);
     console.log('Session token actualizado');
+
+    await registrarBitacora(
+      usuario.id_usuario,
+      'ACCESO_LOGIN_EXITOSO',
+      `El usuario ${usuario.nombre} ${usuario.apellido} (Roles: ${rolesEncontrados.join(', ')}) inició sesión exitosamente en la plataforma ${plataforma}.`
+    );
 
     res.json({
       success: true,
@@ -433,7 +444,7 @@ router.get('/verify', async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'iujo_secret_key_2024');
 
     const userQuery = await pool.query(
-      `SELECT id_usuario, nombre, apellido, correo, activo, session_token, session_token_app FROM usuario WHERE id_usuario = $1`,
+      `SELECT id_usuario, nombre, apellido, cedula, correo, telefono, activo, session_token, session_token_app FROM usuario WHERE id_usuario = $1`,
       [decoded.id]
     );
 
@@ -521,10 +532,13 @@ router.get('/verify', async (req, res) => {
     res.json({ 
       valid: true, 
       user: { 
+        id: usuario.id_usuario,
         id_usuario: usuario.id_usuario, 
         nombre: usuario.nombre, 
         apellido: usuario.apellido, 
+        cedula: usuario.cedula,
         correo: usuario.correo,
+        telefono: usuario.telefono,
         roles: rolesEncontrados,
         esProfesor: rolesEncontrados.includes('profesor'),
         esCoordinador: rolesEncontrados.includes('coordinador') || esAdjunto,

@@ -1,50 +1,64 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import api from '../../services/api';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-
-// Función helper para cargar imagen como base64
-const loadImageAsBase64 = (url) => {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = 'Anonymous';
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      const dataUrl = canvas.toDataURL('image/jpeg');
-      resolve(dataUrl);
-    };
-    img.onerror = reject;
-    img.src = url;
-  });
-};
+import { addLogoHeader, addWatermark } from '../../utils/pdfHelper';
 
 const ReporteAsistencia = () => {
   const [activeTab, setActiveTab] = useState('asistencias');
   const [asistencias, setAsistencias] = useState([]);
   const [inasistencias, setInasistencias] = useState([]);
+  const [justificativos, setJustificativos] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFin, setFechaFin] = useState('');
   const [filtroDocente, setFiltroDocente] = useState('');
-  const [filtroCarrera, setFiltroCarrera] = useState('');
+  const [sugerencias, setSugerencias] = useState([]);
+  const [buscandoDocente, setBuscandoDocente] = useState(false);
+  const [mostrarSugerencias, setMostrarSugerencias] = useState(false);
+  const docenteRef = useRef(null);
 
-  useEffect(() => {
-    cargarDatos();
+  const buscarDocentes = useCallback(async (q) => {
+    if (q.length < 2) { setSugerencias([]); return; }
+    setBuscandoDocente(true);
+    try {
+      const res = await api.get(`/profesores/buscar?q=${q}`);
+      setSugerencias(res.data || []);
+      setMostrarSugerencias(true);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setBuscandoDocente(false);
+    }
   }, []);
 
+  // Cerrar sugerencias al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (docenteRef.current && !docenteRef.current.contains(e.target)) {
+        setMostrarSugerencias(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+
+  // Estado del usuario (roles, etc.)
+  const [userInfo, setUserInfo] = React.useState({ roles: [] });
+
+  // Cargar datos del reporte y la información del usuario
   const cargarDatos = async () => {
     setCargando(true);
     try {
-      const [asisRes, inasRes] = await Promise.all([
+      const [asisRes, inasRes, justRes] = await Promise.all([
         api.get('/asistencias/todas'),
-        api.get('/asistencias/faltas')
+        api.get('/asistencias/faltas'),
+        api.get('/justificativos')
       ]);
       setAsistencias(asisRes.data);
       setInasistencias(inasRes.data || []);
+      setJustificativos(justRes.data || []);
     } catch (error) {
       console.error('Error cargando datos:', error);
     } finally {
@@ -52,9 +66,18 @@ const ReporteAsistencia = () => {
     }
   };
 
+  useEffect(() => {
+    cargarDatos();
+  }, []);
+
+
+// Duplicate cargarDatos removed – using the earlier definition.
+
+
   const filtrarDatos = (lista) => {
     return lista.filter(item => {
-      const fecha = new Date(item.fecha_entrada || item.fecha_clase);
+      const fechaBase = item.fecha_entrada || item.fecha_clase || item.fecha_solicitud;
+      const fecha = new Date(fechaBase);
       const inicio = fechaInicio ? new Date(fechaInicio) : null;
       const fin = fechaFin ? new Date(fechaFin) : null;
       if (inicio && fecha < inicio) return false;
@@ -62,9 +85,6 @@ const ReporteAsistencia = () => {
       
       const nombreCompleto = `${item.nombre || ''} ${item.apellido || ''}`.toLowerCase();
       if (filtroDocente && !nombreCompleto.includes(filtroDocente.toLowerCase())) return false;
-      
-      const carrera = (item.nombre_carrera || '').toLowerCase();
-      if (filtroCarrera && !carrera.includes(filtroCarrera.toLowerCase())) return false;
       
       return true;
     });
@@ -75,43 +95,25 @@ const ReporteAsistencia = () => {
       const doc = new jsPDF();
       const fechaActual = new Date().toLocaleDateString();
       const titulo = tipo === 'completo' ? 'REPORTE COMPLETO DE ASISTENCIAS E INASISTENCIAS' :
-                      tipo === 'asistencias' ? 'REPORTE DE ASISTENCIAS' : 'REPORTE DE INASISTENCIAS';
-      
-      // ✅ Cargar logo como base64
+                      tipo === 'asistencias' ? 'REPORTE DE ASISTENCIAS' :
+                      tipo === 'inasistencias' ? 'REPORTE DE INASISTENCIAS' : 'REPORTE DE JUSTIFICATIVOS';
+
+      // Agregar logo en el membrete
       const logoUrl = '/6933620737_368c2eb1b7.jpg';
-      const logoBase64 = await loadImageAsBase64(logoUrl);
-      
-      // ✅ Logo centrado en la parte superior
-      doc.addImage(logoBase64, 'JPEG', 85, 5, 40, 20);
-      
-      // ✅ Nombre de la institución MÁS GRANDE
-      doc.setFontSize(16);
-      doc.setTextColor(0, 51, 102);
-      doc.setFont('helvetica', 'bold');
-      doc.text('INSTITUTO UNIVERSITARIO', 105, 32, { align: 'center' });
-      doc.text('JESÚS OBRERO', 105, 40, { align: 'center' });
-      doc.setFont('helvetica', 'normal');
-      
-      // ✅ Marca de agua centrada en la página
-      doc.saveGraphicsState();
-      doc.setGState(new doc.GState({ opacity: 0.06 }));
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
-      const watermarkSize = 150;
-      const centerX = (pageWidth - watermarkSize) / 2;
-      const centerY = (pageHeight - watermarkSize) / 2;
-      doc.addImage(logoBase64, 'JPEG', centerX, centerY, watermarkSize, watermarkSize, { angle: -35 });
-      doc.restoreGraphicsState();
-      
-      // Título más pequeño
+      const headerY = await addLogoHeader(doc, logoUrl);
+
+      // Agregar marca de agua con el logo
+      await addWatermark(doc, logoUrl);
+
+      // Título del reporte
       doc.setFontSize(14);
       doc.setTextColor(80, 80, 80);
-      doc.text(titulo, 105, 55, { align: 'center' });
+      doc.text(titulo, 105, headerY + 10, { align: 'center' });
       doc.setFontSize(10);
-      doc.text(`Fecha de generación: ${fechaActual}`, 14, 65);
-      doc.text(`Período: ${fechaInicio || 'Inicio'} - ${fechaFin || 'Fin'}`, 14, 72);
-      
-      let yOffset = 80;
+      doc.text(`Fecha de generación: ${fechaActual}`, 14, headerY + 20);
+      doc.text(`Período: ${fechaInicio || 'Inicio'} - ${fechaFin || 'Fin'}`, 14, headerY + 27);
+
+      let yOffset = headerY + 35;
     
     if (tipo === 'completo' || tipo === 'asistencias') {
       let asisFiltradas = filtrarDatos(asistencias);
@@ -178,6 +180,36 @@ const ReporteAsistencia = () => {
         theme: 'striped',
         headStyles: { fillColor: [0, 51, 102], textColor: 255 },
       });
+      yOffset = doc.lastAutoTable.finalY + 10;
+    }
+
+    if (tipo === 'completo' || tipo === 'justificativos') {
+      let justFiltradas = filtrarDatos(justificativos);
+
+      if (justFiltradas.length > 1000) {
+        if (tipo === 'justificativos') alert('⚠️ El reporte es muy extenso. Se limitará a 1000 registros.');
+        justFiltradas = justFiltradas.slice(0, 1000);
+      }
+      doc.setFontSize(14);
+      doc.text('JUSTIFICATIVOS', 14, yOffset);
+      yOffset += 7;
+      
+      const tableJustificativos = justFiltradas.map(j => [
+        (j.nombre || '') + ' ' + (j.apellido || ''),
+        new Date(j.fecha_solicitud).toLocaleDateString(),
+        new Date(j.fecha_entrada).toLocaleDateString(),
+        j.nombre_carrera || 'N/A',
+        j.motivo || 'N/A',
+        j.estado || 'N/A'
+      ]);
+      
+      autoTable(doc, {
+        head: [['Usuario', 'F. Solicitud', 'F. Inasistencia', 'Carrera', 'Motivo', 'Estado']],
+        body: tableJustificativos,
+        startY: yOffset,
+        theme: 'striped',
+        headStyles: { fillColor: [0, 51, 102], textColor: 255 },
+      });
     }
     
     doc.save(`reporte_${tipo}_${Date.now()}.pdf`);
@@ -189,27 +221,63 @@ const ReporteAsistencia = () => {
 
   const asistenciasFiltradas = filtrarDatos(asistencias);
   const inasistenciasFiltradas = filtrarDatos(inasistencias);
+  const justificativosFiltradas = filtrarDatos(justificativos);
 
   if (cargando) return <div className="card">Cargando...</div>;
 
   return (
     <div>
       <div className="card">
-        <h3 className="card-title">Reportes de Asistencia</h3>
+
         
         <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
-          <input type="date" className="form-control border rounded p-2" style={{ width: 'auto' }} value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} />
-          <input type="date" className="form-control border rounded p-2" style={{ width: 'auto' }} value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} />
-          <input type="text" className="form-control border rounded p-2" placeholder="Filtrar por docente..." value={filtroDocente} onChange={(e) => setFiltroDocente(e.target.value)} />
-          <input type="text" className="form-control border rounded p-2" placeholder="Filtrar por carrera..." value={filtroCarrera} onChange={(e) => setFiltroCarrera(e.target.value)} />
+          <input type="date" className="form-control border rounded p-2" style={{ width: 'auto' }} value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} max={new Date().toISOString().split('T')[0]} />
+          <input type="date" className="form-control border rounded p-2" style={{ width: 'auto' }} value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} max={new Date().toISOString().split('T')[0]} />
+          {/* Buscador de docente con autocompletado */}
+          <div ref={docenteRef} style={{ position: 'relative', flex: 1, minWidth: '200px' }}>
+            <input
+              type="text"
+              className="form-control border rounded p-2"
+              style={{ width: '100%' }}
+              placeholder="Buscar docente por nombre o cédula..."
+              value={filtroDocente}
+              onChange={(e) => {
+                setFiltroDocente(e.target.value);
+                buscarDocentes(e.target.value);
+              }}
+              onFocus={() => { if (sugerencias.length > 0) setMostrarSugerencias(true); }}
+            />
+            {buscandoDocente && (
+              <span style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '12px', color: '#888' }}>⏳</span>
+            )}
+            {mostrarSugerencias && sugerencias.length > 0 && (
+              <ul style={{
+                position: 'absolute', top: '100%', left: 0, right: 0,
+                background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 1000,
+                listStyle: 'none', margin: 0, padding: '4px 0', maxHeight: '220px', overflowY: 'auto'
+              }}>
+                {sugerencias.map(prof => (
+                  <li
+                    key={prof.id_profesor}
+                    style={{ padding: '10px 16px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9' }}
+                    onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'white'}
+                    onMouseDown={() => {
+                      setFiltroDocente(`${prof.nombre} ${prof.apellido}`);
+                      setMostrarSugerencias(false);
+                      setSugerencias([]);
+                    }}
+                  >
+                    <div style={{ fontWeight: '600', color: '#1e293b' }}>{prof.nombre} {prof.apellido}</div>
+                    <div style={{ fontSize: '12px', color: '#64748b' }}>C.I: {prof.cedula}</div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
           <button className="btn btn-secondary" onClick={cargarDatos}>Actualizar</button>
-          <button className="btn btn-warning" onClick={() => { setFechaInicio(''); setFechaFin(''); setFiltroDocente(''); setFiltroCarrera(''); cargarDatos(); }}>Limpiar</button>
-        </div>
-        
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '20px' }}>
-          <button className="btn btn-primary" onClick={() => generarPDFCompleto('completo')}>📄 PDF Completo (Asistencias + Inasistencias)</button>
-          <button className="btn btn-success" onClick={() => generarPDFCompleto('asistencias')}>📄 Solo Asistencias</button>
-          <button className="btn btn-danger" onClick={() => generarPDFCompleto('inasistencias')}>📄 Solo Inasistencias</button>
+          <button className="btn btn-warning" onClick={() => { setFechaInicio(''); setFechaFin(''); setFiltroDocente(''); setSugerencias([]); cargarDatos(); }}>Limpiar</button>
         </div>
       </div>
 
@@ -224,7 +292,7 @@ const ReporteAsistencia = () => {
         </div>
       </div>
 
-      {activeTab === 'asistencias' && (
+      {(activeTab === 'asistencias') && (
         <div className="card">
           <h3 className="card-title">Lista de Asistencias</h3>
           <div className="table-container">

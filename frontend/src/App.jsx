@@ -24,6 +24,8 @@ import ResetPassword from './components/Auth/ResetPassword';
 import ConfiguracionGeneral from './components/Configuracion/ConfiguracionGeneral';
 import DetalleCategoria from './components/Configuracion/DetalleCategoria';
 import Bitacora from './components/Reportes/Bitacora';
+import JustificativosCoordinadores from './components/Justificativos/JustificativosCoordinadores';
+import ReporteCoordinadores from './components/Reportes/ReporteCoordinadores';
 import './styles/global.css';
 
 const ProtectedRoute = ({ children, roles }) => {
@@ -136,6 +138,18 @@ function AppRoutes() {
       <Route path="/reportes" element={
         <ProtectedRoute roles={['profesor', 'coordinador', 'adjunto coordinacion', 'auditor']}>
           <Layout><ReporteAsistencia /></Layout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/justificativos-coordinadores" element={
+        <ProtectedRoute roles={['auditor']}>
+          <Layout><JustificativosCoordinadores /></Layout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/reportes-coordinadores" element={
+        <ProtectedRoute roles={['auditor']}>
+          <Layout><ReporteCoordinadores /></Layout>
         </ProtectedRoute>
       } />
 

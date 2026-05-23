@@ -218,6 +218,7 @@ const GestionAsignaturas = () => {
                 className="form-control"
                 value={fechaInicio}
                 onChange={(e) => setFechaInicio(e.target.value)}
+                max={new Date().toISOString().split('T')[0]}
               />
             </div>
             

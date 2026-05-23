@@ -59,6 +59,12 @@ router.post('/', auth, async (req, res) => {
     return res.status(400).json({ error: 'Nombre y carrera son requeridos' });
   }
 
+  if (req.user.esCoordinador && !req.user.roles.includes('auditor')) {
+    if (!req.user.ids_carreras || !req.user.ids_carreras.map(Number).includes(Number(id_carrera))) {
+      return res.status(403).json({ error: 'No tienes permiso para gestionar asignaturas de esta carrera' });
+    }
+  }
+
   try {
     const asignatura = await Asignatura.create(nombre_asignatura, id_carrera);
     res.status(201).json(asignatura);
@@ -75,6 +81,24 @@ router.put('/:id', auth, async (req, res) => {
   }
 
   const { nombre_asignatura, id_carrera } = req.body;
+
+  if (req.user.esCoordinador && !req.user.roles.includes('auditor')) {
+    try {
+      if (id_carrera && (!req.user.ids_carreras || !req.user.ids_carreras.map(Number).includes(Number(id_carrera)))) {
+        return res.status(403).json({ error: 'No tienes permiso para asignar esta carrera' });
+      }
+      const origRes = await pool.query('SELECT id_carrera FROM asignatura WHERE id_asignatura = $1', [req.params.id]);
+      if (origRes.rows.length > 0) {
+        const origId = origRes.rows[0].id_carrera;
+        if (!req.user.ids_carreras || !req.user.ids_carreras.map(Number).includes(Number(origId))) {
+          return res.status(403).json({ error: 'No tienes permiso para gestionar asignaturas de esta carrera' });
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Error de validación de permisos' });
+    }
+  }
   try {
     const asignatura = await Asignatura.update(req.params.id, nombre_asignatura, id_carrera);
     res.json(asignatura);
@@ -88,6 +112,21 @@ router.put('/:id', auth, async (req, res) => {
 router.delete('/:id', auth, async (req, res) => {
   if (!req.user.esCoordinador) {
     return res.status(403).json({ error: 'Acceso denegado' });
+  }
+
+  if (req.user.esCoordinador && !req.user.roles.includes('auditor')) {
+    try {
+      const origRes = await pool.query('SELECT id_carrera FROM asignatura WHERE id_asignatura = $1', [req.params.id]);
+      if (origRes.rows.length > 0) {
+        const origId = origRes.rows[0].id_carrera;
+        if (!req.user.ids_carreras || !req.user.ids_carreras.map(Number).includes(Number(origId))) {
+          return res.status(403).json({ error: 'No tienes permiso para gestionar asignaturas de esta carrera' });
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Error de validación de permisos' });
+    }
   }
 
   try {

@@ -213,9 +213,14 @@ router.get('/mi-qr', auth, async (req, res) => {
       identificador = `auditor_${idUsuario}`;
     }
 
-    // Generar un código único para todo el día
-    const hoy = new Date();
-    const fechaStr = `${hoy.getFullYear()}-${(hoy.getMonth() + 1).toString().padStart(2, '0')}-${hoy.getDate().toString().padStart(2, '0')}`;
+    // Generar un código único para todo el día (Hora Venezuela)
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Caracas', 
+      year: 'numeric', 
+      month: '2-digit', 
+      day: '2-digit'
+    });
+    const fechaStr = formatter.format(new Date());
     const codigoQR = `${identificador}_${fechaStr}`;
 
     // Generar imagen QR en base64

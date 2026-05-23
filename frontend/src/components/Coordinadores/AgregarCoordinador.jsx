@@ -261,6 +261,7 @@ const AgregarCoordinador = () => {
             required={formData.esCoordinador || formData.esAdjuntoCoordinacion}
             disabled={!(formData.esCoordinador || formData.esAdjuntoCoordinacion)}
             placeholder={(formData.esCoordinador || formData.esAdjuntoCoordinacion) ? 'Seleccionar carrera' : 'Solo aplica para Coordinador o Adjunto'}
+            direction="up"
             options={carreras.map(c => ({
               value: c.id_carrera,
               label: c.nombre_carrera

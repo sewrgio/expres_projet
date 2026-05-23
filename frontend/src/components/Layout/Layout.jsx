@@ -41,7 +41,7 @@ const Layout = ({ children }) => {
       ]
     },
     { path: '/escanear', icon: <IconScanQR />, label: 'Escanear QR', roles: ['coordinador', 'adjunto coordinacion', 'profesor'] },
-    { path: '/justificativos', icon: <IconClipboard />, label: 'Mis Justificativos', roles: ['profesor'] },
+    { path: '/justificativos', icon: <IconClipboard />, label: 'Mis Justificativos', roles: ['profesor', 'adjunto coordinacion', 'coordinador'] },
     {
       label: 'Auditor',
       icon: <IconAddAdmin />,
@@ -52,7 +52,8 @@ const Layout = ({ children }) => {
         { path: '/roles', icon: <IconKey />, label: 'Gestión de Roles', roles: ['auditor'] },
         { path: '/control-qr-fijos', icon: <IconScanQR />, label: 'Control QR Fijos', roles: ['auditor'] },
         { path: '/carreras', icon: <IconGraduation />, label: 'Carreras', roles: ['auditor'] },
-        { path: '/reportes', icon: <IconChart />, label: 'Reportes', roles: ['auditor'] },
+        { path: '/justificativos-coordinadores', icon: <IconClipboard />, label: 'Justificativos Coordinadores', roles: ['auditor'] },
+        { path: '/reportes-coordinadores', icon: <IconChart />, label: 'Reportes Coordinadores', roles: ['auditor'] },
         { path: '/bitacora', icon: <IconClipboard />, label: 'Bitácora', roles: ['auditor'] },
       ]
     },
@@ -101,7 +102,9 @@ const Layout = ({ children }) => {
           </div>
           <h1 className="text-xl 2xl:text-2xl font-bold tracking-wide">IUJO Asistencia</h1>
           <div className="text-xs 2xl:text-sm mt-1 text-white/80 font-medium">
-            {user?.roles?.includes('auditor') ? 'Auditor' : user?.roles?.includes('coordinador') ? 'Coordinador' : 'Profesor'}
+            {user?.roles?.includes('auditor') ? 'Auditor' : 
+             user?.roles?.includes('adjunto coordinacion') ? 'Adjunto de Coordinación' :
+             user?.roles?.includes('coordinador') ? 'Coordinador' : 'Profesor'}
           </div>
         </div>
         

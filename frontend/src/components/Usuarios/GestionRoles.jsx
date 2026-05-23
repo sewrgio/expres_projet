@@ -5,6 +5,8 @@ import { IconUsers, IconSave, IconCancel, IconEdit } from '../Icons/SystemIcons'
 const GestionRoles = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [cargando, setCargando] = useState(true);
+  const [cargandoTabla, setCargandoTabla] = useState(false);
+  const [busqueda, setBusqueda] = useState('');
   const [mensaje, setMensaje] = useState({ texto: '', tipo: '' });
   const [editando, setEditando] = useState(null);
   const [usuarioEditando, setUsuarioEditando] = useState(null);
@@ -18,22 +20,38 @@ const GestionRoles = () => {
     'medio tiempo': false
   });
 
-  useEffect(() => {
-    cargarUsuarios();
-  }, []);
-
-  const cargarUsuarios = async () => {
+  const cargarUsuarios = async (term = '') => {
     try {
-      setCargando(true);
-      const res = await api.get('/usuarios');
+      if (usuarios.length === 0) {
+        setCargando(true);
+      } else {
+        setCargandoTabla(true);
+      }
+      const res = await api.get(`/usuarios?search=${encodeURIComponent(term)}`);
       setUsuarios(res.data);
     } catch (error) {
       console.error('Error cargando usuarios:', error);
       mostrarMensaje('❌ Error al cargar usuarios', 'error');
     } finally {
       setCargando(false);
+      setCargandoTabla(false);
     }
   };
+
+  useEffect(() => {
+    cargarUsuarios('');
+  }, []);
+
+  // Buscador conectado a base de datos con retraso de rebote (debounce)
+  useEffect(() => {
+    if (cargando) return; // Evitar el primer render
+    
+    const delayDebounceFn = setTimeout(() => {
+      cargarUsuarios(busqueda);
+    }, 450);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [busqueda]);
 
   const mostrarMensaje = (texto, tipo) => {
     setMensaje({ texto, tipo });
@@ -79,7 +97,7 @@ const GestionRoles = () => {
       mostrarMensaje('✅ Roles actualizados exitosamente', 'success');
       setEditando(null);
       setUsuarioEditando(null);
-      cargarUsuarios();
+      cargarUsuarios(busqueda);
     } catch (error) {
       console.error('Error actualizando roles:', error);
       mostrarMensaje('❌ Error al actualizar roles', 'error');
@@ -134,9 +152,23 @@ const GestionRoles = () => {
 
   if (cargando) {
     return (
-      <div className="card" style={{ textAlign: 'center', padding: '40px' }}>
-        <div style={{ fontSize: '24px', marginBottom: '10px' }}>⏳</div>
-        <p>Cargando usuarios...</p>
+      <div className="card" style={{ textAlign: 'center', padding: '60px 40px' }}>
+        <div style={{
+          width: '50px',
+          height: '50px',
+          border: '4px solid #f3f3f3',
+          borderTop: '4px solid #003366',
+          borderRadius: '50%',
+          margin: '0 auto 20px',
+          animation: 'spin 1s linear infinite'
+        }}></div>
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+        <p style={{ margin: 0, fontWeight: '600', color: '#003366' }}>Cargando usuarios y roles...</p>
       </div>
     );
   }
@@ -167,6 +199,108 @@ const GestionRoles = () => {
         </div>
       </div>
 
+      {/* Buscador Premium conectado a Base de Datos */}
+      <div className="card" style={{ marginBottom: '20px', padding: '16px', border: '1px solid rgba(226, 232, 240, 0.8)' }}>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative', flex: 1, minWidth: '280px' }}>
+            <span style={{
+              position: 'absolute',
+              left: '16px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: '#94a3b8',
+              fontSize: '18px',
+              pointerEvents: 'none'
+            }}>
+              🔍
+            </span>
+            <input
+              type="text"
+              placeholder="Buscar usuarios por nombre, apellido, cédula o correo..."
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              className="form-control"
+              style={{
+                paddingLeft: '48px',
+                paddingRight: busqueda ? '40px' : '16px',
+                margin: 0,
+                width: '100%',
+                borderRadius: '12px',
+                border: '2px solid #e2e8f0',
+                outline: 'none',
+                height: '46px',
+                fontSize: '14px',
+                transition: 'all 0.2s'
+              }}
+            />
+            {busqueda && (
+              <button
+                onClick={() => setBusqueda('')}
+                style={{
+                  position: 'absolute',
+                  right: '16px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  color: '#94a3b8',
+                  fontSize: '16px',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                title="Limpiar búsqueda"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+          
+          <button
+            onClick={() => cargarUsuarios(busqueda)}
+            className="btn btn-primary"
+            style={{
+              height: '46px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: '#003366',
+              color: 'white',
+              borderRadius: '12px',
+              padding: '0 24px',
+              fontWeight: 'bold',
+              border: 'none',
+              cursor: 'pointer',
+              minWidth: '120px'
+            }}
+          >
+            Buscar
+          </button>
+        </div>
+      </div>
+
+      {cargandoTabla && (
+        <div style={{
+          padding: '10px 18px',
+          backgroundColor: '#f0f9ff',
+          color: '#0284c7',
+          border: '1px solid #bae6fd',
+          borderRadius: '12px',
+          marginBottom: '20px',
+          fontSize: '13px',
+          fontWeight: '600',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          animation: 'pulse 1.5s infinite'
+        }}>
+          <span style={{ display: 'inline-block', animation: 'spin 1s linear infinite' }}>⏳</span>
+          Buscando en la base de datos en tiempo real...
+        </div>
+      )}
+
       {mensaje.texto && (
         <div style={{
           marginBottom: '20px',
@@ -180,103 +314,233 @@ const GestionRoles = () => {
         </div>
       )}
 
-      <div className="card">
-        <div className="table-container">
-          <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ borderBottom: '2px solid #eee', textAlign: 'left' }}>
-                <th style={{ padding: '12px' }}>Nombre</th>
-                <th style={{ padding: '12px' }}>Correo / Cédula</th>
-                <th style={{ padding: '12px' }}>Roles Actuales</th>
-                <th style={{ padding: '12px' }}>Tipo de Tiempo</th>
-                <th style={{ padding: '12px', textAlign: 'center' }}>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {usuarios.map(u => (
-                <tr key={u.id_usuario} style={{ borderBottom: '1px solid #eee' }}>
-                  <td style={{ padding: '12px' }}>
-                    <strong>{u.nombre} {u.apellido}</strong>
-                  </td>
-                  <td style={{ padding: '12px', fontSize: '14px', color: '#555' }}>
-                    {u.correo} <br />
-                    <small>C.I: {u.cedula}</small>
-                  </td>
-                  <td style={{ padding: '12px' }}>
-                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                      {u.roles?.filter(rol => ['auditor', 'coordinador', 'adjunto coordinacion', 'profesor'].includes(rol)).length > 0 ? (
-                        u.roles
-                          .filter(rol => ['auditor', 'coordinador', 'adjunto coordinacion', 'profesor'].includes(rol))
-                          .map(rol => (
-                            <span key={rol} style={{
-                              padding: '4px 10px',
-                              borderRadius: '12px',
-                              fontSize: '12px',
-                              fontWeight: 'bold',
-                              textTransform: 'capitalize',
-                              backgroundColor: 
-                                rol === 'auditor' ? '#f8d7da' : 
-                                rol === 'coordinador' ? '#cce5ff' : 
-                                rol === 'adjunto coordinacion' ? '#fff3cd' : 
-                                '#d4edda',
-                              color: 
-                                rol === 'auditor' ? '#721c24' : 
-                                rol === 'coordinador' ? '#004085' : 
-                                rol === 'adjunto coordinacion' ? '#856404' : 
-                                '#155724'
-                            }}>
-                              {rol}
-                            </span>
-                          ))
-                      ) : (
-                        <span style={{ color: '#999', fontSize: '13px' }}>Sin roles</span>
-                      )}
-                    </div>
-                  </td>
-                  <td style={{ padding: '12px' }}>
-                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                      {u.roles?.filter(rol => ['tiempo completo', 'medio tiempo'].includes(rol)).length > 0 ? (
-                        u.roles
-                          .filter(rol => ['tiempo completo', 'medio tiempo'].includes(rol))
-                          .map(rol => (
-                            <span key={rol} style={{
-                              padding: '4px 10px',
-                              borderRadius: '12px',
-                              fontSize: '12px',
-                              fontWeight: 'bold',
-                              textTransform: 'capitalize',
-                              backgroundColor: rol === 'tiempo completo' ? '#e0e7ff' : '#e0f2fe',
-                              color: rol === 'tiempo completo' ? '#3730a3' : '#0369a1'
-                            }}>
-                              {rol}
-                            </span>
-                          ))
-                      ) : (
-                        <span style={{ color: '#aaa', fontSize: '13px', fontStyle: 'italic' }}>No asignado</span>
-                      )}
-                    </div>
-                  </td>
-                  <td style={{ padding: '12px', textAlign: 'center' }}>
-                    <button 
-                      className="btn btn-warning btn-sm"
-                      onClick={() => iniciarEdicion(u)}
-                      disabled={u.roles?.includes('auditor')}
-                      title={u.roles?.includes('auditor') ? "No se pueden editar roles del auditor" : "Editar roles"}
-                      style={{ opacity: u.roles?.includes('auditor') ? 0.5 : 1 }}
-                    >
-                      <IconEdit />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {usuarios.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '20px', color: '#666' }}>
-              No se encontraron usuarios
+      {/* Vista de Dispositivos Móviles / Tablets (Tarjetas Premium sin scrollbar) */}
+      <div className="block md:hidden space-y-4">
+        {usuarios.map(u => (
+          <div key={u.id_usuario} className="bg-white p-5 rounded-2xl shadow-md border border-gray-100/70 space-y-4 hover:shadow-lg transition-all duration-300">
+            {/* Header: Name and Action */}
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center space-x-3">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-700 text-white text-xs font-black shadow-md flex items-center justify-center flex-shrink-0">
+                  {`${u.nombre?.[0] || ''}${u.apellido?.[0] || ''}`.toUpperCase()}
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-bold text-gray-950 text-sm leading-none break-all">
+                    {u.nombre} {u.apellido}
+                  </span>
+                  <span className="text-[10px] text-gray-400 mt-1.5 font-medium leading-none">
+                    C.I: {u.cedula}
+                  </span>
+                </div>
+              </div>
+              <button 
+                className="btn btn-warning btn-sm"
+                onClick={() => iniciarEdicion(u)}
+                disabled={u.roles?.includes('auditor')}
+                title={u.roles?.includes('auditor') ? "No se pueden editar roles del auditor" : "Editar roles"}
+                style={{ 
+                  opacity: u.roles?.includes('auditor') ? 0.5 : 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: '6px 10px',
+                  fontSize: '11px',
+                  fontWeight: 'bold',
+                  borderRadius: '10px'
+                }}
+              >
+                <IconEdit className="w-3.5 h-3.5" /> Editar
+              </button>
             </div>
-          )}
-        </div>
+
+            {/* Email */}
+            <div className="text-[11px] text-gray-500 font-medium bg-gray-50 px-2.5 py-1.5 rounded-lg w-fit break-all">
+              {u.correo}
+            </div>
+
+            {/* Roles and Time allocation */}
+            <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-50">
+              <div className="space-y-1.5">
+                <span className="text-[9px] font-extrabold uppercase text-gray-400 tracking-wider">Roles</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {u.roles?.filter(rol => ['auditor', 'coordinador', 'adjunto coordinacion', 'profesor'].includes(rol)).length > 0 ? (
+                    u.roles
+                      .filter(rol => ['auditor', 'coordinador', 'adjunto coordinacion', 'profesor'].includes(rol))
+                      .map(rol => (
+                        <span key={rol} style={{
+                          padding: '3px 8px',
+                          borderRadius: '8px',
+                          fontSize: '10px',
+                          fontWeight: 'bold',
+                          textTransform: 'capitalize',
+                          backgroundColor: 
+                            rol === 'auditor' ? '#f8d7da' : 
+                            rol === 'coordinador' ? '#cce5ff' : 
+                            rol === 'adjunto coordinacion' ? '#fff3cd' : 
+                            '#d4edda',
+                          color: 
+                            rol === 'auditor' ? '#721c24' : 
+                            rol === 'coordinador' ? '#004085' : 
+                            rol === 'adjunto coordinacion' ? '#856404' : 
+                            '#155724'
+                        }}>
+                          {rol}
+                        </span>
+                      ))
+                  ) : (
+                    <span className="text-gray-400 text-[11px] italic">Sin roles</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <span className="text-[9px] font-extrabold uppercase text-gray-400 tracking-wider">Dedicación</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {u.roles?.filter(rol => ['tiempo completo', 'medio tiempo'].includes(rol)).length > 0 ? (
+                    u.roles
+                      .filter(rol => ['tiempo completo', 'medio tiempo'].includes(rol))
+                      .map(rol => (
+                        <span key={rol} style={{
+                          padding: '3px 8px',
+                          borderRadius: '8px',
+                          fontSize: '10px',
+                          fontWeight: 'bold',
+                          textTransform: 'capitalize',
+                          backgroundColor: rol === 'tiempo completo' ? '#e0e7ff' : '#e0f2fe',
+                          color: rol === 'tiempo completo' ? '#3730a3' : '#0369a1'
+                        }}>
+                          {rol}
+                        </span>
+                      ))
+                  ) : (
+                    <span className="text-gray-400 text-[11px] italic">No asignada</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {usuarios.length === 0 && (
+          <div className="bg-white p-8 rounded-2xl text-center text-gray-400 border border-gray-100">
+            <p className="font-semibold text-gray-500">No se encontraron usuarios</p>
+          </div>
+        )}
+      </div>
+
+      {/* Vista de Escritorio (Tabla Premium Rediseñada y Totalmente Fluida sin scrollbar) */}
+      <div className="hidden md:block bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden w-full">
+        <table className="w-full text-sm text-left border-collapse table-fixed bg-white" style={{ minWidth: '100%', tableLayout: 'fixed' }}>
+          <thead className="bg-gray-50 text-gray-700 border-b border-gray-100 font-bold uppercase tracking-wider text-xs">
+            <tr style={{ borderBottom: '2px solid #eee', textAlign: 'left' }}>
+              <th className="w-[20%]" style={{ padding: '12px 10px', fontSize: '11px', letterSpacing: '0.05em' }}>Nombre</th>
+              <th className="w-[24%]" style={{ padding: '12px 10px', fontSize: '11px', letterSpacing: '0.05em' }}>Correo / Cédula</th>
+              <th className="w-[32%]" style={{ padding: '12px 10px', fontSize: '11px', letterSpacing: '0.05em' }}>Roles Actuales</th>
+              <th className="w-[14%]" style={{ padding: '12px 10px', fontSize: '11px', letterSpacing: '0.05em' }}>Tipo de Tiempo</th>
+              <th className="w-[10%] text-center" style={{ padding: '12px 10px', fontSize: '11px', letterSpacing: '0.05em', textAlign: 'center' }}>Acciones</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {usuarios.map(u => (
+              <tr key={u.id_usuario} style={{ borderBottom: '1px solid #eee' }} className="hover:bg-indigo-50/20 transition-colors">
+                <td style={{ padding: '12px 10px', verticalAlign: 'middle' }}>
+                  <strong className="text-gray-800 break-words block text-[13.5px] leading-tight">{u.nombre} {u.apellido}</strong>
+                </td>
+                <td style={{ padding: '12px 10px', fontSize: '12.5px', color: '#475569', verticalAlign: 'middle' }}>
+                  <div className="break-all font-medium text-gray-700 leading-tight">{u.correo}</div>
+                  <div className="text-[11px] text-slate-400 mt-1 font-semibold">C.I: {u.cedula}</div>
+                </td>
+                <td style={{ padding: '12px 10px', verticalAlign: 'middle' }}>
+                  <div className="flex flex-wrap gap-1 w-full" style={{ whiteSpace: 'normal' }}>
+                    {u.roles?.filter(rol => ['auditor', 'coordinador', 'adjunto coordinacion', 'profesor'].includes(rol)).length > 0 ? (
+                      u.roles
+                        .filter(rol => ['auditor', 'coordinador', 'adjunto coordinacion', 'profesor'].includes(rol))
+                        .map(rol => (
+                          <span key={rol} style={{
+                            display: 'inline-block',
+                            padding: '2.5px 7px',
+                            borderRadius: '8px',
+                            fontSize: '10.5px',
+                            fontWeight: 'bold',
+                            textTransform: 'capitalize',
+                            whiteSpace: 'normal',
+                            wordBreak: 'break-word',
+                            backgroundColor: 
+                              rol === 'auditor' ? '#fee2e2' : 
+                              rol === 'coordinador' ? '#dbeafe' : 
+                              rol === 'adjunto coordinacion' ? '#fef3c7' : 
+                              '#dcfce7',
+                            color: 
+                              rol === 'auditor' ? '#991b1b' : 
+                              rol === 'coordinador' ? '#1e40af' : 
+                              rol === 'adjunto coordinacion' ? '#92400e' : 
+                              '#166534'
+                          }}>
+                            {rol}
+                          </span>
+                        ))
+                    ) : (
+                      <span style={{ color: '#94a3b8', fontSize: '12.5px', fontStyle: 'italic' }}>Sin roles</span>
+                    )}
+                  </div>
+                </td>
+                <td style={{ padding: '12px 10px', verticalAlign: 'middle' }}>
+                  <div className="flex flex-wrap gap-1 w-full" style={{ whiteSpace: 'normal' }}>
+                    {u.roles?.filter(rol => ['tiempo completo', 'medio tiempo'].includes(rol)).length > 0 ? (
+                      u.roles
+                        .filter(rol => ['tiempo completo', 'medio tiempo'].includes(rol))
+                        .map(rol => (
+                          <span key={rol} style={{
+                            display: 'inline-block',
+                            padding: '2.5px 7px',
+                            borderRadius: '8px',
+                            fontSize: '10.5px',
+                            fontWeight: 'bold',
+                            textTransform: 'capitalize',
+                            whiteSpace: 'normal',
+                            wordBreak: 'break-word',
+                            backgroundColor: rol === 'tiempo completo' ? '#e0e7ff' : '#e0f2fe',
+                            color: rol === 'tiempo completo' ? '#3730a3' : '#0369a1'
+                          }}>
+                            {rol}
+                          </span>
+                        ))
+                    ) : (
+                      <span style={{ color: '#cbd5e1', fontSize: '12px', fontStyle: 'italic' }}>No asignado</span>
+                    )}
+                  </div>
+                </td>
+                <td style={{ padding: '12px 10px', textAlign: 'center', verticalAlign: 'middle' }}>
+                  <button 
+                    className="btn btn-warning"
+                    onClick={() => iniciarEdicion(u)}
+                    disabled={u.roles?.includes('auditor')}
+                    title={u.roles?.includes('auditor') ? "No se pueden editar roles del auditor" : "Editar roles"}
+                    style={{ 
+                      opacity: u.roles?.includes('auditor') ? 0.5 : 1,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '6px 12px',
+                      borderRadius: '8px',
+                      fontSize: '12px',
+                      fontWeight: 'bold',
+                      minWidth: '70px',
+                      height: '32px'
+                    }}
+                  >
+                    Editar
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {usuarios.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '40px 20px', color: '#94a3b8', fontWeight: '600', fontSize: '14px' }}>
+            No se encontraron usuarios que coincidan con la búsqueda.
+          </div>
+        )}
       </div>
 
       {/* Modal Premium de Edición de Roles */}

@@ -4,6 +4,7 @@ import auth from '../middleware/auth.js';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { registrarBitacora } from '../utils/bitacora.js';
 
 const router = express.Router();
 
@@ -46,12 +47,11 @@ router.get(['/', '/todos'], auth, async (req, res) => {
       justificativos = await Justificativo.obtenerDeCoordinadores();
     } else if (req.user.esCoordinador) {
       justificativos = await Justificativo.obtenerTodos();
-      // Bypass frontend filtering
-      const idCarrera = req.user.carreras.length > 0 ? req.user.carreras[0].id : null;
-      justificativos = justificativos.map(j => ({
-        ...j,
-        id_carrera: idCarrera
-      }));
+      // Filtrar solo los justificativos de las carreras del coordinador
+      const idsCarreras = req.user.carreras.map(c => c.id);
+      justificativos = justificativos.filter(j => idsCarreras.includes(j.id_carrera));
+      // Excluir justificativos de otros coordinadores y adjuntos (solo ver profesores regulares)
+      justificativos = justificativos.filter(j => j.es_coordinador === false && j.es_adjunto === false);
     } else if (req.user.esProfesor) {
       justificativos = await Justificativo.findByProfesor(req.user.id_profesor);
     } else {
@@ -80,6 +80,13 @@ router.post('/', auth, upload.single('documento'), async (req, res) => {
 
   try {
     const justificativo = await Justificativo.create(id_asistencia, '', documento_url);
+
+    await registrarBitacora(
+      req.user.id,
+      'SOLICITAR_JUSTIFICATIVO',
+      `El profesor/coordinador ${req.user.correo} solicitó un justificativo de inasistencia para la asistencia ID: ${id_asistencia}. Archivo cargado: ${documento_url || 'Ninguno'}.`
+    );
+
     res.status(201).json(justificativo);
   } catch (error) {
     console.error(error);
@@ -115,13 +122,12 @@ router.get('/pendientes', auth, async (req, res) => {
       justificativos = await Justificativo.obtenerTodos();
     }
 
-    // Bypass frontend filtering
+    // Filtrar solo los justificativos de las carreras del coordinador
     if (req.user.esCoordinador) {
-        const idCarrera = req.user.carreras.length > 0 ? req.user.carreras[0].id : null;
-        justificativos = justificativos.map(j => ({
-            ...j,
-            id_carrera: idCarrera
-        }));
+        const idsCarreras = req.user.carreras.map(c => c.id);
+        justificativos = justificativos.filter(j => idsCarreras.includes(j.id_carrera));
+        // Excluir justificativos de otros coordinadores y adjuntos (solo ver profesores regulares)
+        justificativos = justificativos.filter(j => j.es_coordinador === false && j.es_adjunto === false);
     }
 
     const pendientes = justificativos.filter(j => j.estado === 'pendiente');
@@ -140,6 +146,13 @@ router.put('/aprobar/:id', auth, async (req, res) => {
   const { observaciones } = req.body;
   try {
     const justificativo = await Justificativo.aprobar(req.params.id, observaciones);
+
+    await registrarBitacora(
+      req.user.id,
+      'APROBAR_JUSTIFICATIVO',
+      `El coordinador/auditor ${req.user.correo} aprobó el justificativo de inasistencia ID: ${req.params.id}. Observaciones: ${observaciones || 'Ninguna'}.`
+    );
+
     res.json(justificativo);
   } catch (error) {
     console.error(error);
@@ -155,6 +168,13 @@ router.put('/rechazar/:id', auth, async (req, res) => {
   const { observaciones } = req.body;
   try {
     const justificativo = await Justificativo.rechazar(req.params.id, observaciones);
+
+    await registrarBitacora(
+      req.user.id,
+      'RECHAZAR_JUSTIFICATIVO',
+      `El coordinador/auditor ${req.user.correo} rechazó el justificativo de inasistencia ID: ${req.params.id}. Observaciones: ${observaciones || 'Ninguna'}.`
+    );
+
     res.json(justificativo);
   } catch (error) {
     console.error(error);

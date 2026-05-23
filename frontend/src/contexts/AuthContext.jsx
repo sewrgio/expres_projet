@@ -40,6 +40,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [showInactivityModal, setShowInactivityModal] = useState(false);
   const timerRef = useRef(null);
+  const modalTimerRef = useRef(null);
 
   // --- Inactividad ---
   const resetTimer = useCallback(() => {
@@ -52,6 +53,29 @@ export const AuthProvider = ({ children }) => {
       }, INACTIVITY_TIMEOUT);
     }
   }, [user, showInactivityModal]);
+
+  const handleInactivityLogout = useCallback(() => {
+    setShowInactivityModal(false);
+    clearAllStorage();
+    setUser(null);
+    window.location.href = '/login';
+  }, []);
+
+  // Temporizador para auto-logout de 3 minutos si el modal está visible
+  useEffect(() => {
+    if (showInactivityModal) {
+      modalTimerRef.current = setTimeout(() => {
+        console.log('⏰ Inactividad en modal excedida (3 min). Cerrando sesión automáticamente...');
+        handleInactivityLogout();
+      }, 3 * 60 * 1000); // 3 minutos de gracia
+    }
+
+    return () => {
+      if (modalTimerRef.current) {
+        clearTimeout(modalTimerRef.current);
+      }
+    };
+  }, [showInactivityModal, handleInactivityLogout]);
 
   useEffect(() => {
     if (!user) {
@@ -74,12 +98,6 @@ export const AuthProvider = ({ children }) => {
   const handleStay = () => {
     setShowInactivityModal(false);
     resetTimer();
-  };
-
-  const handleInactivityLogout = () => {
-    setShowInactivityModal(false);
-    logout();
-    window.location.href = '/login';
   };
 
   // --- Verificar sesión al cargar ---

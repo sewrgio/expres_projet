@@ -4,6 +4,7 @@ import Usuario from '../models/usuario.js';
 import auth from '../middleware/auth.js';
 import bcrypt from 'bcryptjs';
 import pool from '../config/db.js';
+import { registrarBitacora } from '../utils/bitacora.js';
 
 const router = express.Router();
 
@@ -194,6 +195,12 @@ router.post('/', auth, async (req, res) => {
       WHERE id_usuario = $1
     `, [id_usuario]);
 
+    await registrarBitacora(
+      req.user.id,
+      'CREAR_COORDINADOR',
+      `El auditor ${req.user.correo} creó un nuevo coordinador/adjunto (ID Usuario: ${id_usuario}) para la carrera ID: ${id_carrera}. Roles asignados: Coordinador (${!!esCoordinador}), Profesor (${!!esProfesor}), Adjunto (${!!esAdjuntoCoordinacion}).`
+    );
+
     res.status(201).json({ 
       success: true, 
       message: 'Usuario creado con los roles seleccionados',
@@ -214,6 +221,24 @@ router.put('/:id', auth, async (req, res) => {
   const { id_carrera } = req.body;
   try {
     const coordinador = await Coordinador.update(req.params.id, id_carrera);
+
+    // Si este coordinador/adjunto también tiene perfil de profesor, actualizar su carrera en profesor_carrera
+    await pool.query(`
+      UPDATE profesor_carrera pc
+      SET id_carrera = $1
+      FROM profesor p
+      JOIN usuario_rol ur_p ON p.id_usuario_rol = ur_p.id_usuario_rol
+      JOIN usuario_rol ur_c ON ur_p.id_usuario = ur_c.id_usuario
+      JOIN coordinador c ON ur_c.id_usuario_rol = c.id_usuario_rol
+      WHERE c.id_coordinador = $2 AND pc.id_profesor = p.id_profesor AND pc.activo = true
+    `, [id_carrera, req.params.id]);
+
+    await registrarBitacora(
+      req.user.id,
+      'MODIFICAR_COORDINADOR',
+      `El auditor ${req.user.correo} modificó al coordinador/adjunto ID: ${req.params.id}, asignándole la carrera ID: ${id_carrera}.`
+    );
+
     res.json(coordinador);
   } catch (error) {
     console.error(error);
@@ -229,6 +254,13 @@ router.delete('/:id', auth, async (req, res) => {
 
   try {
     await Coordinador.delete(req.params.id);
+
+    await registrarBitacora(
+      req.user.id,
+      'ELIMINAR_COORDINADOR',
+      `El auditor ${req.user.correo} eliminó de forma permanente al coordinador/adjunto ID: ${req.params.id} de la base de datos.`
+    );
+
     res.json({ success: true, message: 'Coordinador eliminado' });
   } catch (error) {
     console.error(error);
@@ -244,6 +276,13 @@ router.put('/:id/desactivar', auth, async (req, res) => {
 
   try {
     await Coordinador.deactivate(req.params.id);
+
+    await registrarBitacora(
+      req.user.id,
+      'DESACTIVAR_COORDINADOR',
+      `El auditor ${req.user.correo} desactivó al coordinador/adjunto ID: ${req.params.id}.`
+    );
+
     res.json({ success: true, message: 'Coordinador desactivado' });
   } catch (error) {
     console.error(error);
@@ -259,6 +298,13 @@ router.put('/:id/activar', auth, async (req, res) => {
 
   try {
     await Coordinador.activate(req.params.id);
+
+    await registrarBitacora(
+      req.user.id,
+      'ACTIVAR_COORDINADOR',
+      `El auditor ${req.user.correo} reactivó al coordinador/adjunto ID: ${req.params.id}.`
+    );
+
     res.json({ success: true, message: 'Coordinador activado' });
   } catch (error) {
     console.error(error);

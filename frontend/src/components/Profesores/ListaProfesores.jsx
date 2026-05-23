@@ -324,14 +324,8 @@ const ListaProfesores = () => {
              </button>
 
             <form onSubmit={handleEditar} className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4 overflow-visible">
-              <div className="md:col-span-2 space-y-1">
-                <label className="text-[11px] font-black text-slate-400 uppercase tracking-wider ml-1">Carrera Asignada</label>
-                <CustomSelect
-                  options={carreras.map(c => ({ value: c.id_carrera, label: c.nombre_carrera }))}
-                  value={profesorActual.id_carrera}
-                  onChange={(val) => setProfesorActual({ ...profesorActual, id_carrera: val })}
-                />
-              </div>
+              
+              
 
               <div className="space-y-1">
                 <label className="text-[11px] font-black text-slate-400 uppercase tracking-wider ml-1">Nombre</label>
